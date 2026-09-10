@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Services\LicenseManager;
+use Throwable;
 
 class LicenseController extends Controller {
     public function getStatus(): void {
@@ -10,41 +11,36 @@ class LicenseController extends Controller {
         $this->success(['license' => $status]);
     }
 
-    public function updateDuration(): void {
-        $currentUser = $this->getCurrentUser();
-        if (!$currentUser || $currentUser['role'] !== 'superadmin') {
-            $this->error('Forbidden: Only Superadmin can modify software expiry duration', 403);
-            return;
-        }
-
+    public function activate(): void {
         $input = $this->getJsonInput();
-        $days = (int)($input['days'] ?? 0);
+        $licenseKey = trim($input['license_key'] ?? '');
+        $domain = trim($input['domain_name'] ?? '');
+        $ip = trim($input['ip_address'] ?? '');
 
-        if ($days <= 0) {
-            $this->error('Please specify a positive number of days to add', 400);
+        if (empty($licenseKey)) {
+            $this->error('Please enter a valid License Key', 400);
             return;
         }
 
-        $updated = LicenseManager::updateDuration($days, (int)$currentUser['id']);
-        $this->success(['license' => $updated], "Successfully extended software duration by {$days} days");
+        $user = $this->getCurrentUser();
+        $userId = $user ? (int)$user['id'] : null;
+
+        try {
+            $result = LicenseManager::activate($licenseKey, $domain ?: null, $ip ?: null, $userId);
+            $this->success(['license' => $result], $result['message']);
+        } catch (Throwable $e) {
+            $this->error($e->getMessage(), 400);
+        }
     }
 
-    public function setExactExpiry(): void {
+    public function deactivate(): void {
         $currentUser = $this->getCurrentUser();
         if (!$currentUser || $currentUser['role'] !== 'superadmin') {
-            $this->error('Forbidden: Only Superadmin can modify software expiry duration', 403);
+            $this->error('Forbidden: Only Superadmin can deactivate license', 403);
             return;
         }
 
-        $input = $this->getJsonInput();
-        $date = $input['expires_at'] ?? '';
-
-        if (!$date || !strtotime($date)) {
-            $this->error('Valid expiry date (YYYY-MM-DD) required', 400);
-            return;
-        }
-
-        $updated = LicenseManager::setExactExpiry($date, (int)$currentUser['id']);
-        $this->success(['license' => $updated], "Software expiry date successfully set to {$date}");
+        $result = LicenseManager::deactivate((int)$currentUser['id']);
+        $this->success(['license' => $result], 'License deactivated successfully');
     }
 }

@@ -86,10 +86,10 @@ $router->post('/api/v1/auth/reset-password', [AuthController::class, 'resetUserP
 $router->get('/api/v1/superadmin/server-config', [ServerConfigController::class, 'getConfig'], [AuthMiddleware::class, RoleMiddleware::superadminOnly()]);
 $router->post('/api/v1/superadmin/server-config', [ServerConfigController::class, 'updateConfig'], [AuthMiddleware::class, RoleMiddleware::superadminOnly()]);
 
-// ── Superadmin License & Duration Management ───────────────────
+// ── License Management (SaNDS Lab Licensing System) ────────────
 $router->get('/api/v1/license/status', [LicenseController::class, 'getStatus']);
-$router->post('/api/v1/license/extend', [LicenseController::class, 'updateDuration'], [AuthMiddleware::class, RoleMiddleware::superadminOnly()]);
-$router->post('/api/v1/license/set-expiry', [LicenseController::class, 'setExactExpiry'], [AuthMiddleware::class, RoleMiddleware::superadminOnly()]);
+$router->post('/api/v1/license/activate', [LicenseController::class, 'activate']);
+$router->post('/api/v1/license/deactivate', [LicenseController::class, 'deactivate'], [AuthMiddleware::class, RoleMiddleware::superadminOnly()]);
 
 // ── Settings (Admin / Superadmin) ──────────────────────────────
 $router->get('/api/v1/settings', [SettingsController::class, 'getSettings']);

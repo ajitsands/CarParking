@@ -14,16 +14,22 @@ CREATE TABLE IF NOT EXISTS `system_settings` (
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. System Licenses (Superadmin duration lock)
+-- 2. System Licenses (SaNDS Lab Asymmetric Offline Licensing System)
 CREATE TABLE IF NOT EXISTS `system_licenses` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `license_key` VARCHAR(255) NOT NULL,
+  `token` LONGTEXT NULL,
+  `public_key` TEXT NULL,
+  `domain_name` VARCHAR(255) NULL,
+  `ip_address` VARCHAR(100) NULL,
+  `payload_data` LONGTEXT NULL,
   `issued_to` VARCHAR(255) NOT NULL DEFAULT 'KIMSHEALTH',
   `duration_days` INT NOT NULL DEFAULT 365,
   `expires_at` DATETIME NOT NULL,
   `max_lanes` INT DEFAULT 10,
   `status` ENUM('active', 'expired', 'suspended') DEFAULT 'active',
-  `checksum` VARCHAR(255),
+  `activated_at` DATETIME NULL,
+  `checksum` VARCHAR(255) NULL,
   `updated_by` INT NULL,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

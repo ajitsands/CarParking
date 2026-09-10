@@ -52,10 +52,10 @@ export const api = {
   getServerConfig: () => request('/superadmin/server-config'),
   updateServerConfig: (data) => request('/superadmin/server-config', { method: 'POST', body: data }),
 
-  // Superadmin License
+  // SaNDS Lab License System
   getLicenseStatus: () => request('/license/status'),
-  extendLicense: (days) => request('/license/extend', { method: 'POST', body: { days } }),
-  setExactExpiry: (expires_at) => request('/license/set-expiry', { method: 'POST', body: { expires_at } }),
+  activateLicense: (data) => request('/license/activate', { method: 'POST', body: data }),
+  deactivateLicense: () => request('/license/deactivate', { method: 'POST' }),
 
   // Users (RBAC)
   getUsers: () => request('/users'),

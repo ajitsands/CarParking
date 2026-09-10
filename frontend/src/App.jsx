@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { SettingsProvider } from './context/SettingsContext';
+import { SettingsProvider, useSettings } from './context/SettingsContext';
 
 import Navbar from './components/layout/Navbar';
 import HorizontalMenu from './components/layout/HorizontalMenu';
 import Footer from './components/layout/Footer';
 import Modal from './components/common/Modal';
+import LicenseLockModal from './components/license/LicenseLockModal';
 
 import Dashboard from './pages/Dashboard';
 import LiveLanes from './pages/LiveLanes';
@@ -29,6 +30,7 @@ import { api } from './services/api';
 
 function MainApp() {
   const { user, loading } = useAuth();
+  const { license } = useSettings();
   // Restore last active tab from localStorage so refresh keeps the user on the same page
   const [activeTab, setActiveTabState] = useState(
     () => localStorage.getItem('parking_active_tab') || 'dashboard'
@@ -257,6 +259,11 @@ function MainApp() {
           </div>
         </form>
       </Modal>
+
+      {/* 5. SaNDS Lab Software License Lock Screen (Blocks whole app if unlicensed or expired) */}
+      {license && !license.is_valid && (
+        <LicenseLockModal />
+      )}
     </div>
   );
 }
