@@ -282,59 +282,6 @@ export default function SettingsPage() {
     }
   };
 
-  // ── Test Webhook ─────────────────────────────────────────────────
-  // Builds the active URL from current IP/port/mode and sends a real POST
-  // with a sample ANPR plate event. Shows result in UI (no page navigation).
-  const handleTestWebhook = async () => {
-    const effectivePort = customLanPort || networkInfo.server_port || 8000;
-    const effectiveIp   = customLanIp   || networkInfo.detected_lan_ip || '192.168.100.4';
-    const computedLocalUrl = `http://${effectiveIp}:${effectivePort}/api/v1/webhook/anpr`;
-    const targetUrl =
-      selectedWebhookType === 'server'    ? networkInfo.server_webhook_url :
-      selectedWebhookType === 'localhost' ? networkInfo.localhost_webhook_url :
-                                            computedLocalUrl;
-
-    setTestingWebhook(true);
-    setTestResult(null);
-
-    const samplePayload = {
-      PlateNumber:   'TEST-BHR-9999',
-      PlateColor:    'White',
-      VehicleColor:  'Silver',
-      VehicleType:   'Sedan',
-      TimeStamp:     new Date().toISOString().replace('T', ' ').slice(0, 19),
-      Channel:       1,
-      Lane:          1,
-      SnapPicURL:    '',
-      _test:         true
-    };
-
-    try {
-      const res = await fetch(targetUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(samplePayload)
-      });
-
-      let data = {};
-      try { data = await res.json(); } catch (_) {}
-
-      setTestResult({
-        success: res.ok || data.success,
-        message: data.message || (res.ok ? 'Webhook endpoint responded successfully!' : `HTTP ${res.status} — ${data.error || 'Check server logs'}`),
-        data: data
-      });
-    } catch (err) {
-      setTestResult({
-        success: false,
-        message: `Connection failed: ${err.message}`,
-        error: err.message
-      });
-    } finally {
-      setTestingWebhook(false);
-    }
-  };
-
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
