@@ -32,9 +32,10 @@ class BarrierController extends Controller {
         $db->prepare("INSERT INTO audit_logs (user_id, username, action, entity_type, entity_id, details) VALUES (?, ?, 'MANUAL_BARRIER_OVERRIDE', 'gates_and_cameras', ?, ?)")
            ->execute([$userId, $currentUser['username'] ?? 'operator', $gateId, "Override Reason: {$reason} | Direction: {$direction} | Plate: {$plate}"]);
 
-        // 2. If this is an EXIT gate override, close the active vehicle session!
+        // 2a. If this is an EXIT gate override, close the active vehicle session!
         $sessionUpdated = false;
         $closedSession = null;
+        $createdSession = null;
 
         if ($direction === 'EXIT' || str_contains($gateId, 'OUT')) {
             $session = null;
@@ -115,6 +116,73 @@ class BarrierController extends Controller {
                     'status'       => 'EXIT_COMPLETED'
                 ];
             }
+
+        } elseif ($direction === 'ENTRY' || str_contains($gateId, 'IN')) {
+            // 2b. ENTRY gate override: Create a parking session so the vehicle
+            //     appears on the Dashboard and in active sessions immediately.
+            if ($plate && $plate !== 'MANUAL_OVERRIDE') {
+
+                // Check if the plate is already inside (avoid duplicate active sessions)
+                $cleanPlate = preg_replace('/[^A-Za-z0-9]/', '', $plate);
+                $stmtExist = $db->prepare("SELECT id FROM parking_sessions 
+                    WHERE (plate_number = ? OR REPLACE(plate_number,' ','') = ?)
+                    AND exit_time IS NULL 
+                    AND status NOT IN ('EXIT_COMPLETED','CANCELLED') 
+                    LIMIT 1");
+                $stmtExist->execute([$plate, $cleanPlate]);
+                $existing = $stmtExist->fetch();
+
+                if (!$existing) {
+                    // Generate session code
+                    $sessCode = 'MAN-' . strtoupper(substr(md5($plate . $nowStr), 0, 8));
+
+                    // Default to VALIDATION_PENDING (standard flow)
+                    $initialStatus = 'VALIDATION_PENDING';
+                    $graceMinutes = TariffCalculator::getAdminGraceMinutes();
+                    $validationDeadline = date('Y-m-d H:i:s', strtotime($nowStr) + ($graceMinutes * 60));
+
+                    $stmtIns = $db->prepare("INSERT INTO parking_sessions 
+                        (session_code, plate_number, entry_time, entry_gate_id, status, 
+                         validation_deadline, grace_period_minutes, manual_review_reason) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmtIns->execute([
+                        $sessCode,
+                        $plate,
+                        $nowStr,
+                        $gateId,
+                        $initialStatus,
+                        $validationDeadline,
+                        $graceMinutes,
+                        "Manual Entry Override: {$reason} (Operator: " . ($currentUser['username'] ?? 'operator') . ")"
+                    ]);
+                    $newSessionId = (int)$db->lastInsertId();
+
+                    // Log an ANPR event for the manual entry
+                    $db->prepare("INSERT INTO anpr_events 
+                        (session_id, camera_id, gate_id, direction, plate_number, confidence, raw_payload) 
+                        VALUES (?, 'MANUAL-CAM', ?, 'ENTRY', ?, 100, ?)")
+                       ->execute([
+                           $newSessionId, $gateId, $plate,
+                           json_encode(['reason' => $reason, 'operator' => $currentUser['username'] ?? 'operator', 'type' => 'manual_override'])
+                       ]);
+
+                    $createdSession = [
+                        'session_id'   => $newSessionId,
+                        'session_code' => $sessCode,
+                        'plate_number' => $plate,
+                        'status'       => $initialStatus
+                    ];
+                }
+            }
+        }
+
+
+
+        $msg = "Manual barrier override pulse executed for {$gateId}.";
+        if ($sessionUpdated) {
+            $msg .= " Parking session for vehicle {$closedSession['plate_number']} completed.";
+        } elseif ($createdSession) {
+            $msg .= " Parking session created for vehicle {$createdSession['plate_number']} (Code: {$createdSession['session_code']}).";
         }
 
         $this->success([
@@ -125,9 +193,11 @@ class BarrierController extends Controller {
             'operator'        => $currentUser['full_name'] ?? 'Operator',
             'relay'           => $res,
             'session_updated' => $sessionUpdated,
-            'closed_session'  => $closedSession
-        ], "Manual barrier override pulse executed for {$gateId}. " . ($sessionUpdated ? "Parking session for vehicle {$closedSession['plate_number']} completed." : ""));
+            'closed_session'  => $closedSession,
+            'created_session' => $createdSession
+        ], $msg);
     }
+
 
     public function getLogs(): void {
         $db = Database::getInstance();
