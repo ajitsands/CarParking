@@ -47,7 +47,7 @@ export default function SettingsPage() {
     active_environment: 'local'
   });
   const [selectedWebhookType, setSelectedWebhookType] = useState('local'); // 'local' | 'server' | 'localhost'
-  const [customLanIp, setCustomLanIp] = useState('');
+  const [customLanIp, setCustomLanIp] = useState('192.168.100.4'); // pre-filled with default detected IP
   const [customLanPort, setCustomLanPort] = useState('8000');
   const [copiedKey, setCopiedKey] = useState('');
   const [testResult, setTestResult] = useState(null);
@@ -604,60 +604,63 @@ export default function SettingsPage() {
                     </span>
                   </div>
 
+                  {/* URL display — full width */}
                   <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    flexWrap: 'wrap'
+                    background: 'rgba(0,0,0,0.4)',
+                    padding: '12px 14px',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    color: '#38bdf8',
+                    overflowX: 'auto',
+                    wordBreak: 'break-all',
+                    userSelect: 'all',
+                    marginBottom: '10px'
                   }}>
-                    <div style={{
-                      flex: 1,
-                      minWidth: '280px',
-                      background: 'rgba(0,0,0,0.4)',
-                      padding: '12px 14px',
-                      borderRadius: '6px',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '0.9rem',
-                      fontWeight: 700,
-                      color: '#38bdf8',
-                      overflowX: 'auto',
-                      wordBreak: 'break-all',
-                      userSelect: 'all'
-                    }}>
-                      {activeWebhookUrl}
-                    </div>
+                    {activeWebhookUrl}
+                  </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        type="button"
-                        className="btn btn-primary"
-                        onClick={() => copyToClipboard(activeWebhookUrl, 'main_url')}
-                        style={{
-                          background: copiedKey === 'main_url' ? '#10b981' : 'linear-gradient(135deg, #ec4899 0%, #2563eb 100%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '10px 18px',
-                          fontWeight: 700
-                        }}
-                      >
-                        {copiedKey === 'main_url' ? <Check size={16} /> : <Copy size={16} />}
-                        {copiedKey === 'main_url' ? 'Copied URL!' : 'Copy Webhook URL'}
-                      </button>
+                  {/* Action buttons — own row so they are always fully visible */}
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => copyToClipboard(activeWebhookUrl, 'main_url')}
+                      style={{
+                        background: copiedKey === 'main_url' ? '#10b981' : 'linear-gradient(135deg, #ec4899 0%, #2563eb 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '9px 18px',
+                        fontWeight: 700,
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {copiedKey === 'main_url' ? <Check size={16} /> : <Copy size={16} />}
+                      {copiedKey === 'main_url' ? 'Copied!' : 'Copy Webhook URL'}
+                    </button>
 
-                      <button
-                        type="button"
-                        className="btn btn-outline"
-                        disabled={testingWebhook}
-                        onClick={handleTestWebhook}
-                        style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 14px' }}
-                        title="Send a sample ANPR plate detection to test connection"
-                      >
-                        <Send size={15} />
-                        {testingWebhook ? 'Testing...' : 'Test Webhook'}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      disabled={testingWebhook}
+                      onClick={handleTestWebhook}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '9px 16px',
+                        whiteSpace: 'nowrap',
+                        color: '#fff',
+                        borderColor: 'rgba(255,255,255,0.3)'
+                      }}
+                      title="Send a sample ANPR plate detection to test connection"
+                    >
+                      <Send size={15} />
+                      {testingWebhook ? 'Testing...' : 'Test Webhook'}
+                    </button>
                   </div>
 
                   {/* If Local Network: Configurable IP & Port */}
