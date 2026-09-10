@@ -73,6 +73,9 @@ class AnprWebhookController extends Controller {
 
             $sessionCode = 'PARK-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
 
+            // Anti-Passback Protection: Auto-close any previous unclosed session for this plate
+            \App\Services\AntiPassbackService::reconcileExistingActiveSessions($plate, $sessionCode, $entryTime);
+
             $stmtSess = $db->prepare("INSERT INTO parking_sessions (
                 session_code, plate_number, entry_time, entry_gate_id, entry_image_url, entry_confidence,
                 status, validation_deadline, validation_method, validation_ref, grace_period_minutes,

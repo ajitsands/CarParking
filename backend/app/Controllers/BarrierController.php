@@ -121,20 +121,11 @@ class BarrierController extends Controller {
             // 2b. ENTRY gate override: Create a parking session so the vehicle
             //     appears on the Dashboard and in active sessions immediately.
             if ($plate && $plate !== 'MANUAL_OVERRIDE') {
+                // Generate session code
+                $sessCode = 'MAN-' . strtoupper(substr(md5($plate . $nowStr), 0, 8));
 
-                // Check if the plate is already inside (avoid duplicate active sessions)
-                $cleanPlate = preg_replace('/[^A-Za-z0-9]/', '', $plate);
-                $stmtExist = $db->prepare("SELECT id FROM parking_sessions 
-                    WHERE (plate_number = ? OR REPLACE(plate_number,' ','') = ?)
-                    AND exit_time IS NULL 
-                    AND status NOT IN ('EXIT_COMPLETED','CANCELLED') 
-                    LIMIT 1");
-                $stmtExist->execute([$plate, $cleanPlate]);
-                $existing = $stmtExist->fetch();
-
-                if (!$existing) {
-                    // Generate session code
-                    $sessCode = 'MAN-' . strtoupper(substr(md5($plate . $nowStr), 0, 8));
+                // Anti-Passback Protection: Auto-close any previous unclosed session for this plate
+                \App\Services\AntiPassbackService::reconcileExistingActiveSessions($plate, $sessCode, $nowStr);
 
                     // Default to VALIDATION_PENDING (standard flow)
                     $initialStatus = 'VALIDATION_PENDING';
