@@ -16,6 +16,7 @@ import {
 import BoomBarrierVisualizer from '../components/gate/BoomBarrierVisualizer';
 import ManualOverrideModal from '../components/gate/ManualOverrideModal';
 import StatusBadge from '../components/common/StatusBadge';
+import SearchableSelect from '../components/common/SearchableSelect';
 import { api } from '../services/api';
 import DataTable from '../components/common/DataTable';
 import { useSettings } from '../context/SettingsContext';
@@ -271,20 +272,19 @@ export default function LiveLanes({ onOpenSimulator }) {
                 Vehicle at Exit Gate:
               </div>
 
-              {/* Always-visible selector: ANPR sets this automatically; operator can search/override if camera missed */}
-              <select
-                className="form-select"
-                style={{ flex: 1, maxWidth: '260px', padding: '3px 8px', fontSize: '0.72rem' }}
-                value={selectedExitSessionId || ''}
-                onChange={(e) => setSelectedExitSessionId(e.target.value ? parseInt(e.target.value) : null)}
-              >
-                <option value="">— Select / Search Vehicle —</option>
-                {activeSessions.map(s => (
-                  <option key={s.id} value={s.id}>
-                    {s.plate_number}  [{s.status}]  In: {s.entry_time ? s.entry_time.slice(11, 16) : ''}  ({s.total_duration_minutes || 0}m)
-                  </option>
-                ))}
-              </select>
+              {/* Select2-style searchable dropdown */}
+              <SearchableSelect
+                options={activeSessions.map(s => ({
+                  value: s.id,
+                  label: s.plate_number,
+                  meta: `[${s.status}]  Entry: ${s.entry_time ? s.entry_time.slice(11,16) : ''}  •  ${s.total_duration_minutes || 0} min parked`
+                }))}
+                value={selectedExitSessionId}
+                onChange={(val) => setSelectedExitSessionId(val ? parseInt(val) : null)}
+                placeholder="— ANPR auto-detects / Search plate —"
+                searchPlaceholder="Type plate number to search..."
+                noOptionsText="No active vehicles inside"
+              />
             </div>
 
             {selectedVehicle ? (
