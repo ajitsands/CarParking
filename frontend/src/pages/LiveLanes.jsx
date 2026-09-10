@@ -114,7 +114,10 @@ export default function LiveLanes({ onOpenSimulator }) {
     }
   };
 
-  const selectedVehicle = activeSessions.find(s => s.id === selectedExitSessionId) || activeSessions[0] || null;
+  // Only populated when ANPR auto-detects or operator manually picks from dropdown
+  const selectedVehicle = selectedExitSessionId
+    ? activeSessions.find(s => s.id === selectedExitSessionId) || null
+    : null;
 
   return (
     <div>
@@ -252,7 +255,9 @@ export default function LiveLanes({ onOpenSimulator }) {
 
             <div className="lane-anpr-plate-overlay">
               <span style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>EXIT SENSOR:</span>
-              <span>{selectedVehicle ? selectedVehicle.plate_number : 'NO VEHICLE'}</span>
+              <span style={{ color: selectedVehicle ? '#fff' : '#64748b' }}>
+                {selectedVehicle ? selectedVehicle.plate_number : 'WAITING...'}
+              </span>
               <span style={{ fontSize: '0.65rem', color: '#10b981' }}>{activeSessions.length} INSIDE</span>
             </div>
           </div>
