@@ -5,6 +5,7 @@ import { SettingsProvider } from './context/SettingsContext';
 
 import Navbar from './components/layout/Navbar';
 import HorizontalMenu from './components/layout/HorizontalMenu';
+import Footer from './components/layout/Footer';
 import Modal from './components/common/Modal';
 
 import Dashboard from './pages/Dashboard';
@@ -156,6 +157,9 @@ function MainApp() {
           <UserManagementPage />
         )}
       </main>
+
+      {/* Sticky Footer */}
+      <Footer />
 
       {/* Global ANPR Simulator Modal */}
       <AnprSimulatorModal 
