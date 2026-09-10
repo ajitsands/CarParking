@@ -1,0 +1,8 @@
+{
+    "username": "superadmin",
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6InN1cGVyYWRtaW4iLCJoYXNoIjoiJDJ5JDEwJEVGLlA3WXdNZ0ZaSkVCN2VJeU4xa2UzdU5hbU42OHpQbXVIQlVZSEp2UXF6RS5GUUlrVC5xIiwidXBkYXRlZF9hdCI6IjIwMjYtMDktMDkgMTk6NTI6NTAiLCJ0eXBlIjoiU1VQRVJBRE1JTl9TRUNVUklUWV9WQVVMVCIsImlhdCI6MTc4ODk4MzU3MCwiZXhwIjoxNzg5NTg4MzcwfQ.zWrPgimqeUDbSvsVYGgC_eL64bTId0fYp9VIeRJe5vg",
+    "salt": "b4e26527bc06e3909f38111f224a2588",
+    "signature": "2512823a6a9aa551addf720801ff5560cb6efe05dcefef7228ac3c8fdd364668",
+    "storage": "server_file_encrypted",
+    "updated_at": "2026-09-09 19:52:50"
+}

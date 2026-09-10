@@ -1,0 +1,1700 @@
+Title: Live Content
+
+Description: Fetched live
+
+Source: https://proposal.sandslab.com/kims/
+
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Hospital Parking Management &amp; Visitor Validation System — Prepared for KIMSHEALTH</title>
+<meta name="description" content="Process Flow &amp; Solution Design Document for Smart Hospital Parking Management &amp; Visitor Validation System. Version 1.0, September 2026. Prepared exclusively for KIMSHEALTH by SaNDS Lab Middle East W.L.L.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  /* ── Global Reset ─────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary:   #1a3a5c;
+    --accent:    #0f7bc4;
+    --gold:      #d4a017;
+    --light:     #f0f4f8;
+    --text:      #1e2e3e;
+    --muted:     #64748b;
+    --border:    #cbd5e1;
+    --success:   #059669;
+    --warning:   #d97706;
+    --danger:    #dc2626;
+    --white:     #ffffff;
+    --shadow:    0 4px 24px rgba(0,0,0,0.08);
+    --page-w:    210mm;
+    --page-h:    297mm;
+  }
+
+  html { font-size: 13.5px; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #e8ecf0;
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* ── Fixed Top Bar ────────────────────────────────────── */
+  #topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+    background: linear-gradient(135deg, #0d2137 0%, #1a3a5c 50%, #0f7bc4 100%);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 24px; gap: 16px; height: 58px;
+  }
+  #topbar .brand-text {
+    display: flex; align-items: center; gap: 12px;
+    color: rgba(255,255,255,0.85); font-size: 0.82rem; font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+  #topbar .brand-text strong { color: #fff; }
+  .topbar-client-pill {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: #ffffff;
+    border: 1px solid rgba(255,255,255,0.4);
+    padding: 3px 10px 3px 8px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    height: 32px;
+  }
+  .topbar-client-label {
+    font-size: 0.58rem; font-weight: 800;
+    color: #8b182b;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding-right: 6px;
+    border-right: 1.5px solid #e2e8f0;
+    line-height: 1;
+  }
+  .topbar-client-logo {
+    height: 20px; width: auto; display: block;
+  }
+  #topbar .right-group {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .zoom-group {
+    display: flex; align-items: center; gap: 0;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.22);
+    border-radius: 8px; overflow: hidden;
+  }
+  .zoom-btn {
+    background: transparent; border: none;
+    color: #fff; font-size: 1rem; font-weight: 700;
+    width: 30px; height: 30px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+    font-family: 'Inter', sans-serif;
+    line-height: 1;
+  }
+  .zoom-btn:hover { background: rgba(255,255,255,0.20); }
+  .zoom-btn:active { background: rgba(255,255,255,0.30); }
+  #zoom-level {
+    min-width: 42px; text-align: center;
+    font-size: 0.75rem; font-weight: 700;
+    color: #fff; padding: 0 4px;
+    border-left: 1px solid rgba(255,255,255,0.18);
+    border-right: 1px solid rgba(255,255,255,0.18);
+    cursor: pointer; line-height: 30px;
+    transition: color 0.15s;
+  }
+  #zoom-level:hover { color: var(--gold); }
+  #btn-download {
+    background: linear-gradient(135deg, var(--gold), #b8860b);
+    color: #fff; box-shadow: 0 2px 10px rgba(212,160,23,0.4);
+    display: flex; align-items: center; gap: 7px;
+    padding: 8px 18px; border: none; border-radius: 8px;
+    font-family: 'Inter', sans-serif; font-size: 0.82rem;
+    font-weight: 600; cursor: pointer; transition: all 0.2s;
+    letter-spacing: 0.03em;
+  }
+  #btn-download:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,160,23,0.5); }
+  #btn-download:active { transform: translateY(0); }
+  .badge-secure {
+    background: rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.8);
+    border: 1px solid rgba(255,255,255,0.25);
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  #topbar .topbar-logo {
+    height: 34px; width: auto;
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.3));
+  }
+
+  /* ── Document Wrapper ─────────────────────────────────── */
+  #doc-wrapper {
+    margin: 72px auto 40px;
+    max-width: var(--page-w);
+  }
+
+  /* ── Each A4 Page ─────────────────────────────────────── */
+  .page {
+    position: relative;
+    width: 210mm;
+    height: 297mm;
+    min-height: 297mm;
+    max-height: 297mm;
+    background: var(--white);
+    box-shadow: var(--shadow);
+    margin: 0 auto 16px;
+    padding: 16mm 18mm 18mm 18mm;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* ── Watermark ────────────────────────────────────────── */
+  .page::before {
+    content: "PREPARED BY\ASANDS LAB";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-35deg);
+    font-size: 46px;
+    font-weight: 900;
+    color: rgba(26, 58, 92, 0.055);
+    white-space: pre;
+    text-align: center;
+    line-height: 1.4;
+    pointer-events: none;
+    letter-spacing: 4px;
+    font-family: 'Inter', sans-serif;
+    z-index: 0;
+    user-select: none;
+  }
+
+  /* ── Cover Page ───────────────────────────────────────── */
+  #cover {
+    background: linear-gradient(160deg, #0d2137 0%, #1a3a5c 55%, #0f4f7c 100%);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 20mm 18mm;
+  }
+  #cover::before { color: rgba(255,255,255,0.06); }
+
+  .cover-logo {
+    height: 80px; width: auto;
+    margin-bottom: 24px;
+    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.5));
+  }
+  .cover-client-badge {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 7px 20px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 14px;
+    margin-bottom: 24px;
+  }
+  .cover-client-logo {
+    height: 36px; width: auto; display: block;
+  }
+  .cover-divider {
+    width: 70px; height: 3px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    margin: 18px auto;
+    border-radius: 2px;
+  }
+  .cover-tag {
+    color: var(--gold);
+    font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.25em; text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .cover-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem; font-weight: 700;
+    color: #fff; line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .cover-subtitle {
+    font-size: 1.1rem; color: rgba(255,255,255,0.72);
+    font-weight: 300; margin-bottom: 6px;
+  }
+  .cover-desc {
+    font-size: 0.85rem; color: rgba(255,255,255,0.7);
+    margin-bottom: 4px;
+  }
+  .cover-meta {
+    display: flex; gap: 16px; justify-content: center;
+    flex-wrap: wrap; margin-top: 8px;
+  }
+  .cover-meta-item {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 10px; padding: 8px 18px;
+    text-align: center;
+  }
+  .cover-meta-item .label {
+    font-size: 0.65rem; color: var(--gold);
+    text-transform: uppercase; letter-spacing: 0.12em;
+    display: block; margin-bottom: 3px;
+  }
+  .cover-meta-item .value {
+    font-size: 0.88rem; color: #fff; font-weight: 600;
+  }
+  .cover-bottom {
+    margin-top: 26px; padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.15);
+    width: 100%; text-align: center;
+  }
+  .cover-bottom p { color: rgba(255,255,255,0.5); font-size: 0.72rem; }
+  .cover-bottom strong { color: var(--gold); }
+
+  /* ── Content Styles ───────────────────────────────────── */
+  .page-content { position: relative; z-index: 1; }
+
+  /* Page Header stripe */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 6px; margin-bottom: 16px;
+    gap: 16px;
+  }
+  .header-client-group {
+    display: flex; align-items: center; gap: 12px;
+    min-width: 0;
+  }
+  .header-client-logo {
+    height: 24px; width: auto; flex-shrink: 0;
+    display: block; object-fit: contain;
+  }
+  .header-vsep {
+    width: 1.5px; height: 16px;
+    background: #cbd5e1; flex-shrink: 0;
+  }
+  .page-header .doc-title {
+    font-size: 0.64rem; color: var(--muted); letter-spacing: 0.04em;
+    text-transform: uppercase; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .header-provider-group {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  }
+  .header-provider-tag {
+    font-size: 0.58rem; color: #94a3b8; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .page-header .logo-small {
+    height: 24px; width: auto;
+    flex-shrink: 0;
+  }
+
+  /* Page footer */
+  .page-footer {
+    position: absolute; bottom: 8mm; left: 18mm; right: 18mm;
+    display: flex; align-items: center; justify-content: space-between;
+    border-top: 1px solid var(--border); padding-top: 5px;
+    font-size: 0.64rem; color: var(--muted);
+  }
+  .page-footer .pf-brand { color: var(--gold); font-weight: 600; }
+
+  /* Headings */
+  h1.section-heading {
+    font-size: 1.15rem; font-weight: 700; color: var(--primary);
+    margin: 12px 0 8px;
+    padding: 7px 14px;
+    background: linear-gradient(135deg, #e8f0f8, #f0f6ff);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  h2.sub-heading {
+    font-size: 0.92rem; font-weight: 600; color: var(--accent);
+    margin: 10px 0 6px;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Body Text */
+  p.body-text { margin-bottom: 8px; font-size: 0.8rem; color: var(--text); line-height: 1.55; }
+
+  /* Bullet lists */
+  ul.bullet-list { margin: 6px 0 10px 18px; }
+  ul.bullet-list li { margin-bottom: 4px; font-size: 0.78rem; color: var(--text); line-height: 1.5; }
+
+  /* Callout Boxes */
+  .callout {
+    border-radius: 6px; padding: 9px 13px; margin: 9px 0;
+    font-size: 0.78rem; border-left: 4px solid;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .callout-title { font-weight: 700; margin-bottom: 3px; font-size: 0.8rem; }
+  .callout.info    { background: #eff6ff; border-color: var(--accent); color: #1e3a5f; }
+  .callout.info .callout-title { color: var(--accent); }
+  .callout.success { background: #ecfdf5; border-color: var(--success); color: #064e3b; }
+  .callout.success .callout-title { color: var(--success); }
+  .callout.warning { background: #fffbeb; border-color: var(--warning); color: #78350f; }
+  .callout.warning .callout-title { color: var(--warning); }
+  .callout.danger  { background: #fef2f2; border-color: var(--danger); color: #7f1d1d; }
+  .callout.danger .callout-title { color: var(--danger); }
+
+  /* Tables */
+  .tbl-wrap { margin: 8px 0; overflow-x: auto; break-inside: avoid; page-break-inside: avoid; }
+  table.doc-table {
+    width: 100%; border-collapse: collapse; font-size: 0.76rem;
+    background: var(--white); border-radius: 6px; overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  table.doc-table th {
+    background: linear-gradient(135deg, var(--primary), #234f7a);
+    color: #fff; padding: 7px 11px; text-align: left;
+    font-weight: 600; font-size: 0.74rem; letter-spacing: 0.03em;
+  }
+  table.doc-table td {
+    padding: 6px 11px; border-bottom: 1px solid #e2e8f0;
+    color: var(--text); line-height: 1.45;
+  }
+  table.doc-table tr:last-child td { border-bottom: none; }
+  table.doc-table tr:nth-child(even) td { background: #f8fafc; }
+
+  /* Flow / Architecture Diagram */
+  .flow-diagram {
+    background: #f0f6ff; border: 1px solid #bfdbfe;
+    border-radius: 8px; padding: 12px 14px; margin: 10px 0;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .flow-row {
+    display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; gap: 5px; margin-bottom: 6px;
+  }
+  .flow-row:last-child { margin-bottom: 0; }
+  .flow-node {
+    background: #1e3a5c; color: #fff; border-radius: 5px;
+    padding: 5px 10px; font-size: 0.7rem; font-weight: 600;
+    white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+  .flow-node.accent { background: var(--accent); }
+  .flow-node.green  { background: #059669; }
+  .flow-node.gold   { background: #b8860b; }
+  .flow-arrow { color: var(--accent); font-weight: 700; font-size: 0.82rem; padding: 0 2px; }
+
+  /* Process steps */
+  .process-step {
+    display: flex; align-items: flex-start; gap: 9px;
+    margin-bottom: 6px; padding: 5px 8px;
+    background: #f8fafc; border-radius: 5px; border-left: 3px solid var(--accent);
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .step-num {
+    background: var(--primary); color: #fff; border-radius: 50%;
+    width: 20px; height: 20px; display: flex; align-items: center;
+    justify-content: center; font-size: 0.65rem; font-weight: 700;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .step-text { font-size: 0.76rem; line-height: 1.45; }
+
+  /* Badges */
+  .status-grid { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0; break-inside: avoid; }
+  .status-badge {
+    padding: 3px 10px; border-radius: 16px;
+    font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em;
+    border: 1px solid; display: inline-block;
+  }
+  .sb-blue   { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+  .sb-green  { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+  .sb-yellow { background: #fef9c3; color: #713f12; border-color: #fde047; }
+  .sb-red    { background: #fee2e2; color: #7f1d1d; border-color: #fca5a5; }
+  .sb-gray   { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+  .sb-purple { background: #ede9fe; color: #4c1d95; border-color: #c4b5fd; }
+
+  /* Phase grid */
+  .phase-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 8px 0;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .phase-card {
+    background: linear-gradient(135deg, #f8fafc, #f0f4f8);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 12px;
+  }
+  .phase-card .ph-num  { font-size: 0.62rem; color: var(--gold); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+  .phase-card .ph-name { font-weight: 600; color: var(--primary); font-size: 0.78rem; }
+  .phase-card .ph-desc { font-size: 0.7rem; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+  /* Signature block */
+  .sig-table {
+    width: 100%; border-collapse: collapse; border: 2px solid var(--primary);
+    border-radius: 8px; overflow: hidden; margin-top: 14px;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .sig-table th { background: linear-gradient(135deg, var(--primary), #234f7a); color: #fff; padding: 8px 14px; font-size: 0.78rem; text-align: left; font-weight: 700; }
+  .sig-table td { padding: 10px 14px; border: 1px solid var(--border); font-size: 0.78rem; vertical-align: top; }
+  .sig-table .field-line { display: block; margin-top: 18px; border-top: 1px solid var(--border); padding-top: 3px; font-size: 0.7rem; color: var(--muted); }
+
+  /* Workflow image */
+  .workflow-img {
+    width: 100%; height: auto; max-height: 220mm; object-fit: contain;
+    border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    display: block; margin: 0 auto;
+  }
+
+  /* Section intro */
+  .section-intro { background: #f0f6ff; border-radius: 6px; padding: 9px 13px; margin-bottom: 10px; font-size: 0.78rem; color: var(--text); border-left: 3px solid var(--accent); line-height: 1.55; break-inside: avoid; page-break-inside: avoid; }
+
+  /* ── Print styles ─────────────────────────────────────── */
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  @media print {
+    #topbar { display: none !important; }
+    body {
+      background: #ffffff !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    #doc-wrapper {
+      margin: 0 !important;
+      padding: 0 !important;
+      max-width: none !important;
+      width: 210mm !important;
+      zoom: 1.0 !important;
+    }
+    .page {
+      box-shadow: none !important;
+      border: none !important;
+      margin: 0 !important;
+      padding: 16mm 18mm 18mm 18mm !important;
+      width: 210mm !important;
+      height: 297mm !important;
+      min-height: 297mm !important;
+      max-height: 297mm !important;
+      box-sizing: border-box !important;
+      page-break-after: always !important;
+      break-after: page !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      overflow: hidden !important;
+      position: relative !important;
+    }
+    .page:last-child {
+      page-break-after: auto !important;
+      break-after: auto !important;
+    }
+    .page::before {
+      print-color-adjust: exact !important;
+      -webkit-print-color-adjust: exact !important;
+    }
+    h1, h2, h3, .section-heading, .sub-heading {
+      page-break-after: avoid !important;
+      break-after: avoid !important;
+    }
+    table, .doc-table, .sig-table, tr, td, th,
+    .callout, .tbl-wrap, .process-step, .phase-card,
+    .flow-diagram, .workflow-img, .section-intro, .phase-grid {
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ TOP BAR ═══════════════════════════════════════════ -->
+<nav id="topbar" aria-label="Document toolbar">
+  <div class="brand-text">
+    <div class="topbar-client-pill" title="Prepared for KIMSHEALTH">
+      <span class="topbar-client-label">CLIENT</span>
+      <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="topbar-client-logo">
+    </div>
+    <span style="color:rgba(255,255,255,0.4);font-weight:300;">|</span>
+    <strong>Smart Hospital Parking</strong> &nbsp;·&nbsp; Solution Design Document &nbsp;·&nbsp; v1.0
+  </div>
+  <div class="right-group">
+    <!-- Zoom controls -->
+    <div class="zoom-group" title="Zoom document (Ctrl + / Ctrl -)">
+      <button class="zoom-btn" id="btn-zoom-out" onclick="zoomOut()" title="Zoom Out (Ctrl−)">−</button>
+      <span id="zoom-level" onclick="resetZoom()" title="Click to reset zoom">100%</span>
+      <button class="zoom-btn" id="btn-zoom-in" onclick="zoomIn()" title="Zoom In (Ctrl+)">+</button>
+    </div>
+    <span class="badge-secure">🔒 No Copy · Protected Document</span>
+    <button id="btn-download" onclick="downloadPDF()">⬇ Download PDF</button>
+    <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="topbar-logo" title="SaNDS Lab">
+  </div>
+</nav>
+
+<!-- ═══ DOCUMENT WRAPPER ═══════════════════════════════════ -->
+<div id="doc-wrapper">
+
+  <!-- ─── PAGE 1 — COVER ──────────────────────────────────── -->
+  <section class="page" id="cover" aria-label="Cover page">
+    <div class="page-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;height:100%;min-height:257mm;">
+      <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="cover-logo">
+      <div class="cover-tag">Solution Design Document</div>
+      <div class="cover-title">Smart Hospital<br>Parking Management<br>&amp; Visitor Validation System</div>
+      <div class="cover-divider"></div>
+      <div class="cover-subtitle">Process Flow &amp; Technical Architecture</div>
+      <div class="cover-desc">Prepared for <strong>KIMSHEALTH</strong> &nbsp;·&nbsp; Confidential</div>
+      <div class="cover-client-badge">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="cover-client-logo">
+      </div>
+      <div class="cover-meta">
+        <div class="cover-meta-item">
+          <span class="label">Client</span>
+          <span class="value">KIMSHEALTH</span>
+        </div>
+        <div class="cover-meta-item">
+          <span class="label">Version</span>
+          <span class="value">1.0</span>
+        </div>
+        <div class="cover-meta-item">
+          <span class="label">Date</span>
+          <span class="value">September 2026</span>
+        </div>
+        <div class="cover-meta-item">
+          <span class="label">Classification</span>
+          <span class="value">Confidential</span>
+        </div>
+      </div>
+      <div class="cover-bottom">
+        <p>Prepared by <strong>SaNDS Lab Middle East W.L.L</strong> for <strong>KIMSHEALTH</strong> &nbsp;·&nbsp; All Rights Reserved 2026</p>
+        <p style="margin-top:5px;">This document is confidential. Unauthorized sharing or reproduction is prohibited.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 2 — EXECUTIVE SUMMARY ─────────────────────── -->
+  <section class="page" aria-label="Executive Summary">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s1">1. Executive Summary</h1>
+      <p class="body-text">The <strong>Smart Hospital Parking Management System</strong> is designed to automate vehicle entry, hospital visitor validation, parking fee calculation, payment, and exit control. The solution combines ANPR (Automatic Number Plate Recognition), webhook-based integration, QR validation, hospital appointment integration, automated boom barriers, online payment, and configurable whitelist/blacklist rules.</p>
+
+      <div class="callout info">
+        <div class="callout-title">🏥 Core Business Principle</div>
+        The system does not attempt to determine whether a person is a genuine hospital visitor from ANPR alone. Instead, ANPR identifies the vehicle and the hospital system validates the related patient, appointment, visitor, staff, emergency, or other authorized status.
+      </div>
+
+      <h2 class="sub-heading">Primary Objectives</h2>
+      <ul class="bullet-list">
+        <li>Provide a fast, contactless vehicle entry and exit experience.</li>
+        <li>Automatically identify vehicles using ANPR and create a parking session.</li>
+        <li>Allow patients and visitors to validate their visit through appointment QR, reception registration, or integrated hospital systems.</li>
+        <li>Provide a configurable validation/grace period, proposed at <strong>30 minutes</strong>.</li>
+        <li>Automatically convert unvalidated sessions into chargeable parking sessions.</li>
+        <li>Calculate parking charges automatically and display the amount at exit.</li>
+        <li>Enable QR-based digital payment and automatically open the exit barrier after confirmed payment.</li>
+        <li>Support white-listed, black-listed, staff, emergency, and other special vehicle categories.</li>
+        <li>Provide real-time monitoring, audit trails, analytics, and revenue reports.</li>
+      </ul>
+
+      <h2 class="sub-heading">Recommended User Experience</h2>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Scenario</th><th>System Behaviour</th></tr></thead>
+          <tbody>
+            <tr><td>Valid appointment / visitor</td><td>Vehicle identified by ANPR and validated through appointment/QR/reception; parking is free or discounted according to policy.</td></tr>
+            <tr><td>No validation within grace period</td><td>Parking session automatically becomes chargeable and the configured tariff starts.</td></tr>
+            <tr><td>General / unrelated visitor</td><td>Vehicle can enter but is charged according to the configured parking tariff.</td></tr>
+            <tr><td>Whitelisted vehicle</td><td>Automatic authorized access based on vehicle number and policy.</td></tr>
+            <tr><td>Blacklisted vehicle</td><td>Entry denied and reason displayed to driver/security according to configured security policy.</td></tr>
+            <tr><td>Emergency vehicle</td><td>Priority access under a dedicated emergency rule.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 2 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 3 — SCOPE OF THE SOLUTION ─────────────────── -->
+  <section class="page" aria-label="Scope of the Solution">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s2">2. Scope of the Solution</h1>
+      <h2 class="sub-heading">2.1 In Scope</h2>
+      <ul class="bullet-list">
+        <li>Entry ANPR camera integration through HTTP/HTTPS webhook.</li>
+        <li>Vehicle image and number plate event capture.</li>
+        <li>Entry lane authorization and boom barrier control.</li>
+        <li>Parking session creation and lifecycle management.</li>
+        <li>Appointment/visitor validation through QR and hospital reception.</li>
+        <li>WhatsApp/email delivery of appointment and parking QR codes.</li>
+        <li>30-minute configurable visitor validation window.</li>
+        <li>Automatic charging after validation window expires.</li>
+        <li>Exit ANPR and parking session lookup.</li>
+        <li>Real-time tariff calculation.</li>
+        <li>Payment QR display and payment gateway integration.</li>
+        <li>Payment success webhook and automatic barrier release.</li>
+        <li>Whitelist and blacklist management.</li>
+        <li>Staff and emergency vehicle handling.</li>
+        <li>Real-time dashboard, reports, audit logs, and alerts.</li>
+      </ul>
+
+      <h2 class="sub-heading">2.2 Recommended Out-of-Scope / Integration Dependencies</h2>
+      <ul class="bullet-list">
+        <li>Clinical decisions and patient eligibility decisions remain with the hospital's HIS/EMR/appointment system.</li>
+        <li>Payment acquiring, bank settlement, and payment gateway compliance are handled by the selected payment provider.</li>
+        <li>ANPR camera accuracy depends on camera positioning, lighting, plate format, weather, and vendor capabilities.</li>
+        <li>Boom barrier safety mechanisms such as induction loops and obstruction sensors remain under the barrier/traffic-control hardware layer.</li>
+      </ul>
+
+      <div class="callout info">
+        <div class="callout-title">ℹ Integration Boundaries</div>
+        SaNDS Lab provides standardized REST APIs, webhooks, and relay interfaces for smooth integration with KIMSHEALTH HIS, appointment schedulers, and gate barriers.
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 3 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 4 — KEY ACTORS & SYSTEM ARCHITECTURE ───────── -->
+  <section class="page" aria-label="Key Actors and System Architecture">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h2 class="sub-heading">2.3 Key Stakeholders &amp; System Actors</h2>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Actor</th><th>Role &amp; Responsibilities</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Patient</strong></td><td>Has an appointment or hospital visit and may receive a digital parking QR code.</td></tr>
+            <tr><td><strong>Visitor</strong></td><td>May validate a visit through QR or hospital reception counter.</td></tr>
+            <tr><td><strong>Receptionist</strong></td><td>Registers/validates visitors and associates them with an active parking session.</td></tr>
+            <tr><td><strong>Security Officer</strong></td><td>Monitors entry/exit lanes, handles exceptions, and manages restricted vehicles.</td></tr>
+            <tr><td><strong>Parking Administrator</strong></td><td>Configures tariffs, grace periods, gates, and operational parking policies.</td></tr>
+            <tr><td><strong>Hospital HIS/Appointment</strong></td><td>Provides appointment/patient/visitor validation information via secure API.</td></tr>
+            <tr><td><strong>Payment Gateway</strong></td><td>Processes digital parking payments and returns instant webhook confirmation.</td></tr>
+            <tr><td><strong>ANPR Camera</strong></td><td>Detects vehicle plate numbers and sends event/image data to the application.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h1 class="section-heading" id="s3">3. High-Level System Architecture</h1>
+      <p class="body-text">The solution follows an <strong>event-driven architecture</strong>. ANPR cameras generate entry/exit events, the Parking Management Application applies business rules, and an Action Controller/relay interface operates the boom barrier.</p>
+
+      <div class="flow-diagram">
+        <div class="flow-row">
+          <span class="flow-node">Entry Lane</span><span class="flow-arrow">→</span>
+          <span class="flow-node accent">ANPR Camera</span><span class="flow-arrow">→</span>
+          <span class="flow-node">Webhook</span><span class="flow-arrow">→</span>
+          <span class="flow-node accent">Parking App</span><span class="flow-arrow">→</span>
+          <span class="flow-node">Decision Engine</span><span class="flow-arrow">→</span>
+          <span class="flow-node">Relay</span><span class="flow-arrow">→</span>
+          <span class="flow-node green">Boom Barrier</span>
+        </div>
+        <div class="flow-row" style="margin-top:8px;">
+          <span class="flow-node">HIS / Appointment</span><span class="flow-arrow">↔</span>
+          <span class="flow-node accent">Secure API</span><span class="flow-arrow">↔</span>
+          <span class="flow-node">Parking App</span>
+        </div>
+        <div class="flow-row" style="margin-top:8px;">
+          <span class="flow-node">WhatsApp / Email QR</span><span class="flow-arrow">→</span>
+          <span class="flow-node accent">Validation Service</span><span class="flow-arrow">→</span>
+          <span class="flow-node green">Parking Session</span>
+        </div>
+        <div class="flow-row" style="margin-top:8px;">
+          <span class="flow-node">Payment Display QR</span><span class="flow-arrow">→</span>
+          <span class="flow-node accent">Payment Gateway</span><span class="flow-arrow">→</span>
+          <span class="flow-node">Success Webhook</span><span class="flow-arrow">→</span>
+          <span class="flow-node green">Exit Barrier</span>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 4 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 5 — CORE APPLICATION SERVICES ───────────────── -->
+  <section class="page" aria-label="Core Application Services">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h2 class="sub-heading">3.1 Core Application Services</h2>
+      <p class="body-text">The modular architecture separates concerns across dedicated backend services to guarantee sub-second lane response times and high availability:</p>
+
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Service</th><th>Responsibility</th></tr></thead>
+          <tbody>
+            <tr><td><strong>ANPR Event Service</strong></td><td>Receives camera webhook events, validates source, stores plate/image/time/gate data.</td></tr>
+            <tr><td><strong>Vehicle Recognition Service</strong></td><td>Normalizes plate numbers and matches them to active sessions and vehicle profiles.</td></tr>
+            <tr><td><strong>Decision Engine</strong></td><td>Applies whitelist, blacklist, appointment, validation, payment, and tariff rules.</td></tr>
+            <tr><td><strong>Parking Session Manager</strong></td><td>Creates and updates session states from entry through exit.</td></tr>
+            <tr><td><strong>Visitor Validation Service</strong></td><td>Validates appointment/QR/reception registration and links it to the parking session.</td></tr>
+            <tr><td><strong>Tariff Engine</strong></td><td>Calculates charges based on configured grace periods, slabs, hourly/half-hourly rates, etc.</td></tr>
+            <tr><td><strong>Payment Service</strong></td><td>Creates payment requests/QR and consumes payment success/failure callbacks.</td></tr>
+            <tr><td><strong>Barrier Action Controller</strong></td><td>Sends approved open/close commands to relay/barrier hardware.</td></tr>
+            <tr><td><strong>Notification Service</strong></td><td>Sends QR, reminders, payment and parking notifications through configured channels.</td></tr>
+            <tr><td><strong>Audit &amp; Reporting Service</strong></td><td>Maintains immutable event history and generates operational/revenue reports.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-title">⚙ Performance SLA &amp; Fault Tolerance</div>
+        Critical gate transactions execute in under 350ms. If an external HIS or payment service experiences latency, local caching ensures the boom barrier operations and ANPR captures continue uninterrupted.
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 5 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 6 — VEHICLE ENTRY PROCESS ──────────────────── -->
+  <section class="page" aria-label="Vehicle Entry Process">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s4">4. Detailed Process Flow — Vehicle Entry</h1>
+      <h2 class="sub-heading">4.1 Standard Entry Process</h2>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>#</th><th>Process</th><th>System Action</th></tr></thead>
+          <tbody>
+            <tr><td><strong>1</strong></td><td>Vehicle approaches entry lane.</td><td>Vehicle presence is detected by lane sensor/ANPR camera.</td></tr>
+            <tr><td><strong>2</strong></td><td>ANPR captures number plate.</td><td>Camera generates plate number, image, timestamp, camera ID and gate/lane ID.</td></tr>
+            <tr><td><strong>3</strong></td><td>Webhook sent to Parking Application.</td><td>The event is received over a secure HTTP/HTTPS endpoint.</td></tr>
+            <tr><td><strong>4</strong></td><td>System validates the event.</td><td>Check source, camera configuration, duplicate events, plate confidence and timestamp.</td></tr>
+            <tr><td><strong>5</strong></td><td>Vehicle profile is checked.</td><td>Whitelist/blacklist and other access policies are evaluated.</td></tr>
+            <tr><td><strong>6</strong></td><td>Entry decision is made.</td><td>Authorized vehicles are allowed; restricted vehicles are denied; exceptions may be sent to security.</td></tr>
+            <tr><td><strong>7</strong></td><td>Barrier command is issued.</td><td>Action Controller sends an open command to the relay/barrier.</td></tr>
+            <tr><td><strong>8</strong></td><td>Parking session is created.</td><td>Session records entry time, vehicle number, image, gate, status and validation deadline.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="sub-heading">4.2 Entry Event Data</h2>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Field</th><th>Example / Description</th></tr></thead>
+          <tbody>
+            <tr><td>Vehicle Number</td><td>BHR 12345</td></tr>
+            <tr><td>Camera ID</td><td>ANPR-ENTRY-01</td></tr>
+            <tr><td>Gate ID</td><td>GATE-IN-01</td></tr>
+            <tr><td>Timestamp</td><td>2026-09-03 10:15:32</td></tr>
+            <tr><td>Direction</td><td>ENTRY</td></tr>
+            <tr><td>ANPR Confidence</td><td>Vendor-provided confidence score</td></tr>
+            <tr><td>Vehicle Image</td><td>Captured ANPR/overview image reference</td></tr>
+            <tr><td>Parking Session ID</td><td>PARK-20260903-001245</td></tr>
+            <tr><td>Initial Status</td><td><span class="status-badge sb-yellow">VALIDATION_PENDING</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout success">
+        <div class="callout-title">✅ Recommended Design Decision</div>
+        Open the entry barrier quickly for normal vehicles after the access decision. Do not force every visitor to complete hospital validation before entering, because this can create queues at the entry lane. Validation can occur immediately afterward through QR or reception.
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 6 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 7 — VISITOR VALIDATION PROCESS ──────────────── -->
+  <section class="page" aria-label="Visitor Validation Process">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s5">5. Hospital Visitor Validation Process</h1>
+      <p class="section-intro">The visitor validation process determines whether the active parking session qualifies for free or discounted parking. The proposed default validation window is <strong>30 minutes</strong>, configurable by the hospital.</p>
+
+      <h2 class="sub-heading">5.1 Validation Method A — Appointment QR</h2>
+      <ul class="bullet-list">
+        <li>Appointment is created in the hospital appointment system.</li>
+        <li>Parking entitlement/QR token is generated by the Parking System or hospital integration.</li>
+        <li>QR is delivered through WhatsApp/email/SMS as configured.</li>
+        <li>Visitor presents QR at the designated scanner or reception.</li>
+        <li>System validates token, appointment date/time, status, and applicable parking entitlement.</li>
+        <li>The QR token is associated with the active vehicle parking session.</li>
+        <li>Parking session status changes to <span class="status-badge sb-green">VALIDATED / FREE</span> or DISCOUNTED according to policy.</li>
+      </ul>
+
+      <h2 class="sub-heading">5.2 Validation Method B — Reception</h2>
+      <ul class="bullet-list">
+        <li>Visitor approaches reception without a usable appointment QR.</li>
+        <li>Reception searches appointment/patient/visitor details.</li>
+        <li>Reception selects or enters the vehicle number.</li>
+        <li>System identifies the active parking session.</li>
+        <li>Reception confirms the visit.</li>
+        <li>Parking session is marked <span class="status-badge sb-green">VALIDATED</span> and the entitlement is recorded.</li>
+      </ul>
+
+      <h2 class="sub-heading">5.3 Validation Method C — Automatic Vehicle/Appointment Match</h2>
+      <div class="callout success">
+        <div class="callout-title">⭐ Best Future Experience</div>
+        During appointment booking, the patient can optionally register a vehicle number. When ANPR detects that vehicle, the system can automatically match the vehicle to the appointment and validate the parking session without requiring the patient to scan a QR.
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 7 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 8 — CHARGING & PAYMENT ──────────────────────── -->
+  <section class="page" aria-label="Charging and Payment">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h2 class="sub-heading">5.4 Validation Window</h2>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Time / Event</th><th>Status</th><th>System Behaviour</th></tr></thead>
+          <tbody>
+            <tr><td>Entry</td><td><span class="status-badge sb-yellow">VALIDATION_PENDING</span></td><td>Start configurable 30-minute validation timer.</td></tr>
+            <tr><td>Before deadline</td><td><span class="status-badge sb-yellow">VALIDATION_PENDING</span></td><td>Allow QR/reception/automatic appointment validation.</td></tr>
+            <tr><td>Validation completed</td><td><span class="status-badge sb-green">VALIDATED</span></td><td>Mark free/discounted entitlement; stop charge initiation.</td></tr>
+            <tr><td>Deadline without validation</td><td><span class="status-badge sb-red">CHARGING</span></td><td>Start parking tariff calculation.</td></tr>
+            <tr><td>Validated vehicle exits</td><td><span class="status-badge sb-green">FREE_EXIT</span></td><td>Open barrier automatically after session validation.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h1 class="section-heading" id="s6">6. Non-Validated Vehicle &amp; Parking Charging</h1>
+      <p class="body-text">If a vehicle enters the hospital parking area but the visit is not validated within the configured grace/validation window, the system automatically converts the session to a chargeable parking session.</p>
+
+      <h2 class="sub-heading">6.1 Charging Example</h2>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Event</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Entry</td><td>10:15 AM</td></tr>
+            <tr><td>Validation window</td><td>30 minutes</td></tr>
+            <tr><td>Charging starts</td><td>10:45 AM</td></tr>
+            <tr><td>Tariff</td><td>Example: BHD 0.100 per 30 minutes</td></tr>
+            <tr><td>11:15 AM</td><td>BHD 0.100</td></tr>
+            <tr><td>11:45 AM</td><td>BHD 0.200</td></tr>
+            <tr><td>12:15 PM</td><td>BHD 0.300</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="body-text"><em>The tariff above is only an example. The hospital administrator can configure free periods, slabs, hourly/half-hourly rates, maximum daily caps, and discounts.</em></p>
+
+      <h2 class="sub-heading">6.2 Exit Payment Flow</h2>
+      <ul class="bullet-list">
+        <li>Exit ANPR detects the vehicle number and retrieves the active session.</li>
+        <li>System evaluates session state; for chargeable sessions, the tariff engine calculates the current amount.</li>
+        <li>Exit display displays amount and dynamic QR; customer scans to pay via mobile banking/cards.</li>
+        <li>Payment gateway webhook confirms payment; Action Controller automatically releases the boom barrier.</li>
+      </ul>
+
+      <div class="callout danger">
+        <div class="callout-title">🔐 Payment Security Rule</div>
+        The barrier must open only after the server has received and verified a payment success response from the payment provider. Do not treat a customer-facing screen alone as proof of payment.
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 8 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 9 — VEHICLE EXIT PROCESS ────────────────────── -->
+  <section class="page" aria-label="Vehicle Exit Process">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s7">7. Detailed Process Flow — Vehicle Exit</h1>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Decision</th><th>System Action</th></tr></thead>
+          <tbody>
+            <tr><td>Vehicle is <span class="status-badge sb-green">VALIDATED / FREE</span></td><td>Display 'No Payment Required' and open barrier.</td></tr>
+            <tr><td>Vehicle is <span class="status-badge sb-blue">WHITELISTED</span></td><td>Apply configured staff/authorized rule and open barrier.</td></tr>
+            <tr><td>Vehicle is <span class="status-badge sb-purple">EMERGENCY / PRIORITY</span></td><td>Apply emergency policy and open barrier.</td></tr>
+            <tr><td>Vehicle is <span class="status-badge sb-yellow">CHARGING</span> and amount = 0</td><td>Open barrier if tariff rules allow zero charge.</td></tr>
+            <tr><td>Vehicle is <span class="status-badge sb-red">CHARGING</span> and amount &gt; 0</td><td>Display amount + payment QR and keep barrier closed until payment confirmation.</td></tr>
+            <tr><td>Vehicle is already <span class="status-badge sb-green">PAID</span></td><td>Open barrier and close session after exit confirmation.</td></tr>
+            <tr><td>Vehicle is <span class="status-badge sb-red">BLACKLISTED</span></td><td>Apply configured security rule; normally keep barrier closed and alert security.</td></tr>
+            <tr><td>Session not found</td><td>Send to exception/manual review workflow rather than guessing.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="sub-heading">7.1 Exit Safety and Anti-Tailgating</h2>
+      <ul class="bullet-list">
+        <li>Use vehicle presence/loop sensors in addition to ANPR.</li>
+        <li>Configure barrier auto-close timing and obstruction detection.</li>
+        <li>Use a second camera or lane sensor where practical for exit confirmation.</li>
+        <li>Prevent duplicate exit events from creating duplicate sessions.</li>
+        <li>Keep an operator override available for legitimate exceptions.</li>
+      </ul>
+
+      <div class="callout warning">
+        <div class="callout-title">🛡 Anti-Tailgating Sensor Interlocking</div>
+        The barrier logic counts loop activation and deactivation cycles. If a second vehicle attempts to follow without an authorized session, the barrier immediately lowers after the first vehicle clears, and an alert sounds.
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 9 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 10 — VEHICLE ACCESS CONTROL ─────────────────── -->
+  <section class="page" aria-label="Vehicle Access Control">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s8">8. Vehicle Access Control — White List, Black List &amp; Priority</h1>
+      <h2 class="sub-heading">8.1 White List</h2>
+      <ul class="bullet-list">
+        <li>Hospital staff vehicles</li>
+        <li>Doctors and management vehicles</li>
+        <li>Hospital-owned vehicles</li>
+        <li>Authorized vendor/service vehicles</li>
+        <li>Other permanently authorized vehicles</li>
+      </ul>
+      <p class="body-text">White-listed rules should be configurable by vehicle, category, gate, date/time, and validity period.</p>
+
+      <h2 class="sub-heading">8.2 Black List</h2>
+      <ul class="bullet-list">
+        <li>Restricted vehicles</li>
+        <li>Vehicles with repeated parking/security violations</li>
+        <li>Vehicles blocked by hospital security</li>
+        <li>Other vehicles specifically denied access</li>
+      </ul>
+      <div class="callout warning">
+        <div class="callout-title">🔒 Security Principle</div>
+        Show the driver a controlled message such as 'ACCESS DENIED — PLEASE CONTACT SECURITY'. Detailed blacklist reasons should normally be visible only to authorized security/administration users.
+      </div>
+
+      <h2 class="sub-heading">8.3 Priority / Emergency Vehicles</h2>
+      <ul class="bullet-list">
+        <li>Ambulances</li>
+        <li>Emergency response vehicles</li>
+        <li>Fire/service vehicles where applicable</li>
+        <li>Other hospital-defined priority vehicles</li>
+      </ul>
+      <p class="body-text">Priority vehicles should have a separate policy rather than being treated as ordinary white-listed vehicles, because they may require immediate access even when normal parking rules are active.</p>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 10 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 11 — RECOMMENDED HARDWARE ───────────────────── -->
+  <section class="page" aria-label="Recommended Hardware">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s9">9. Recommended Hardware</h1>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Hardware</th><th>Qty / Lane</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><strong>ANPR Camera</strong></td><td>1 min; 2 recommended</td><td>Vehicle plate recognition, image capture and entry/exit event generation.</td></tr>
+            <tr><td><strong>Boom Barrier</strong></td><td>1</td><td>Automated vehicle access control.</td></tr>
+            <tr><td><strong>Industrial/Ethernet Relay Controller</strong></td><td>1</td><td>Software-to-barrier control interface.</td></tr>
+            <tr><td><strong>Vehicle Loop Detector / Sensor</strong></td><td>1 or more</td><td>Vehicle presence, safety and barrier sequencing.</td></tr>
+            <tr><td><strong>QR Code Scanner</strong></td><td>1 at validation; optional at lanes</td><td>Scan appointment/visitor parking QR.</td></tr>
+            <tr><td><strong>LED / Payment Display</strong></td><td>1</td><td>Show parking status, amount, instructions and payment QR.</td></tr>
+            <tr><td><strong>Network Switch</strong></td><td>As required</td><td>Connect cameras, relay, displays and local devices.</td></tr>
+            <tr><td><strong>UPS</strong></td><td>As required</td><td>Power backup for critical parking equipment.</td></tr>
+            <tr><td><strong>Server / Cloud Infrastructure</strong></td><td>1 logical system</td><td>Application, database, integration and reporting.</td></tr>
+            <tr><td><strong>CCTV Overview Camera</strong></td><td>Optional</td><td>Security evidence and incident investigation.</td></tr>
+            <tr><td><strong>Intercom / Help Point</strong></td><td>Optional</td><td>Driver assistance and exception handling.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="sub-heading">9.1 Recommended Lane Design</h2>
+      <div class="flow-diagram" style="margin-bottom:8px;">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--primary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em;">Entry Lane</div>
+        <div class="flow-row">
+          <span class="flow-node">Vehicle</span><span class="flow-arrow">→</span>
+          <span class="flow-node accent">ANPR Camera</span><span class="flow-arrow">→</span>
+          <span class="flow-node">Vehicle Sensor</span><span class="flow-arrow">→</span>
+          <span class="flow-node">Entry Display</span><span class="flow-arrow">→</span>
+          <span class="flow-node green">Boom Barrier</span><span class="flow-arrow">→</span>
+          <span class="flow-node gold">Parking Area</span>
+        </div>
+      </div>
+      <div class="flow-diagram">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--primary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.08em;">Exit Lane</div>
+        <div class="flow-row">
+          <span class="flow-node">Vehicle</span><span class="flow-arrow">→</span>
+          <span class="flow-node accent">Exit ANPR</span><span class="flow-arrow">→</span>
+          <span class="flow-node">Vehicle Sensor</span><span class="flow-arrow">→</span>
+          <span class="flow-node">Display / Payment QR</span><span class="flow-arrow">→</span>
+          <span class="flow-node">Payment Validation</span><span class="flow-arrow">→</span>
+          <span class="flow-node green">Boom Barrier</span><span class="flow-arrow">→</span>
+          <span class="flow-node gold">Exit</span>
+        </div>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 11 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 12 — PARKING SESSION & DATA MODEL ───────────── -->
+  <section class="page" aria-label="Parking Session and Data Model">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s10">10. Parking Session &amp; Data Model</h1>
+      <p class="body-text">A parking session is the central record connecting the vehicle, ANPR events, validation, payment and exit.</p>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Data Group</th><th>Important Fields</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Parking Session</strong></td><td>Session ID, vehicle number, entry time, exit time, status, validation deadline, fee, payment status.</td></tr>
+            <tr><td><strong>ANPR Event</strong></td><td>Camera ID, gate ID, direction, plate, confidence, image reference, timestamp, raw payload.</td></tr>
+            <tr><td><strong>Vehicle Profile</strong></td><td>Vehicle number, category, owner/reference, whitelist/blacklist status, validity dates.</td></tr>
+            <tr><td><strong>Visitor Validation</strong></td><td>Validation method, appointment/reference, QR token, validation time, validated by.</td></tr>
+            <tr><td><strong>Tariff</strong></td><td>Grace period, rate, slab, effective dates, category, maximum charge.</td></tr>
+            <tr><td><strong>Payment</strong></td><td>Transaction ID, amount, provider, initiated time, success time, status, webhook reference.</td></tr>
+            <tr><td><strong>Barrier Event</strong></td><td>Open command, response, timestamp, lane, operator/manual override reference.</td></tr>
+            <tr><td><strong>Audit Log</strong></td><td>User, action, before/after values, timestamp, IP/device reference where appropriate.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="sub-heading">10.1 Recommended Session Statuses</h2>
+      <div class="status-grid">
+        <span class="status-badge sb-blue">ENTRY_DETECTED</span>
+        <span class="status-badge sb-blue">ENTRY_ALLOWED</span>
+        <span class="status-badge sb-yellow">VALIDATION_PENDING</span>
+        <span class="status-badge sb-green">VALIDATED</span>
+        <span class="status-badge sb-red">CHARGING</span>
+        <span class="status-badge sb-yellow">PAYMENT_PENDING</span>
+        <span class="status-badge sb-green">PAID</span>
+        <span class="status-badge sb-blue">EXIT_AUTHORIZED</span>
+        <span class="status-badge sb-green">EXIT_COMPLETED</span>
+        <span class="status-badge sb-red">BLACKLISTED</span>
+        <span class="status-badge sb-purple">MANUAL_REVIEW</span>
+        <span class="status-badge sb-gray">CANCELLED</span>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 12 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 13 — DASHBOARD, MONITORING & REPORTS ────────── -->
+  <section class="page" aria-label="Dashboard, Monitoring and Reports">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s11">11. Dashboard, Monitoring &amp; Reports</h1>
+      <h2 class="sub-heading">11.1 Real-Time Dashboard</h2>
+      <ul class="bullet-list">
+        <li>Vehicles currently inside parking.</li>
+        <li>Validated hospital visitors.</li>
+        <li>Validation-pending vehicles.</li>
+        <li>Currently charging vehicles.</li>
+        <li>Payment-pending vehicles.</li>
+        <li>Staff/whitelist vehicles.</li>
+        <li>Emergency/priority vehicles.</li>
+        <li>Blacklisted/rejected vehicles.</li>
+        <li>Entry and exit lane status.</li>
+        <li>Barrier/controller health.</li>
+        <li>Recent ANPR images and events.</li>
+      </ul>
+
+      <h2 class="sub-heading">11.2 Management Reports</h2>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Report</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Daily Parking Report</strong></td><td>Entries, exits, active vehicles, free/paid sessions.</td></tr>
+            <tr><td><strong>Revenue Report</strong></td><td>Parking charges, payments, refunds/adjustments and settlement references.</td></tr>
+            <tr><td><strong>Visitor Validation Report</strong></td><td>Validated vs unvalidated sessions and validation methods.</td></tr>
+            <tr><td><strong>ANPR Report</strong></td><td>Vehicle recognition events, confidence and image references.</td></tr>
+            <tr><td><strong>Blacklist/Whitelist Report</strong></td><td>Access decisions and vehicle status history.</td></tr>
+            <tr><td><strong>Peak Usage Report</strong></td><td>Identify peak entry/exit times and parking utilization.</td></tr>
+            <tr><td><strong>Exception Report</strong></td><td>Unknown vehicles, failed ANPR, barrier failures, payment failures and manual overrides.</td></tr>
+            <tr><td><strong>Audit Report</strong></td><td>Administrative changes and security-sensitive actions.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 13 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 14 — SECURITY & OPERATIONAL CONTROLS ────────── -->
+  <section class="page" aria-label="Security and Operational Controls">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s12">12. Security, Reliability &amp; Operational Controls</h1>
+      <ul class="bullet-list">
+        <li>Use HTTPS for ANPR webhooks and application APIs wherever supported.</li>
+        <li>Authenticate camera/webhook sources using API keys, signed requests, IP allowlisting, or vendor-supported secure methods.</li>
+        <li>Do not place patient identifiers or sensitive medical information inside QR codes.</li>
+        <li>Use short-lived, single-use or controlled-use QR tokens.</li>
+        <li>Apply role-based access control for reception, security, parking administration and system administrators.</li>
+        <li>Maintain an audit trail for validation, blacklist changes, tariff changes, payment events, barrier commands and manual overrides.</li>
+        <li>Encrypt sensitive data in transit and at rest according to hospital security requirements.</li>
+        <li>Keep image retention configurable according to hospital policy and applicable privacy requirements.</li>
+        <li>Provide backup/recovery procedures for application and database services.</li>
+        <li>Provide local/manual fallback procedures for network or server outages.</li>
+        <li>Use barrier safety sensors and do not bypass the manufacturer's safety interlocks.</li>
+        <li>Design all webhook processing to be idempotent so duplicate camera/payment events do not create duplicate transactions.</li>
+      </ul>
+
+      <h2 class="sub-heading">12.1 Manual Override</h2>
+      <ul class="bullet-list">
+        <li>Security/Admin can manually open a barrier when authorized.</li>
+        <li>Every manual override must require an authenticated user and reason.</li>
+        <li>Manual actions must be logged with timestamp, lane, vehicle and operator.</li>
+        <li>Repeated manual overrides should appear in an exception report.</li>
+      </ul>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 14 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 15 — INTEGRATION & EXCEPTION HANDLING ───────── -->
+  <section class="page" aria-label="Integration and Exception Handling">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s13">13. Integration Requirements</h1>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Integration</th><th>Direction</th><th>Key Data</th></tr></thead>
+          <tbody>
+            <tr><td><strong>ANPR Camera</strong></td><td>Camera → Parking System</td><td>Plate, image, time, camera/lane, direction, confidence.</td></tr>
+            <tr><td><strong>Hospital HIS / Appointment</strong></td><td>Two-way</td><td>Appointment status, reference, optional vehicle number, validation/entitlement.</td></tr>
+            <tr><td><strong>WhatsApp / Email</strong></td><td>Parking/Hospital → User</td><td>Appointment QR, parking instructions, notifications.</td></tr>
+            <tr><td><strong>QR Scanner</strong></td><td>Scanner → Parking System</td><td>QR token / validation event.</td></tr>
+            <tr><td><strong>Payment Gateway</strong></td><td>Two-way</td><td>Payment request, transaction status, success webhook.</td></tr>
+            <tr><td><strong>Relay / Barrier Controller</strong></td><td>Parking System → Hardware</td><td>Open/close command and device response.</td></tr>
+            <tr><td><strong>Display Board</strong></td><td>Parking System → Display</td><td>Amount, payment QR, access message, instructions.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-title">⚡ 13.1 Webhook Processing Concept</div>
+        Each external webhook should be stored as an event before business processing. The system should acknowledge the webhook quickly, then process it safely using an event queue or transactional service. This protects the lane from slow external integrations.
+      </div>
+
+      <h1 class="section-heading" id="s14">14. Exception &amp; Edge-Case Handling</h1>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Scenario</th><th>Recommended Handling</th></tr></thead>
+          <tbody>
+            <tr><td>ANPR cannot read plate</td><td>Capture image, create MANUAL_REVIEW event and provide security/operator workflow.</td></tr>
+            <tr><td>Duplicate ANPR event</td><td>Use event ID/time/vehicle/lane rules to de-duplicate.</td></tr>
+            <tr><td>Appointment not found</td><td>Keep VALIDATION_PENDING and allow reception/manual validation until deadline.</td></tr>
+            <tr><td>QR expired</td><td>Reject QR with clear message and route to reception if appropriate.</td></tr>
+            <tr><td>Vehicle changes during visit</td><td>Authorized staff can update the active session with audit trail.</td></tr>
+            <tr><td>Payment fails</td><td>Keep barrier closed; allow retry or alternate payment method.</td></tr>
+            <tr><td>Network outage</td><td>Use configured local fallback/manual process; synchronize events when connectivity returns.</td></tr>
+            <tr><td>Tailgating attempt</td><td>Sensor detects unauthorized follow; barrier auto-drops and triggers alert.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warning">
+        <div class="callout-title">⚠️ 14.1 Important Rule — Never Guess</div>
+        When the system cannot confidently determine the vehicle's status, it should move to MANUAL_REVIEW rather than automatically charging, waiving payment, or opening a restricted barrier.
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 15 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 16 — IMPLEMENTATION PHASES & TECH STACK ─────── -->
+  <section class="page" aria-label="Implementation Phases and Technology Stack">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s15">15. Proposed Implementation Phases</h1>
+      <div class="phase-grid">
+        <div class="phase-card"><div class="ph-num">Phase 1</div><div class="ph-name">Site Survey</div><div class="ph-desc">Lane layout, camera positions, barrier models, network, power, safety sensors, parking policy.</div></div>
+        <div class="phase-card"><div class="ph-num">Phase 2</div><div class="ph-name">Hardware Integration</div><div class="ph-desc">ANPR, barriers, relay/controller, sensors, displays and scanners.</div></div>
+        <div class="phase-card"><div class="ph-num">Phase 3</div><div class="ph-name">Core Software</div><div class="ph-desc">Vehicle/session management, decision engine, tariff engine, dashboard and administration.</div></div>
+        <div class="phase-card"><div class="ph-num">Phase 4</div><div class="ph-name">Hospital Integration</div><div class="ph-desc">Appointment/HIS API, visitor validation and staff vehicle integration.</div></div>
+        <div class="phase-card"><div class="ph-num">Phase 5</div><div class="ph-name">Payment</div><div class="ph-desc">Payment gateway, QR payment, webhook verification and reconciliation.</div></div>
+        <div class="phase-card"><div class="ph-num">Phase 6</div><div class="ph-name">Testing</div><div class="ph-desc">ANPR accuracy, entry/exit, validation, payment, exceptions, security and load testing.</div></div>
+        <div class="phase-card"><div class="ph-num">Phase 7</div><div class="ph-name">Pilot</div><div class="ph-desc">One entry + one exit lane pilot, operational observation and policy tuning.</div></div>
+        <div class="phase-card"><div class="ph-num">Phase 8</div><div class="ph-name">Full Rollout</div><div class="ph-desc">Full site deployment, training, monitoring and support.</div></div>
+      </div>
+
+      <h2 class="sub-heading">15.1 Success Criteria</h2>
+      <ul class="bullet-list">
+        <li>Fast and reliable entry/exit without unnecessary queue formation.</li>
+        <li>Accurate creation and closure of parking sessions.</li>
+        <li>Correct association of visitor validation with vehicle sessions.</li>
+        <li>No unauthorized free parking caused by validation/payment logic errors.</li>
+        <li>Verified payment before paid-session exit authorization.</li>
+        <li>Complete audit trail for access and administrative actions.</li>
+        <li>Reliable manual fallback for operational exceptions.</li>
+      </ul>
+
+      <h1 class="section-heading" id="s16">16. Technology Stack</h1>
+      <div class="tbl-wrap">
+        <table class="doc-table">
+          <thead><tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Frontend</strong></td><td>React JS</td><td>Admin dashboard, security dashboard, reception, parking management UI.</td></tr>
+            <tr><td><strong>Backend/API</strong></td><td>PHP 8.x</td><td>Business logic, REST APIs, webhook processing, parking rules.</td></tr>
+            <tr><td><strong>Database</strong></td><td>MySQL 8.x</td><td>Vehicles, parking sessions, appointments, validation, payments, logs.</td></tr>
+            <tr><td><strong>Integrations</strong></td><td>REST API / Webhook</td><td>ANPR camera, hospital HIS, WhatsApp/SMS notifications, payment gateways.</td></tr>
+            <tr><td><strong>Hardware</strong></td><td>HTTP/TCP/IP · Ethernet Relay</td><td>Boom barrier control and safety loop sensors.</td></tr>
+            <tr><td><strong>Security</strong></td><td>HTTPS + JWT/Session + RBAC</td><td>Enterprise-grade API and user authentication.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 16 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 17 — RECOMMENDED END-TO-END PROCESS ─────────── -->
+  <section class="page" aria-label="End to End Process">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="s16b">16. Final Recommended End-to-End Process</h1>
+      <p class="body-text">The following is the recommended production workflow based on the proposed hospital use case:</p>
+
+      <div class="process-step"><div class="step-num">1</div><div class="step-text"><strong>VEHICLE ARRIVES</strong> → Entry ANPR detects plate and captures image.</div></div>
+      <div class="process-step"><div class="step-num">2</div><div class="step-text"><strong>WEBHOOK</strong> → ANPR event is securely pushed to Parking Application.</div></div>
+      <div class="process-step"><div class="step-num">3</div><div class="step-text"><strong>ACCESS CHECK</strong> → System evaluates blacklist/whitelist/priority rules.</div></div>
+      <div class="process-step"><div class="step-num">4</div><div class="step-text"><strong>ENTRY BARRIER</strong> → If allowed, Action Controller opens the boom barrier.</div></div>
+      <div class="process-step"><div class="step-num">5</div><div class="step-text"><strong>SESSION CREATED</strong> → Parking session starts as <span class="status-badge sb-yellow">VALIDATION_PENDING</span>.</div></div>
+      <div class="process-step"><div class="step-num">6</div><div class="step-text"><strong>VALIDATION</strong> → Patient/visitor validates by automatic appointment match, QR scanner, WhatsApp/email QR, or reception.</div></div>
+      <div class="process-step"><div class="step-num">7</div><div class="step-text"><strong>VALIDATED</strong> → Session becomes <span class="status-badge sb-green">FREE/DISCOUNTED</span> according to hospital policy.</div></div>
+      <div class="process-step"><div class="step-num">8</div><div class="step-text"><strong>NOT VALIDATED</strong> → After configurable 30-minute window, session becomes <span class="status-badge sb-red">CHARGING</span>.</div></div>
+      <div class="process-step"><div class="step-num">9</div><div class="step-text"><strong>EXIT ANPR</strong> → Vehicle number is identified and active session is retrieved.</div></div>
+      <div class="process-step"><div class="step-num">10</div><div class="step-text"><strong>EXIT DECISION</strong> → Validated/whitelist/priority = free exit; charging = payment required.</div></div>
+      <div class="process-step"><div class="step-num">11</div><div class="step-text"><strong>PAYMENT</strong> → Amount and QR are displayed; payment is verified by gateway webhook.</div></div>
+      <div class="process-step"><div class="step-num">12</div><div class="step-text"><strong>EXIT BARRIER</strong> → Verified free/paid authorization is sent to relay and barrier opens.</div></div>
+      <div class="process-step"><div class="step-num">13</div><div class="step-text"><strong>SESSION CLOSED</strong> → Exit time, amount, payment and barrier event are recorded.</div></div>
+      <div class="process-step"><div class="step-num">14</div><div class="step-text"><strong>REPORTING</strong> → Dashboard and reports update in real time.</div></div>
+
+      <div class="callout success" style="margin-top:14px;">
+        <div class="callout-title">🏆 Recommended Product Positioning</div>
+        Position the solution as a <strong>Smart Hospital Parking &amp; Visitor Validation Platform</strong> rather than only a parking system. This creates a broader value proposition around patient experience, visitor management, security, automation, payment and analytics.
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 17 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 18 — APPENDIX: WORKFLOW DIAGRAM ──────────────── -->
+  <section class="page" aria-label="Workflow Diagram Appendix">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content">
+      <h1 class="section-heading" id="appendix-a">Appendix A — Working Process Flow Diagram</h1>
+      <p class="body-text">The following diagram provides the visual end-to-end process, including architecture, entry, visitor validation, charging, exit, special vehicle handling, configuration and reporting.</p>
+      <div style="text-align:center;margin-top:10px;">
+        <img src="[IMAGE_BASE64]" alt="Smart Hospital Parking Workflow Diagram" class="workflow-img">
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 18 of 19</span>
+    </div>
+  </section>
+
+  <!-- ─── PAGE 19 — APPROVAL & ACCEPTANCE ───────────────────── -->
+  <section class="page" aria-label="Approval and Acceptance">
+    <div class="page-header">
+      <div class="header-client-group">
+        <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" class="header-client-logo">
+        <span class="header-vsep"></span>
+        <span class="doc-title">Smart Hospital Parking — Process Flow &amp; Solution Design Document · v1.0</span>
+      </div>
+      <div class="header-provider-group">
+        <span class="header-provider-tag">Prepared by</span>
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" class="logo-small">
+      </div>
+    </div>
+    <div class="page-content" style="display:flex;flex-direction:column;justify-content:center;height:82%;">
+      <h1 class="section-heading" id="s17">17. Approval &amp; Acceptance</h1>
+      <p class="body-text">This document describes the proposed functional process and high-level technical architecture for the Smart Hospital Parking Management &amp; Visitor Validation System. Final tariff rules, integration specifications, hardware models, security requirements, data retention, and operational policies should be confirmed during the detailed requirement and site-survey stage.</p>
+
+      <table class="sig-table" style="margin-top:24px;">
+        <thead>
+          <tr>
+            <th style="width:50%;">For KIMSHEALTH (Client)</th>
+            <th style="width:50%;">For SaNDS Lab (Solution Provider)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div style="margin-bottom:12px;">
+                <img src="[IMAGE_BASE64]" alt="KIMSHEALTH" style="height:26px;width:auto;display:block;">
+              </div>
+              <span class="field-line">Name: ______________________________</span>
+              <span class="field-line">Designation: ________________________</span>
+              <span class="field-line">Signature: ___________________________</span>
+              <span class="field-line">Date: ________________________________</span>
+            </td>
+            <td>
+              <div style="margin-bottom:12px;">
+                <img src="[IMAGE_BASE64]" alt="SaNDS Lab" style="height:26px;width:auto;display:block;">
+              </div>
+              <strong>SaNDS Lab Middle East W.L.L</strong><br>
+              <span class="field-line">Name: Ajit Kumar KV</span>
+              <span class="field-line">Designation: CEO</span>
+              <span class="field-line">Signature: ___________________________</span>
+              <span class="field-line">Date: ________________________________</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:35px;text-align:center;">
+        <img src="[IMAGE_BASE64]" alt="SaNDS Lab" style="height:48px;width:auto;opacity:0.75;">
+        <p style="font-size:0.72rem;color:var(--muted);margin-top:10px;">SaNDS Lab Middle East W.L.L &nbsp;·&nbsp; Confidential &nbsp;·&nbsp; Version 1.0 &nbsp;·&nbsp; September 2026</p>
+        <p style="font-size:0.68rem;color:var(--border);margin-top:4px;">This document is prepared exclusively for KIMSHEALTH. Unauthorized reproduction is strictly prohibited.</p>
+      </div>
+    </div>
+    <div class="page-footer">
+      <span>© 2026 SaNDS Lab Middle East W.L.L · Confidential · Prepared for KIMSHEALTH</span>
+      <span class="pf-brand">Page 19 of 19</span>
+    </div>
+  </section>
+
+</div><!-- /#doc-wrapper -->
+
+<script>
+  // ── Document Zoom ──────────────────────────────────────
+  var _zoom     = 1.0;
+  var _zoomStep = 0.1;
+  var _zoomMin  = 0.4;
+  var _zoomMax  = 2.0;
+
+  function _applyZoom() {
+    var pct = Math.round(_zoom * 100);
+    document.getElementById('doc-wrapper').style.zoom = _zoom;
+    document.getElementById('zoom-level').textContent = pct + '%';
+    document.getElementById('btn-zoom-in').style.opacity  = _zoom >= _zoomMax ? '0.35' : '1';
+    document.getElementById('btn-zoom-out').style.opacity = _zoom <= _zoomMin ? '0.35' : '1';
+  }
+
+  function zoomIn() {
+    if (_zoom < _zoomMax) {
+      _zoom = Math.min(_zoomMax, Math.round((_zoom + _zoomStep) * 10) / 10);
+      _applyZoom();
+    }
+  }
+
+  function zoomOut() {
+    if (_zoom > _zoomMin) {
+      _zoom = Math.max(_zoomMin, Math.round((_zoom - _zoomStep) * 10) / 10);
+      _applyZoom();
+    }
+  }
+
+  function resetZoom() {
+    _zoom = 1.0;
+    _applyZoom();
+  }
+
+  // ── Block right-click ──────────────────────────────────
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  // ── Block keyboard shortcuts ───────────────────────────
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.key === '=' || e.key === '+')) { e.preventDefault(); zoomIn(); return; }
+    if (e.ctrlKey && e.key === '-')                    { e.preventDefault(); zoomOut(); return; }
+    if (e.ctrlKey && e.key === '0')                    { e.preventDefault(); resetZoom(); return; }
+
+    var blocked = (
+      (e.ctrlKey && 'caApsuvUSPU'.indexOf(e.key) >= 0) ||
+      e.key === 'F12' ||
+      e.key === 'PrintScreen'
+    );
+    if (blocked) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  });
+
+  // ── Visitor Access & Download Tracking ────────────────
+  function trackVisitEvent(eventType, meta) {
+    try {
+      if (window.location.protocol === 'file:') {
+        console.warn('[ProposalTracker] Tracking requires a web server (http:// or https://). File protocol cannot run track.php.');
+        return;
+      }
+
+      var payload = {
+        event: eventType || 'page_view',
+        page_url: window.location.href,
+        referrer: document.referrer || 'Direct',
+        screen: (window.screen ? window.screen.width + 'x' + window.screen.height : ''),
+        language: navigator.language || navigator.userLanguage || '',
+        timezone: (Intl && Intl.DateTimeFormat) ? Intl.DateTimeFormat().resolvedOptions().timeZone : '',
+        client_time: new Date().toISOString(),
+        meta: meta || {}
+      };
+
+      var endpoint = new URL('track.php?action=log', window.location.href).href;
+
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true
+      }).then(function(res) {
+        return res.json();
+      }).then(function(data) {
+        if (data && data.status === 'success') {
+          console.log('[ProposalTracker] Logged:', eventType, data);
+        } else {
+          console.warn('[ProposalTracker] Server response:', data);
+        }
+      }).catch(function(err) {
+        console.warn('[ProposalTracker] Fetch failed, trying fallback beacon...', err);
+        try {
+          if (navigator.sendBeacon) {
+            var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+            navigator.sendBeacon(endpoint, blob);
+          } else {
+            new Image().src = endpoint + '&event=' + encodeURIComponent(eventType) + '&_t=' + Date.now();
+          }
+        } catch(e) {}
+      });
+    } catch(err) {
+      console.error('[ProposalTracker] Exception:', err);
+    }
+  }
+
+  // Record initial page view on load
+  trackVisitEvent('page_view');
+
+  // ── Download PDF via print dialog ─────────────────────
+  function downloadPDF() {
+    // Record download event
+    trackVisitEvent('download_pdf', { action: 'pdf_download_button' });
+
+    var bar = document.getElementById('topbar');
+    var wrapper = document.getElementById('doc-wrapper');
+    var prevZoom = wrapper.style.zoom;
+    wrapper.style.zoom = '1.0';
+    bar.style.display = 'none';
+
+    var style = document.createElement('style');
+    style.id = 'print-inject';
+    style.textContent = [
+      '@page { size: A4 portrait; margin: 0; }',
+      'body { background:#fff!important; margin:0!important; padding:0!important; -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }',
+      '#doc-wrapper { margin:0!important; padding:0!important; max-width:none!important; width:210mm!important; zoom:1!important; }',
+      '.page { box-shadow:none!important; border:none!important; margin:0!important; padding:16mm 18mm 18mm 18mm!important; width:210mm!important; height:297mm!important; max-height:297mm!important; min-height:297mm!important; box-sizing:border-box!important; page-break-after:always!important; break-after:page!important; page-break-inside:avoid!important; break-inside:avoid!important; overflow:hidden!important; position:relative!important; }',
+      '.page:last-child { page-break-after:auto!important; break-after:auto!important; }',
+      '.page::before { content:"PREPARED BY\ASANDS LAB"!important; position:absolute!important; top:50%!important; left:50%!important; transform:translate(-50%,-50%) rotate(-35deg)!important; font-size:52px!important; font-weight:900!important; color:rgba(26,58,92,0.09)!important; white-space:pre!important; text-align:center!important; line-height:1.4!important; pointer-events:none!important; letter-spacing:4px!important; z-index:0!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }',
+      'h1, h2, h3, .section-heading, .sub-heading { page-break-after:avoid!important; break-after:avoid!important; }',
+      'table, .doc-table, .sig-table, tr, td, th, .callout, .tbl-wrap, .process-step, .phase-card, .flow-diagram, .workflow-img, .section-intro { page-break-inside:avoid!important; break-inside:avoid!important; }'
+    ].join(' ');
+    document.head.appendChild(style);
+
+    setTimeout(function() {
+      window.print();
+      setTimeout(function() {
+        bar.style.display = '';
+        wrapper.style.zoom = prevZoom;
+        var s = document.getElementById('print-inject');
+        if (s) s.remove();
+      }, 1500);
+    }, 300);
+  }
+</script>
+</body>
+</html>
+
