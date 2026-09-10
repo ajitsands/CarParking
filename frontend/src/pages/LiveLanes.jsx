@@ -264,25 +264,11 @@ export default function LiveLanes({ onOpenSimulator }) {
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-color)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Car size={13} color="var(--accent)" />
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', gap: '4px' }}>
+              <Car size={13} color="var(--accent)" />
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
                 Vehicle at Exit Gate:
-              </div>
-              {activeSessions.length > 1 && (
-                <select
-                  className="form-select"
-                  style={{ width: 'auto', padding: '2px 8px', fontSize: '0.68rem' }}
-                  value={selectedExitSessionId || ''}
-                  onChange={(e) => setSelectedExitSessionId(parseInt(e.target.value))}
-                >
-                  {activeSessions.map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.plate_number} ({s.status})
-                    </option>
-                  ))}
-                </select>
-              )}
+              </span>
             </div>
 
             {selectedVehicle ? (
