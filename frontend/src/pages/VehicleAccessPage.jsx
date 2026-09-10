@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, ShieldAlert, Plus, Trash2, Search, Car, RefreshCw } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, Plus, Trash2, Search, Car, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
 import Modal from '../components/common/Modal';
+import ConfirmModal from '../components/common/ConfirmModal';
 import DataTable from '../components/common/DataTable';
 
 export default function VehicleAccessPage() {
@@ -10,6 +11,7 @@ export default function VehicleAccessPage() {
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [error, setError] = useState('');
+  const [toastMsg, setToastMsg] = useState(null);
 
   // Form State
   const [plateNumber, setPlateNumber] = useState('');
@@ -22,6 +24,13 @@ export default function VehicleAccessPage() {
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  // Delete Confirmation Modal State
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    vehicle: null,
+    loading: false
+  });
+
   const loadVehicles = async () => {
     setLoading(true);
     try {
@@ -30,7 +39,7 @@ export default function VehicleAccessPage() {
         setVehicles(res.data.vehicles || []);
       }
     } catch (err) {
-      setError(err.message || 'Failed to load vehicle access list');
+      setError(err.message || 'Failed to load vehicles');
     } finally {
       setLoading(false);
     }
@@ -49,9 +58,9 @@ export default function VehicleAccessPage() {
 
     try {
       await api.saveVehicle({
-        plate_number: plateNumber.trim(),
+        plate_number: plateNumber.trim().toUpperCase(),
+        category,
         access_status: activeTab,
-        category: activeTab === 'blacklisted' ? 'general' : category,
         owner_name: ownerName.trim(),
         owner_phone: ownerPhone.trim(),
         owner_department: ownerDept.trim(),
@@ -61,6 +70,8 @@ export default function VehicleAccessPage() {
       });
 
       setModalOpen(false);
+      setToastMsg({ type: 'success', text: `Vehicle ${plateNumber.trim().toUpperCase()} added to ${activeTab} successfully!` });
+      setTimeout(() => setToastMsg(null), 4000);
       // Reset
       setPlateNumber('');
       setOwnerName('');
@@ -73,13 +84,28 @@ export default function VehicleAccessPage() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to remove this vehicle?')) return;
+  const handleOpenDeleteModal = (vehicle) => {
+    setDeleteConfirm({
+      isOpen: true,
+      vehicle,
+      loading: false
+    });
+  };
+
+  const handleExecuteDelete = async () => {
+    if (!deleteConfirm.vehicle) return;
+    setDeleteConfirm(prev => ({ ...prev, loading: true }));
+
     try {
-      await api.deleteVehicle(id);
+      await api.deleteVehicle(deleteConfirm.vehicle.id);
+      setToastMsg({ type: 'success', text: `Vehicle ${deleteConfirm.vehicle.plate_number} removed from ${activeTab}!` });
+      setTimeout(() => setToastMsg(null), 4000);
+      setDeleteConfirm({ isOpen: false, vehicle: null, loading: false });
       loadVehicles();
     } catch (err) {
-      alert(err.message || 'Delete failed');
+      setDeleteConfirm(prev => ({ ...prev, loading: false }));
+      setToastMsg({ type: 'error', text: err.message || 'Failed to delete vehicle' });
+      setTimeout(() => setToastMsg(null), 4000);
     }
   };
 
@@ -102,104 +128,124 @@ export default function VehicleAccessPage() {
         </div>
       </div>
 
+      {toastMsg && (
+        <div style={{
+          padding: '10px 16px',
+          borderRadius: '8px',
+          marginBottom: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontSize: '0.84rem',
+          fontWeight: 600,
+          background: toastMsg.type === 'success' ? 'var(--status-green-bg, #ecfdf5)' : 'var(--status-red-bg, #fef2f2)',
+          color: toastMsg.type === 'success' ? 'var(--status-green, #059669)' : 'var(--status-red, #dc2626)',
+          border: `1px solid ${toastMsg.type === 'success' ? 'var(--status-green-border, #a7f3d0)' : 'var(--status-red-border, #fecaca)'}`,
+          boxShadow: 'var(--shadow-sm)'
+        }}>
+          {toastMsg.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+          <span>{toastMsg.text}</span>
+        </div>
+      )}
+
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
         <button
           className={`btn ${activeTab === 'whitelisted' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveTab('whitelisted')}
         >
-          <ShieldCheck size={16} /> Whitelist (Staff, Doctors & Priority)
+          <ShieldCheck size={16} /> Whitelist (Doctor / Staff Auto-Open)
         </button>
         <button
-          className={`btn ${activeTab === 'blacklisted' ? 'btn-danger' : 'btn-outline'}`}
+          className={`btn ${activeTab === 'blacklisted' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveTab('blacklisted')}
+          style={activeTab === 'blacklisted' ? { background: 'var(--status-red)', borderColor: 'var(--status-red)' } : {}}
         >
-          <ShieldAlert size={16} /> Blacklist (Security Restricted)
+          <ShieldAlert size={16} /> Blacklist (Security Alert / Block Entry)
         </button>
       </div>
 
-      {error && (
-        <div style={{
-          padding: '8px 12px',
-          background: 'var(--status-red-bg)',
-          color: 'var(--status-red)',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.75rem',
-          marginBottom: '12px'
-        }}>
-          {error}
-        </div>
-      )}
-
-      {/* Modern DataTable */}
+      {/* Vehicles DataTable */}
       <DataTable
-        title={activeTab === 'whitelisted' ? 'Whitelisted Priority Vehicles' : 'Security Blacklisted Vehicles'}
-        subtitle={`Total registered records: ${vehicles.length}`}
-        icon={activeTab === 'whitelisted' ? ShieldCheck : ShieldAlert}
         columns={[
           {
             key: 'plate_number',
             label: 'Plate Number',
             render: (v) => (
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.85rem' }}>
+              <div style={{
+                display: 'inline-block',
+                padding: '3px 8px',
+                borderRadius: '4px',
+                background: 'var(--bg-surface)',
+                border: '1px solid var(--border-color)',
+                fontFamily: 'var(--font-mono)',
+                fontWeight: 800,
+                fontSize: '0.84rem'
+              }}>
                 {v.plate_number}
-              </span>
+              </div>
+            )
+          },
+          {
+            key: 'owner_name',
+            label: 'Owner / Contact',
+            render: (v) => (
+              <div>
+                <div style={{ fontWeight: 600 }}>{v.owner_name || 'N/A'}</div>
+                {v.owner_phone && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{v.owner_phone}</div>}
+              </div>
             )
           },
           {
             key: 'category',
             label: 'Category',
             render: (v) => (
-              <span className={`badge ${activeTab === 'whitelisted' ? 'badge-blue' : 'badge-red'}`} style={{ textTransform: 'capitalize' }}>
+              <span className="badge badge-blue">
                 {v.category}
               </span>
             )
           },
           {
-            key: 'owner_name',
-            label: 'Owner / Department',
+            key: 'department',
+            label: 'Department',
             render: (v) => (
-              <div>
-                <strong style={{ fontSize: '0.8rem' }}>{v.owner_name || '-'}</strong>
-                {v.owner_department && <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{v.owner_department}</div>}
-              </div>
-            )
-          },
-          {
-            key: 'owner_phone',
-            label: 'Contact',
-            render: (v) => (
-              <span style={{ fontSize: '0.75rem' }}>{v.owner_phone || '-'}</span>
-            )
-          },
-          {
-            key: activeTab === 'whitelisted' ? 'valid_to' : 'block_reason',
-            label: activeTab === 'whitelisted' ? 'Valid Until' : 'Block Reason',
-            render: (v) => (
-              <span style={{ fontSize: '0.75rem', color: activeTab === 'blacklisted' ? 'var(--status-red)' : 'var(--text-secondary)' }}>
-                {activeTab === 'whitelisted' ? (v.valid_to || 'Permanent') : v.block_reason}
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                {v.owner_department || '-'}
               </span>
             )
           },
-          {
-            key: 'notes',
-            label: 'Notes',
-            render: (v) => (
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{v.notes || '-'}</span>
-            )
-          },
+          ...(activeTab === 'blacklisted' ? [
+            {
+              key: 'block_reason',
+              label: 'Block Reason',
+              render: (v) => (
+                <span style={{ fontSize: '0.75rem', color: 'var(--status-red)', fontWeight: 600 }}>
+                  {v.block_reason || 'Security Violation'}
+                </span>
+              )
+            }
+          ] : [
+            {
+              key: 'valid_to',
+              label: 'Validity',
+              render: (v) => (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                  {v.valid_to ? `Until ${v.valid_to}` : 'Permanent'}
+                </span>
+              )
+            }
+          ]),
           {
             key: 'actions',
-            label: 'Action',
+            label: 'Actions',
             sortable: false,
-            exportable: false,
             align: 'right',
             render: (v) => (
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
                 style={{ color: 'var(--status-red)' }}
-                onClick={() => handleDelete(v.id)}
+                onClick={() => handleOpenDeleteModal(v)}
                 title="Remove Vehicle"
               >
                 <Trash2 size={13} />
@@ -218,6 +264,20 @@ export default function VehicleAccessPage() {
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
           </button>
         }
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, vehicle: null, loading: false })}
+        onConfirm={handleExecuteDelete}
+        title="Remove Vehicle from Access List"
+        plateNumber={deleteConfirm.vehicle?.plate_number}
+        message={`Are you sure you want to remove this vehicle from the ${activeTab} list?`}
+        confirmText="Remove Vehicle"
+        cancelText="Cancel"
+        type="danger"
+        loading={deleteConfirm.loading}
       />
 
       {/* Add Modal */}
@@ -239,54 +299,71 @@ export default function VehicleAccessPage() {
             />
           </div>
 
-          {activeTab === 'whitelisted' ? (
-            <>
-              <div className="form-group">
-                <label className="form-label">Category</label>
-                <select className="form-select" value={category} onChange={(e) => setCategory(e.target.value)}>
-                  <option value="doctor">Doctor / Physician</option>
-                  <option value="staff">Hospital Staff / Nurse</option>
-                  <option value="emergency">Emergency / Ambulance</option>
-                  <option value="hospital_owned">Hospital Owned Vehicle</option>
-                  <option value="vendor">Authorized Vendor</option>
-                </select>
-              </div>
+          <div className="form-group">
+            <label className="form-label">Vehicle Category</label>
+            <select
+              className="form-select"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="doctor">Doctor</option>
+              <option value="staff">Hospital Staff</option>
+              <option value="hospital_owned">Hospital Owned / Ambulance</option>
+              <option value="vip">VIP / Executive</option>
+              <option value="vendor">Authorized Vendor</option>
+              <option value="general">General Visitor</option>
+            </select>
+          </div>
 
-              <div className="form-group">
-                <label className="form-label">Owner Name</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="e.g. Dr. Tariq"
-                  value={ownerName}
-                  onChange={(e) => setOwnerName(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Department</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="e.g. Cardiology"
-                  value={ownerDept}
-                  onChange={(e) => setOwnerDept(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Valid Until (Optional)</label>
-                <input
-                  type="date"
-                  className="form-input"
-                  value={validTo}
-                  onChange={(e) => setValidTo(e.target.value)}
-                />
-              </div>
-            </>
-          ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div className="form-group">
-              <label className="form-label">Security Block Reason *</label>
+              <label className="form-label">Owner Name</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Full name..."
+                value={ownerName}
+                onChange={(e) => setOwnerName(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Phone Number</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="+973 3900 0000"
+                value={ownerPhone}
+                onChange={(e) => setOwnerPhone(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Department / Designation</label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="e.g. Cardiology, Radiology, Security..."
+              value={ownerDept}
+              onChange={(e) => setOwnerDept(e.target.value)}
+            />
+          </div>
+
+          {activeTab === 'whitelisted' && (
+            <div className="form-group">
+              <label className="form-label">Valid Until (Leave blank for permanent)</label>
+              <input
+                type="date"
+                className="form-input"
+                value={validTo}
+                onChange={(e) => setValidTo(e.target.value)}
+              />
+            </div>
+          )}
+
+          {activeTab === 'blacklisted' && (
+            <div className="form-group">
+              <label className="form-label">Blacklist Reason *</label>
               <textarea
                 className="form-textarea"
                 rows="3"

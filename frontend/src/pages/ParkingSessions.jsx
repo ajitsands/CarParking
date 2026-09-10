@@ -3,6 +3,7 @@ import { Car, Search, Filter, RefreshCw, Eye, CheckCircle2, CreditCard, AlertCir
 import { api } from '../services/api';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
+import ConfirmModal from '../components/common/ConfirmModal';
 import DataTable from '../components/common/DataTable';
 import { useSettings } from '../context/SettingsContext';
 
@@ -16,6 +17,15 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
   const [selectedSession, setSelectedSession] = useState(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [error, setError] = useState('');
+  const [toastMsg, setToastMsg] = useState(null);
+
+  // Modern Confirmation Modal state
+  const [exitModal, setExitModal] = useState({
+    isOpen: false,
+    session: null,
+    isCash: false,
+    loading: false
+  });
 
   const loadSessions = async () => {
     setLoading(true);
@@ -58,24 +68,44 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
         setDetailModalOpen(true);
       }
     } catch (err) {
-      alert(err.message || 'Failed to load details');
+      setToastMsg({ type: 'error', text: err.message || 'Failed to load details' });
     }
   };
 
-  const handleCompleteExit = async (sess, isCash = false) => {
-    if (!window.confirm(`Authorize exit for vehicle ${sess.plate_number}? This will open the exit boom barrier and complete the session.`)) return;
+  // Trigger modern modal instead of native window.confirm
+  const handleOpenExitModal = (sess, isCash = false) => {
+    setExitModal({
+      isOpen: true,
+      session: sess,
+      isCash,
+      loading: false
+    });
+  };
+
+  const handleExecuteExit = async () => {
+    if (!exitModal.session) return;
+    setExitModal(prev => ({ ...prev, loading: true }));
+
     try {
-      const res = await api.completeSessionExit(sess.id, {
+      const res = await api.completeSessionExit(exitModal.session.id, {
         gate_id: 'GATE-OUT-01',
-        cash_payment: isCash,
-        reason: isCash ? 'Cash collected by operator' : 'Manual exit checkout from sessions page'
+        cash_payment: exitModal.isCash,
+        reason: exitModal.isCash ? 'Cash collected by operator' : 'Manual exit checkout from sessions page'
       });
+
       if (res.success) {
-        alert(res.message || `Vehicle ${sess.plate_number} exit completed successfully!`);
+        setExitModal({ isOpen: false, session: null, isCash: false, loading: false });
+        setToastMsg({ 
+          type: 'success', 
+          text: res.message || `Vehicle ${exitModal.session.plate_number} exit authorized! Boom barrier opening signal sent.` 
+        });
+        setTimeout(() => setToastMsg(null), 5000);
         loadSessions();
       }
     } catch (err) {
-      alert(err.message || 'Failed to complete exit');
+      setExitModal(prev => ({ ...prev, loading: false }));
+      setToastMsg({ type: 'error', text: err.message || 'Failed to complete exit' });
+      setTimeout(() => setToastMsg(null), 5000);
     }
   };
 
@@ -106,6 +136,27 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
         </button>
       </div>
+
+      {/* Success / Error Notification Toast */}
+      {toastMsg && (
+        <div style={{
+          padding: '10px 16px',
+          borderRadius: '8px',
+          marginBottom: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontSize: '0.84rem',
+          fontWeight: 600,
+          background: toastMsg.type === 'success' ? 'var(--status-green-bg, #ecfdf5)' : 'var(--status-red-bg, #fef2f2)',
+          color: toastMsg.type === 'success' ? 'var(--status-green, #059669)' : 'var(--status-red, #dc2626)',
+          border: `1px solid ${toastMsg.type === 'success' ? 'var(--status-green-border, #a7f3d0)' : 'var(--status-red-border, #fecaca)'}`,
+          boxShadow: 'var(--shadow-sm)'
+        }}>
+          {toastMsg.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+          <span>{toastMsg.text}</span>
+        </div>
+      )}
 
       {/* Filter Tabs */}
       <div style={{
@@ -140,40 +191,53 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button type="submit" className="btn btn-primary">Search</button>
+        <button type="submit" className="btn btn-primary">
+          Search
+        </button>
+        {search && (
+          <button 
+            type="button" 
+            className="btn btn-outline"
+            onClick={() => { setSearch(''); loadSessions(); }}
+          >
+            Clear
+          </button>
+        )}
       </form>
 
-      {error && (
-        <div style={{
-          padding: '8px 12px',
-          background: 'var(--status-red-bg)',
-          color: 'var(--status-red)',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '0.75rem',
-          marginBottom: '12px'
-        }}>
-          {error}
-        </div>
-      )}
-
-      {/* Modern DataTable */}
+      {/* Sessions DataTable */}
       <DataTable
         columns={[
-          {
-            key: 'session_code',
-            label: 'Session Code',
-            render: (sess) => (
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.74rem', fontWeight: 600 }}>
-                {sess.session_code}
-              </span>
-            )
-          },
           {
             key: 'plate_number',
             label: 'Plate Number',
             render: (sess) => (
-              <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800 }}>
-                {sess.plate_number}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 800,
+                  fontSize: '0.84rem'
+                }}>
+                  {sess.plate_number}
+                </div>
+                {sess.category && sess.category !== 'general' && (
+                  <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>
+                    {sess.category}
+                  </span>
+                )}
+              </div>
+            )
+          },
+          {
+            key: 'session_code',
+            label: 'Session Code',
+            render: (sess) => (
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                {sess.session_code}
               </span>
             )
           },
@@ -275,7 +339,7 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
                     type="button"
                     className="btn btn-outline btn-sm"
                     style={{ color: 'var(--status-blue)', borderColor: 'var(--status-blue)' }}
-                    onClick={() => handleCompleteExit(sess, parseFloat(sess.net_amount || 0) > 0)}
+                    onClick={() => handleOpenExitModal(sess, parseFloat(sess.net_amount || 0) > 0)}
                     title="Complete Exit & Open Barrier"
                   >
                     <ArrowRightCircle size={13} /> Exit
@@ -295,6 +359,31 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
         searchPlaceholder="Search plate, session code, or status..."
         defaultPageSize={10}
         emptyMessage="No parking sessions matched your criteria."
+      />
+
+      {/* Well-Designed Exit Authorization Modal */}
+      <ConfirmModal
+        isOpen={exitModal.isOpen}
+        onClose={() => setExitModal({ isOpen: false, session: null, isCash: false, loading: false })}
+        onConfirm={handleExecuteExit}
+        title="Authorize Vehicle Exit"
+        plateNumber={exitModal.session?.plate_number}
+        message="Authorize exit for this vehicle? This will trigger the relay signal to open the Exit Boom Barrier and complete this parking session."
+        confirmText="Authorize & Open Barrier"
+        cancelText="Cancel"
+        type="primary"
+        loading={exitModal.loading}
+        sessionInfo={exitModal.session ? {
+          gate: exitModal.session.exit_gate_id || 'GATE-OUT-01',
+          duration: exitModal.session.total_duration_minutes 
+            ? (exitModal.session.total_duration_minutes >= 60 
+                ? `${Math.floor(exitModal.session.total_duration_minutes / 60)}h ${exitModal.session.total_duration_minutes % 60}m`
+                : `${exitModal.session.total_duration_minutes}m`)
+            : 'Active',
+          status: exitModal.session.status,
+          statusColor: exitModal.session.status === 'VALIDATED' ? 'var(--status-green)' : 'var(--status-blue)',
+          fee: formatCurrency(exitModal.session.net_amount || 0)
+        } : null}
       />
 
       {/* Detailed Session Modal */}
@@ -321,40 +410,27 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
               </div>
             </div>
 
-            <div style={{
-              background: 'var(--bg-input)',
-              padding: '12px',
-              borderRadius: 'var(--radius-sm)',
-              marginBottom: '14px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span>Entry Gate:</span>
-                <strong>{selectedSession.session?.entry_gate_id}</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+              <div>
+                <span className="stat-label">Entry Time</span>
+                <div style={{ fontWeight: 600 }}>{selectedSession.session?.entry_time}</div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span>Entry Timestamp:</span>
-                <strong>{selectedSession.session?.entry_time}</strong>
+              <div>
+                <span className="stat-label">Exit Time</span>
+                <div style={{ fontWeight: 600 }}>{selectedSession.session?.exit_time || 'Still in parking lot'}</div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span>Exit Timestamp:</span>
-                <strong>{selectedSession.session?.exit_time || 'Still Inside'}</strong>
+              <div>
+                <span className="stat-label">Duration</span>
+                <div style={{ fontWeight: 600 }}>{selectedSession.session?.total_duration_minutes || 0} minutes</div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span>Validation Method:</span>
-                <strong style={{ textTransform: 'capitalize' }}>
-                  {selectedSession.session?.validation_method || 'None'}
-                </strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Total Parking Fee:</span>
-                <strong style={{ color: 'var(--gold)', fontSize: '1rem', fontFamily: 'var(--font-mono)' }}>
-                  {formatCurrency(selectedSession.tariff?.net_amount || selectedSession.session?.net_amount || 0)}
-                </strong>
+              <div>
+                <span className="stat-label">Entry Gate / Camera</span>
+                <div style={{ fontWeight: 600 }}>{selectedSession.session?.entry_gate_id || 'GATE-IN-01'}</div>
               </div>
             </div>
 
             {/* Validation Info */}
-            {selectedSession.validation && (
+            {selectedSession.validations && selectedSession.validations.length > 0 && (
               <div style={{
                 padding: '10px 12px',
                 background: 'var(--status-green-bg)',
@@ -362,10 +438,11 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
                 borderRadius: 'var(--radius-sm)',
                 marginBottom: '14px'
               }}>
-                <strong style={{ color: 'var(--status-green)' }}>Hospital Visitor Validation Record</strong>
+                <strong style={{ color: 'var(--status-green)' }}>Validation Verified</strong>
                 <div style={{ fontSize: '0.74rem', marginTop: '4px' }}>
-                  Patient: {selectedSession.validation.visitor_name} (MRN: {selectedSession.validation.patient_mrn})<br />
-                  Validated: {selectedSession.validation.created_at} via {selectedSession.validation.validation_type}
+                  Type: {selectedSession.validations[0].validation_type}<br />
+                  Validated By: Staff User #{selectedSession.validations[0].validated_by_user_id || 'System'}<br />
+                  Free Minutes Granted: {selectedSession.validations[0].free_minutes_granted} mins ({selectedSession.validations[0].discount_percent}% Waiver)
                 </div>
               </div>
             )}
