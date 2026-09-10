@@ -164,8 +164,15 @@ export default function SettingsPage() {
       const res = await api.simulateAnpr({
         camera_id: 'ANPR-ENTRY-CAM-01',
         plate_number: 'BHR 11223',
+        PlateNumber: 'BHR 11223',
+        licensePlate: 'BHR 11223',
+        PlateText: 'BHR 11223',
+        gate_id: 'GATE-IN-01',
         gate_code: 'GATE-IN-01',
-        direction: 'ENTRY'
+        Channel: 1,
+        Lane: 1,
+        direction: 'ENTRY',
+        confidence: 98.5
       });
       setTestResult({ 
         success: true, 

@@ -65,6 +65,7 @@ export const api = {
 
   // ANPR Webhook & Simulation
   sendAnprWebhook: (payload) => request('/webhook/anpr', { method: 'POST', body: payload }),
+  simulateAnpr: (payload) => request('/webhook/anpr', { method: 'POST', body: payload }),
 
   // Parking Sessions
   getSessions: (params = {}) => {
