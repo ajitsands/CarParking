@@ -675,7 +675,7 @@ export default function SettingsPage() {
                       flexWrap: 'wrap',
                       fontSize: '0.78rem'
                     }}>
-                      <span style={{ color: 'var(--text-secondary)' }}>Server LAN IP:</span>
+                      <span style={{ color: 'rgba(255,255,255,0.7)' }}>Server LAN IP:</span>
                       <input
                         type="text"
                         className="form-input"
@@ -684,7 +684,7 @@ export default function SettingsPage() {
                         placeholder="e.g. 192.168.100.4"
                         style={{ width: '150px', padding: '4px 8px', fontSize: '0.78rem', fontFamily: 'var(--font-mono)' }}
                       />
-                      <span style={{ color: 'var(--text-secondary)' }}>Port:</span>
+                      <span style={{ color: 'rgba(255,255,255,0.7)' }}>Port:</span>
                       <input
                         type="text"
                         className="form-input"
@@ -696,17 +696,26 @@ export default function SettingsPage() {
                       {networkInfo.detected_lan_ip && (
                         <button
                           type="button"
-                          className="btn btn-outline btn-sm"
                           onClick={() => {
                             setCustomLanIp(networkInfo.detected_lan_ip);
                             setCustomLanPort(String(networkInfo.server_port || 8000));
                           }}
-                          style={{ fontSize: '0.72rem', padding: '4px 8px' }}
+                          style={{
+                            fontSize: '0.72rem',
+                            padding: '4px 10px',
+                            background: 'rgba(56,189,248,0.15)',
+                            color: '#38bdf8',
+                            border: '1px solid rgba(56,189,248,0.5)',
+                            borderRadius: 'var(--radius-sm)',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            whiteSpace: 'nowrap'
+                          }}
                         >
-                          Use Host Detected IP ({networkInfo.detected_lan_ip})
+                          ⟳ Use Host Detected IP ({networkInfo.detected_lan_ip})
                         </button>
                       )}
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginLeft: 'auto' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.72rem', marginLeft: 'auto' }}>
                         💡 Tip: Set a static LAN IP on this host server so cameras never lose connection.
                       </span>
                     </div>
