@@ -26,7 +26,24 @@ class ReportsController extends Controller {
         $totalRevenue = (float)$db->query("SELECT COALESCE(SUM(amount), 0) FROM payments")->fetchColumn();
         $totalValidated = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE status IN ('VALIDATED', 'EXIT_COMPLETED') AND validation_method != 'none'")->fetchColumn();
 
-        // 5. Recent Audit Logs (Enriched with vehicle plate, start time, end time, and duration)
+        // 5. Recent Audit Logs (Enriched with vehicle plate, start time, end time, duration, and gate route)
+        $startDate = $_GET['start_date'] ?? null;
+        $endDate = $_GET['end_date'] ?? null;
+
+        $whereClauses = [];
+        $queryParams = [];
+
+        if (!empty($startDate)) {
+            $whereClauses[] = "DATE(a.created_at) >= :start_date";
+            $queryParams[':start_date'] = $startDate;
+        }
+        if (!empty($endDate)) {
+            $whereClauses[] = "DATE(a.created_at) <= :end_date";
+            $queryParams[':end_date'] = $endDate;
+        }
+
+        $whereSql = !empty($whereClauses) ? "WHERE " . implode(" AND ", $whereClauses) : "";
+
         $auditSql = "
             SELECT 
                 a.id,
@@ -52,6 +69,26 @@ class ReportsController extends Controller {
                         ELSE NULL
                     END
                 ) as duration_minutes,
+                COALESCE(
+                    s.entry_gate_id,
+                    CASE WHEN a.entity_id LIKE 'GATE%' AND a.details LIKE '%Direction: ENTRY%' THEN a.entity_id ELSE NULL END,
+                    CASE WHEN a.entity_id LIKE 'GATE%' THEN a.entity_id ELSE NULL END,
+                    'GATE-IN-01'
+                ) as entry_gate,
+                s.exit_gate_id as exit_gate,
+                CASE
+                    WHEN s.entry_gate_id IS NOT NULL AND s.exit_gate_id IS NOT NULL THEN CONCAT(s.entry_gate_id, ' → ', s.exit_gate_id)
+                    WHEN s.exit_gate_id IS NOT NULL THEN s.exit_gate_id
+                    WHEN s.entry_gate_id IS NOT NULL THEN s.entry_gate_id
+                    WHEN a.entity_id LIKE 'GATE%' THEN a.entity_id
+                    ELSE 'GATE-IN-01'
+                END as gate_route,
+                CASE 
+                    WHEN a.details LIKE 'Override Reason: %' THEN SUBSTRING_INDEX(SUBSTRING_INDEX(a.details, 'Override Reason: ', -1), ' |', 1)
+                    WHEN a.details LIKE 'Reason: %' THEN SUBSTRING_INDEX(SUBSTRING_INDEX(a.details, 'Reason: ', -1), ' |', 1)
+                    WHEN a.details LIKE '%AUTO_CLOSED_NEW_ENTRY%' THEN 'Auto Closed (Anti-Passback Duplicate Entry Reconciled)'
+                    ELSE NULL
+                END as override_reason,
                 a.entity_type,
                 a.entity_id,
                 a.details,
@@ -59,10 +96,12 @@ class ReportsController extends Controller {
                 a.created_at
             FROM audit_logs a
             LEFT JOIN parking_sessions s ON (a.entity_type = 'parking_sessions' AND a.entity_id = s.id)
+            {$whereSql}
             ORDER BY a.id DESC 
-            LIMIT 150
+            LIMIT 300
         ";
-        $stmtAudit = $db->query($auditSql);
+        $stmtAudit = $db->prepare($auditSql);
+        $stmtAudit->execute($queryParams);
         $auditLogs = $stmtAudit->fetchAll();
 
         $this->success([

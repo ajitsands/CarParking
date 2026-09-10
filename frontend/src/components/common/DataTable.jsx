@@ -13,7 +13,9 @@ import {
   RefreshCw, 
   Filter,
   FileSpreadsheet,
-  Database
+  Database,
+  Plus,
+  Minus
 } from 'lucide-react';
 
 export default function DataTable({
@@ -33,12 +35,27 @@ export default function DataTable({
   subtitle = null,
   icon: Icon = null,
   className = '',
-  style = {}
+  style = {},
+  expandableRowRender = null,
+  rowKey = (row, idx) => row.id ?? idx
 }) {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [expandedRowKeys, setExpandedRowKeys] = useState(new Set());
+
+  const toggleRowExpand = (key) => {
+    setExpandedRowKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   // 1. Client-side Search Filtering
   const filteredData = useMemo(() => {
@@ -284,6 +301,11 @@ export default function DataTable({
         <table className="data-table" style={{ width: '100%' }}>
           <thead>
             <tr>
+              {expandableRowRender && (
+                <th style={{ width: '42px', textAlign: 'center', padding: '8px 4px', userSelect: 'none' }}>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}></span>
+                </th>
+              )}
               {columns.map((col, idx) => {
                 const isSortable = col.sortable !== false && col.key;
                 const isSorted = sortConfig.key === col.key;
@@ -327,7 +349,7 @@ export default function DataTable({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={columns.length} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
+                <td colSpan={columns.length + (expandableRowRender ? 1 : 0)} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem' }}>
                     <RefreshCw size={16} className="animate-spin" color="var(--accent)" />
                     <span>Loading datatable records...</span>
@@ -335,24 +357,72 @@ export default function DataTable({
                 </td>
               </tr>
             ) : paginatedData.length > 0 ? (
-              paginatedData.map((row, rowIdx) => (
-                <tr key={row.id || rowIdx}>
-                  {columns.map((col, colIdx) => (
-                    <td
-                      key={col.key || colIdx}
-                      style={{
-                        textAlign: col.align || 'left',
-                        verticalAlign: 'middle'
-                      }}
-                    >
-                      {col.render ? col.render(row, rowIdx) : row[col.key]}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              paginatedData.map((row, rowIdx) => {
+                const key = typeof rowKey === 'function' ? rowKey(row, rowIdx) : (row[rowKey] ?? rowIdx);
+                const isExpanded = expandedRowKeys.has(key);
+
+                return (
+                  <React.Fragment key={key}>
+                    <tr className={isExpanded ? 'row-expanded-parent' : ''} style={{ transition: 'background-color 0.15s ease' }}>
+                      {expandableRowRender && (
+                        <td style={{ width: '42px', textAlign: 'center', verticalAlign: 'middle', padding: '6px 4px' }}>
+                          <button
+                            type="button"
+                            className="btn-row-expand"
+                            onClick={() => toggleRowExpand(key)}
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '5px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: isExpanded ? 'var(--accent)' : 'var(--bg-surface)',
+                              color: isExpanded ? '#ffffff' : 'var(--text-secondary)',
+                              border: '1px solid var(--border-color)',
+                              cursor: 'pointer',
+                              padding: 0,
+                              transition: 'all 0.15s ease'
+                            }}
+                            title={isExpanded ? 'Collapse row details' : 'Expand row details'}
+                          >
+                            {isExpanded ? <Minus size={13} strokeWidth={2.5} /> : <Plus size={13} strokeWidth={2.5} />}
+                          </button>
+                        </td>
+                      )}
+                      {columns.map((col, colIdx) => (
+                        <td
+                          key={col.key || colIdx}
+                          style={{
+                            textAlign: col.align || 'left',
+                            verticalAlign: 'middle'
+                          }}
+                        >
+                          {col.render ? col.render(row, rowIdx) : row[col.key]}
+                        </td>
+                      ))}
+                    </tr>
+                    {expandableRowRender && isExpanded && (
+                      <tr key={`${key}-child`} className="row-expanded-child">
+                        <td
+                          colSpan={columns.length + 1}
+                          style={{
+                            padding: '14px 18px',
+                            background: 'var(--bg-input)',
+                            borderBottom: '1px solid var(--border-color)',
+                            borderTop: '1px dashed var(--border-color)'
+                          }}
+                        >
+                          {expandableRowRender(row, rowIdx)}
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                );
+              })
             ) : (
               <tr>
-                <td colSpan={columns.length} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
+                <td colSpan={columns.length + (expandableRowRender ? 1 : 0)} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                     <Database size={24} style={{ opacity: 0.3 }} />
                     <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{emptyMessage}</div>

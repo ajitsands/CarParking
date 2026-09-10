@@ -102,7 +102,10 @@ export const api = {
 
   // Dashboard & Analytics
   getDashboardMetrics: () => request('/dashboard/metrics'),
-  getReportsSummary: () => request('/reports/summary'),
+  getReportsSummary: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/reports/summary${qs ? '?' + qs : ''}`);
+  },
 
   // HIS Integration Endpoints
   hisSyncAppointment: (payload) => request('/his/appointments/sync', { method: 'POST', body: payload }),
