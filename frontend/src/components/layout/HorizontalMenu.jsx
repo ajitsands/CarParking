@@ -13,17 +13,20 @@ import {
   Sparkles,
   WalletCards,
   Key,
-  ChevronDown,
-  ShieldCheck
+  ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulator }) {
   const { isSuperadmin, isAdmin } = useAuth();
   const { settings } = useSettings();
+  const { theme } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  const isDark = theme === 'dark';
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -80,6 +83,22 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
       boxShadow: '0 3px 12px rgba(0, 0, 0, 0.25)'
     };
   }
+
+  // Theme-aware dropdown styling tokens
+  const dd = {
+    bg: isDark ? 'rgba(15, 23, 42, 0.98)' : '#ffffff',
+    border: isDark ? '1px solid rgba(236, 72, 153, 0.35)' : '1px solid #e2e8f0',
+    shadow: isDark 
+      ? '0 10px 35px -5px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.05)' 
+      : '0 12px 30px -4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+    textColor: isDark ? '#e2e8f0' : '#0f172a',
+    subtextColor: isDark ? '#94a3b8' : '#64748b',
+    headerColor: isDark ? '#94a3b8' : '#64748b',
+    dividerColor: isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0',
+    hoverBg: isDark ? 'rgba(236, 72, 153, 0.16)' : '#f8fafc',
+    activeBg: isDark ? 'rgba(236, 72, 153, 0.22)' : 'rgba(236, 72, 153, 0.12)',
+    activeColor: isDark ? '#f472b6' : '#db2777'
+  };
 
   return (
     <nav 
@@ -149,7 +168,7 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
                 />
               </button>
 
-              {/* Floating Dropdown Menu */}
+              {/* Floating Dropdown Menu (Theme Responsive: Light / Dark) */}
               {dropdownOpen && (
                 <div style={{
                   position: 'absolute',
@@ -157,12 +176,12 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
                   right: 0,
                   zIndex: 9999,
                   minWidth: '240px',
-                  background: 'rgba(15, 23, 42, 0.98)',
+                  background: dd.bg,
                   backdropFilter: 'blur(16px)',
-                  border: '1px solid rgba(236, 72, 153, 0.35)',
+                  border: dd.border,
                   borderRadius: '10px',
                   padding: '6px',
-                  boxShadow: '0 10px 35px -5px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.05)',
+                  boxShadow: dd.shadow,
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '3px'
@@ -174,7 +193,7 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
                     fontWeight: 800,
                     textTransform: 'uppercase',
                     letterSpacing: '0.08em',
-                    color: '#94a3b8'
+                    color: dd.headerColor
                   }}>
                     Administration
                   </div>
@@ -192,21 +211,25 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
                       padding: '8px 12px',
                       borderRadius: '6px',
                       border: 'none',
-                      background: activeTab === 'settings' ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
-                      color: activeTab === 'settings' ? '#f472b6' : '#e2e8f0',
+                      background: activeTab === 'settings' ? dd.activeBg : 'transparent',
+                      color: activeTab === 'settings' ? dd.activeColor : dd.textColor,
                       fontSize: '0.81rem',
                       fontWeight: activeTab === 'settings' ? 700 : 500,
                       cursor: 'pointer',
                       textAlign: 'left',
                       transition: 'background 0.15s ease'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(236, 72, 153, 0.15)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = activeTab === 'settings' ? 'rgba(236, 72, 153, 0.2)' : 'transparent'}
+                    onMouseEnter={(e) => {
+                      if (activeTab !== 'settings') e.currentTarget.style.background = dd.hoverBg;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = activeTab === 'settings' ? dd.activeBg : 'transparent';
+                    }}
                   >
                     <Settings size={15} color="#ec4899" />
                     <div>
                       <div style={{ lineHeight: 1.2 }}>System Settings</div>
-                      <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>Rates, grace, cameras & theme</div>
+                      <div style={{ fontSize: '0.68rem', color: dd.subtextColor, marginTop: '2px' }}>Rates, grace, cameras & theme</div>
                     </div>
                   </button>
 
@@ -223,21 +246,25 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
                       padding: '8px 12px',
                       borderRadius: '6px',
                       border: 'none',
-                      background: activeTab === 'users' ? 'rgba(37, 99, 235, 0.2)' : 'transparent',
-                      color: activeTab === 'users' ? '#93c5fd' : '#e2e8f0',
+                      background: activeTab === 'users' ? dd.activeBg : 'transparent',
+                      color: activeTab === 'users' ? (isDark ? '#93c5fd' : '#2563eb') : dd.textColor,
                       fontSize: '0.81rem',
                       fontWeight: activeTab === 'users' ? 700 : 500,
                       cursor: 'pointer',
                       textAlign: 'left',
                       transition: 'background 0.15s ease'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(37, 99, 235, 0.15)'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = activeTab === 'users' ? 'rgba(37, 99, 235, 0.2)' : 'transparent'}
+                    onMouseEnter={(e) => {
+                      if (activeTab !== 'users') e.currentTarget.style.background = dd.hoverBg;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = activeTab === 'users' ? dd.activeBg : 'transparent';
+                    }}
                   >
                     <Users size={15} color="#3b82f6" />
                     <div>
                       <div style={{ lineHeight: 1.2 }}>User Management</div>
-                      <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>Staff accounts & permissions</div>
+                      <div style={{ fontSize: '0.68rem', color: dd.subtextColor, marginTop: '2px' }}>Staff accounts & permissions</div>
                     </div>
                   </button>
 
@@ -246,7 +273,7 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
                     <>
                       <div style={{
                         height: '1px',
-                        background: 'rgba(255, 255, 255, 0.1)',
+                        background: dd.dividerColor,
                         margin: '4px 6px'
                       }} />
 
@@ -256,7 +283,7 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
                         fontWeight: 800,
                         textTransform: 'uppercase',
                         letterSpacing: '0.08em',
-                        color: '#f59e0b'
+                        color: isDark ? '#f59e0b' : '#b45309'
                       }}>
                         Superadmin Controls
                       </div>
@@ -274,21 +301,25 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
                           padding: '8px 12px',
                           borderRadius: '6px',
                           border: 'none',
-                          background: activeTab === 'server-config' ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                          color: activeTab === 'server-config' ? '#fde047' : '#e2e8f0',
+                          background: activeTab === 'server-config' ? dd.activeBg : 'transparent',
+                          color: activeTab === 'server-config' ? (isDark ? '#fde047' : '#d97706') : dd.textColor,
                           fontSize: '0.81rem',
                           fontWeight: activeTab === 'server-config' ? 700 : 500,
                           cursor: 'pointer',
                           textAlign: 'left',
                           transition: 'background 0.15s ease'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(245, 158, 11, 0.15)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = activeTab === 'server-config' ? 'rgba(245, 158, 11, 0.2)' : 'transparent'}
+                        onMouseEnter={(e) => {
+                          if (activeTab !== 'server-config') e.currentTarget.style.background = dd.hoverBg;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = activeTab === 'server-config' ? dd.activeBg : 'transparent';
+                        }}
                       >
                         <Server size={15} color="#f59e0b" />
                         <div>
                           <div style={{ lineHeight: 1.2 }}>Server & Database</div>
-                          <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>DB credentials & host endpoints</div>
+                          <div style={{ fontSize: '0.68rem', color: dd.subtextColor, marginTop: '2px' }}>DB credentials & host endpoints</div>
                         </div>
                       </button>
 
@@ -305,21 +336,25 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
                           padding: '8px 12px',
                           borderRadius: '6px',
                           border: 'none',
-                          background: activeTab === 'license' ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
-                          color: activeTab === 'license' ? '#f472b6' : '#e2e8f0',
+                          background: activeTab === 'license' ? dd.activeBg : 'transparent',
+                          color: activeTab === 'license' ? dd.activeColor : dd.textColor,
                           fontSize: '0.81rem',
                           fontWeight: activeTab === 'license' ? 700 : 500,
                           cursor: 'pointer',
                           textAlign: 'left',
                           transition: 'background 0.15s ease'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(236, 72, 153, 0.15)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = activeTab === 'license' ? 'rgba(236, 72, 153, 0.2)' : 'transparent'}
+                        onMouseEnter={(e) => {
+                          if (activeTab !== 'license') e.currentTarget.style.background = dd.hoverBg;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = activeTab === 'license' ? dd.activeBg : 'transparent';
+                        }}
                       >
                         <Key size={15} color="#ec4899" />
                         <div>
                           <div style={{ lineHeight: 1.2 }}>Software License</div>
-                          <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>SaNDS Lab key & activation</div>
+                          <div style={{ fontSize: '0.68rem', color: dd.subtextColor, marginTop: '2px' }}>SaNDS Lab key & activation</div>
                         </div>
                       </button>
                     </>
