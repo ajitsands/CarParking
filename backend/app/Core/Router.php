@@ -57,6 +57,7 @@ class Router {
         foreach ($this->routes as $route) {
             if ($route['method'] === $method && preg_match($route['pattern'], $uri, $matches)) {
                 array_shift($matches); // Remove full match
+                $matches = array_map('urldecode', $matches);
 
                 // Execute middlewares
                 foreach ($route['middlewares'] as $middleware) {

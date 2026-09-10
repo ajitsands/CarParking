@@ -195,11 +195,12 @@ export default function PrepaidParkingPage() {
 
   // Open Vehicle Ledger History
   const inspectVehicleHistory = async (plate) => {
-    setSelectedPlate(plate);
+    const cleanPlate = decodeURIComponent(plate || '').trim();
+    setSelectedPlate(cleanPlate);
     setActiveSubTab('vehicle');
     setHistoryLoading(true);
     try {
-      const res = await api.getPrepaidVehicleHistory(plate);
+      const res = await api.getPrepaidVehicleHistory(cleanPlate);
       if (res.success) {
         setVehicleHistory(res.data);
       }
@@ -285,69 +286,67 @@ export default function PrepaidParkingPage() {
         </div>
       )}
 
-      {/* Analytics KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+      {/* Analytics KPI Stat Cards */}
+      <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginBottom: '20px' }}>
         {/* Monthly Collection Card */}
-        <div className="kpi-card" style={{ borderLeft: '4px solid var(--accent)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-              Collected This Month ({stats?.selected_month || 'Current'})
-            </span>
-            <Receipt size={18} color="var(--accent)" />
+        <div className="stat-card" style={{ borderLeft: '4px solid var(--accent)' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="stat-label">Collected This Month ({stats?.selected_month || 'Current'})</div>
+            <div className="stat-value">{formatCurrency(stats?.collected_this_month || 0)}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--status-green)', marginTop: '4px', fontWeight: 600 }}>
+              Lifetime Total: {formatCurrency(stats?.total_all_time || 0)}
+            </div>
           </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
-            {formatCurrency(stats?.collected_this_month || 0)}
-          </div>
-          <div style={{ fontSize: '0.68rem', color: 'var(--status-green)', marginTop: '4px', fontWeight: 600 }}>
-            Lifetime Total: {formatCurrency(stats?.total_all_time || 0)}
+          <div className="stat-icon-wrap stat-icon-purple">
+            <Receipt size={20} />
           </div>
         </div>
 
         {/* Today's Collection Card */}
-        <div className="kpi-card" style={{ borderLeft: '4px solid #10b981' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-              Today's Pass Revenue
-            </span>
-            <Banknote size={18} color="#10b981" />
+        <div className="stat-card" style={{ borderLeft: '4px solid #10b981' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="stat-label">Today's Pass Revenue</div>
+            <div className="stat-value" style={{ color: '#10b981' }}>
+              {formatCurrency(stats?.collected_today || 0)}
+            </div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+              Direct Cash & Card Receipts
+            </div>
           </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
-            {formatCurrency(stats?.collected_today || 0)}
-          </div>
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Direct Cash & Card Receipts
+          <div className="stat-icon-wrap stat-icon-green">
+            <Banknote size={20} />
           </div>
         </div>
 
         {/* Active Passes Card */}
-        <div className="kpi-card" style={{ borderLeft: '4px solid #3b82f6' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-              Active Whitelisted Vehicles
-            </span>
-            <ShieldCheck size={18} color="#3b82f6" />
+        <div className="stat-card" style={{ borderLeft: '4px solid #3b82f6' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="stat-label">Active Whitelisted Vehicles</div>
+            <div className="stat-value" style={{ color: '#3b82f6' }}>
+              {stats?.active_passes_count || passes.filter(p => p.status === 'active').length}
+            </div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+              Auto-open barrier on gates
+            </div>
           </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-primary)', marginTop: '4px' }}>
-            {stats?.active_passes_count || passes.filter(p => p.status === 'active').length}
-          </div>
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Auto-open barrier on gates
+          <div className="stat-icon-wrap stat-icon-blue">
+            <ShieldCheck size={20} />
           </div>
         </div>
 
         {/* Expiring Soon Card */}
-        <div className="kpi-card" style={{ borderLeft: '4px solid #f59e0b' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-              Expiring in 7 Days
-            </span>
-            <Clock size={18} color="#f59e0b" />
+        <div className="stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="stat-label">Expiring in 7 Days</div>
+            <div className="stat-value" style={{ color: '#f59e0b' }}>
+              {stats?.expiring_soon_count || passes.filter(p => p.days_remaining > 0 && p.days_remaining <= 7).length}
+            </div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+              Eligible for renewal reminder
+            </div>
           </div>
-          <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#f59e0b', marginTop: '4px' }}>
-            {stats?.expiring_soon_count || passes.filter(p => p.days_remaining > 0 && p.days_remaining <= 7).length}
-          </div>
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Eligible for renewal reminder
+          <div className="stat-icon-wrap stat-icon-amber">
+            <Clock size={20} />
           </div>
         </div>
       </div>
@@ -377,7 +376,7 @@ export default function PrepaidParkingPage() {
             onClick={() => setActiveSubTab('vehicle')}
             style={{ borderRadius: '6px 6px 0 0', borderBottom: 'none' }}
           >
-            <Car size={14} /> Vehicle History: {selectedPlate}
+            <Car size={14} /> Vehicle History: {decodeURIComponent(selectedPlate)}
           </button>
         )}
       </div>
@@ -682,45 +681,86 @@ export default function PrepaidParkingPage() {
 
       {/* TAB 3: VEHICLE SPECIFIC HISTORY */}
       {activeSubTab === 'vehicle' && (
-        <div className="panel">
+        <div className="panel" style={{ marginBottom: '20px' }}>
           <div className="panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="panel-title">
-              <Car size={16} /> Vehicle Ledger History: {selectedPlate}
+            <span className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Car size={16} color="var(--accent)" />
+              <span>Vehicle Ledger History: {decodeURIComponent(selectedPlate || '')}</span>
             </span>
             <button className="btn btn-outline btn-sm" onClick={() => setActiveSubTab('passes')}>
               Back to Passes
             </button>
           </div>
-          <div className="panel-body">
+          <div className="panel-body" style={{ padding: '16px' }}>
             {historyLoading ? (
-              <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                Loading vehicle financial history...
+              <div style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <RefreshCw size={18} className="animate-spin" style={{ display: 'inline-block', marginBottom: '8px' }} />
+                <div>Loading vehicle financial history...</div>
               </div>
             ) : vehicleHistory ? (
               <div>
-                {/* Vehicle Financial Summary */}
-                <div style={{ display: 'flex', gap: '16px', background: 'var(--bg-input)', padding: '12px 16px', borderRadius: 'var(--radius-sm)', marginBottom: '16px', flexWrap: 'wrap' }}>
-                  <div>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Vehicle Plate</span>
-                    <span className="plate-badge" style={{ fontSize: '1rem', padding: '4px 10px' }}>{vehicleHistory.plate_number}</span>
+                {/* Vehicle Financial Summary - 4 Elegant Stat Cards */}
+                <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+                  <div className="stat-card" style={{ borderLeft: '4px solid #3b82f6' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="stat-label">Vehicle License Plate</div>
+                      <div style={{ marginTop: '4px' }}>
+                        <span className="plate-badge" style={{ fontSize: '1rem', fontWeight: 800, padding: '4px 10px' }}>
+                          {decodeURIComponent(vehicleHistory.plate_number || selectedPlate || '')}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        Registered Whitelist Vehicle
+                      </div>
+                    </div>
+                    <div className="stat-icon-wrap stat-icon-blue">
+                      <Car size={20} />
+                    </div>
                   </div>
-                  <div>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Lifetime Revenue</span>
-                    <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--accent)', fontFamily: 'var(--font-mono)' }}>
-                      {vehicleHistory.formatted_total_paid}
-                    </span>
+
+                  <div className="stat-card" style={{ borderLeft: '4px solid #10b981' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="stat-label">Lifetime Revenue Paid</div>
+                      <div className="stat-value" style={{ color: '#10b981' }}>
+                        {vehicleHistory.formatted_total_paid || formatCurrency(vehicleHistory.total_paid || 0)}
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        All prepaid collections
+                      </div>
+                    </div>
+                    <div className="stat-icon-wrap stat-icon-green">
+                      <Banknote size={20} />
+                    </div>
                   </div>
-                  <div>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Total Passes Issued</span>
-                    <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                      {vehicleHistory.passes?.length || 0}
-                    </span>
+
+                  <div className="stat-card" style={{ borderLeft: '4px solid var(--accent)' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="stat-label">Total Passes Issued</div>
+                      <div className="stat-value">
+                        {vehicleHistory.passes?.length || 0}
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        Active & past duration plans
+                      </div>
+                    </div>
+                    <div className="stat-icon-wrap stat-icon-purple">
+                      <WalletCards size={20} />
+                    </div>
                   </div>
-                  <div>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Gate Entries Logged</span>
-                    <span style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                      {vehicleHistory.sessions?.length || 0}
-                    </span>
+
+                  <div className="stat-card" style={{ borderLeft: '4px solid #f59e0b' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="stat-label">Gate Entries Logged</div>
+                      <div className="stat-value">
+                        {vehicleHistory.sessions?.length || 0}
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        ANPR automated gate visits
+                      </div>
+                    </div>
+                    <div className="stat-icon-wrap stat-icon-amber">
+                      <Clock size={20} />
+                    </div>
                   </div>
                 </div>
 

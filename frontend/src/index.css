@@ -562,11 +562,12 @@ button, input, select, textarea {
   margin-bottom: 16px;
 }
 
-.stat-card {
+.stat-card,
+.kpi-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 12px 14px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -574,7 +575,8 @@ button, input, select, textarea {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.stat-card:hover {
+.stat-card:hover,
+.kpi-card:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }

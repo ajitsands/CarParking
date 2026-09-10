@@ -171,7 +171,7 @@ class PrepaidController extends Controller {
      */
     public function getVehicleHistory(string $plate): void {
         $db = Database::getInstance();
-        $cleanPlate = strtoupper(trim($plate));
+        $cleanPlate = strtoupper(trim(urldecode($plate)));
 
         // 1. Passes for this vehicle
         $stmtPass = $db->prepare("SELECT * FROM prepaid_passes WHERE plate_number = ? ORDER BY id DESC");
