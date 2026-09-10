@@ -264,11 +264,27 @@ export default function LiveLanes({ onOpenSimulator }) {
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border-color)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px', gap: '4px' }}>
-              <Car size={13} color="var(--accent)" />
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
+            {/* Vehicle selector — ANPR auto-fills, operator can override */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', gap: '8px' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                <Car size={13} color="var(--accent)" />
                 Vehicle at Exit Gate:
-              </span>
+              </div>
+
+              {/* Always-visible selector: ANPR sets this automatically; operator can search/override if camera missed */}
+              <select
+                className="form-select"
+                style={{ flex: 1, maxWidth: '260px', padding: '3px 8px', fontSize: '0.72rem' }}
+                value={selectedExitSessionId || ''}
+                onChange={(e) => setSelectedExitSessionId(e.target.value ? parseInt(e.target.value) : null)}
+              >
+                <option value="">— Select / Search Vehicle —</option>
+                {activeSessions.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.plate_number}  [{s.status}]  In: {s.entry_time ? s.entry_time.slice(11, 16) : ''}  ({s.total_duration_minutes || 0}m)
+                  </option>
+                ))}
+              </select>
             </div>
 
             {selectedVehicle ? (
