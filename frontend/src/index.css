@@ -172,17 +172,18 @@ button, input, select, textarea {
   width: 100%;
   justify-content: space-between;
   gap: 12px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.horizontal-menu-inner::-webkit-scrollbar {
-  display: none;
+  overflow: visible;
 }
 
 .menu-group {
   display: flex;
   align-items: center;
   gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.menu-group::-webkit-scrollbar {
+  display: none;
 }
 
 .menu-divider {
