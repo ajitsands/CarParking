@@ -12,7 +12,8 @@ import {
   Server, 
   Clock, 
   Sparkles,
-  WalletCards 
+  WalletCards,
+  Key 
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -39,7 +40,7 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
 
   const superadminItems = [
     { id: 'server-config', label: 'Server & DB', icon: Server },
-    { id: 'license', label: 'Software Expiry', icon: Clock }
+    { id: 'license', label: 'Software License', icon: Key }
   ];
 
   // Admin configurable menu colors (Default: Pink & Blue combination)
