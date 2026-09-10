@@ -50,10 +50,10 @@ export default function LiveLanes({ onOpenSimulator }) {
         const inside = (sessRes.data.sessions || []).filter(s => !s.exit_time && s.status !== 'EXIT_COMPLETED');
         setActiveSessions(inside);
 
-        // Auto-select the first vehicle if none currently selected
+        // Keep existing selection if vehicle still inside; otherwise clear — do NOT auto-select first item
         setSelectedExitSessionId(prev => {
           if (prev && inside.some(s => s.id === prev)) return prev;
-          return inside.length > 0 ? inside[0].id : null;
+          return null; // ANPR will set this when a plate is detected
         });
       }
     } catch (e) {}

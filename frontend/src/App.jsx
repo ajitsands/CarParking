@@ -29,7 +29,15 @@ import { api } from './services/api';
 
 function MainApp() {
   const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  // Restore last active tab from localStorage so refresh keeps the user on the same page
+  const [activeTab, setActiveTabState] = useState(
+    () => localStorage.getItem('parking_active_tab') || 'dashboard'
+  );
+
+  const setActiveTab = (tab) => {
+    localStorage.setItem('parking_active_tab', tab);
+    setActiveTabState(tab);
+  };
   
   // Modals state
   const [simulatorOpen, setSimulatorOpen] = useState(false);
