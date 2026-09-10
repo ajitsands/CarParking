@@ -104,7 +104,22 @@ $router->put('/api/v1/users/{id}', [UserController::class, 'update'], [AuthMiddl
 $router->delete('/api/v1/users/{id}', [UserController::class, 'delete'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);
 
 // ── ANPR Camera Webhook ────────────────────────────────────────
+// POST: actual webhook endpoint for camera software to push plate events
 $router->post('/api/v1/webhook/anpr', [AnprWebhookController::class, 'handle'], [LicenseCheckMiddleware::class]);
+// GET: friendly info page when someone opens the URL in a browser
+$router->get('/api/v1/webhook/anpr', function() {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success'     => true,
+        'endpoint'    => 'ANPR Camera Webhook',
+        'method'      => 'POST only',
+        'format'      => 'application/json',
+        'description' => 'This endpoint receives HTTP POST requests from ANPR camera software (Dahua, Hikvision, Uniview, Hanwha). Configure your camera to POST plate events here.',
+        'note'        => 'You are seeing this because you opened the URL in a browser (GET request). Your camera software must send HTTP POST requests to this URL.',
+        'status'      => 'active'
+    ], JSON_PRETTY_PRINT);
+    exit;
+});
 
 // ── Parking Sessions ───────────────────────────────────────────
 $router->get('/api/v1/sessions', [ParkingSessionController::class, 'index'], [AuthMiddleware::class]);
