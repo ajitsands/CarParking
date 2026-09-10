@@ -56,6 +56,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\ReportsController;
 use App\Controllers\HisIntegrationController;
 use App\Controllers\PrepaidController;
+use App\Controllers\GateController;
 
 // Handle static files if using PHP built-in server
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -96,6 +97,14 @@ $router->get('/api/v1/settings', [SettingsController::class, 'getSettings']);
 $router->post('/api/v1/settings', [SettingsController::class, 'updateSettings'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);
 $router->post('/api/v1/settings/logo', [SettingsController::class, 'uploadLogo'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);
 $router->post('/api/v1/settings/test-anpr-mapping', [SettingsController::class, 'testAnprMapping'], [AuthMiddleware::class]);
+
+// ── Gates & ANPR Cameras (Multi-Gate Management) ───────────────
+$router->get('/api/v1/gates', [GateController::class, 'index'], [AuthMiddleware::class]);
+$router->post('/api/v1/gates', [GateController::class, 'store'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);
+$router->put('/api/v1/gates/{id}', [GateController::class, 'update'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);
+$router->delete('/api/v1/gates/{id}', [GateController::class, 'delete'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);
+$router->post('/api/v1/gates/{id}/test-pulse', [GateController::class, 'testPulse'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);
+$router->post('/api/v1/gates/{id}/test-camera', [GateController::class, 'testCameraPing'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);
 
 // ── Users (RBAC) ───────────────────────────────────────────────
 $router->get('/api/v1/users', [UserController::class, 'index'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);

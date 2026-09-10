@@ -11,10 +11,10 @@ class UserController extends Controller {
 
         if ($currentUser['role'] === 'superadmin') {
             // Superadmin can see all users
-            $stmt = $db->query("SELECT id, username, email, full_name, phone, role, status, last_login, created_at FROM users ORDER BY id ASC");
+            $stmt = $db->query("SELECT id, username, email, full_name, phone, role, status, assigned_gates, last_login, created_at FROM users ORDER BY id ASC");
         } else {
             // Admin can see all users EXCEPT superadmin
-            $stmt = $db->query("SELECT id, username, email, full_name, phone, role, status, last_login, created_at FROM users WHERE role != 'superadmin' ORDER BY id ASC");
+            $stmt = $db->query("SELECT id, username, email, full_name, phone, role, status, assigned_gates, last_login, created_at FROM users WHERE role != 'superadmin' ORDER BY id ASC");
         }
 
         $users = $stmt->fetchAll();
@@ -31,6 +31,7 @@ class UserController extends Controller {
         $password = $input['password'] ?? '';
         $role = $input['role'] ?? 'operator';
         $phone = $input['phone'] ?? '';
+        $assignedGates = trim($input['assigned_gates'] ?? 'ALL');
 
         if (!$username || !$email || !$fullName || strlen($password) < 6) {
             $this->error('Username, email, full name and password (min 6 chars) are required', 400);
@@ -53,8 +54,8 @@ class UserController extends Controller {
         }
 
         $hash = password_hash($password, PASSWORD_BCRYPT);
-        $stmt = $db->prepare("INSERT INTO users (username, email, password_hash, full_name, phone, role, status) VALUES (?, ?, ?, ?, ?, ?, 'active')");
-        $stmt->execute([$username, $email, $hash, $fullName, $phone, $role]);
+        $stmt = $db->prepare("INSERT INTO users (username, email, password_hash, full_name, phone, role, status, assigned_gates) VALUES (?, ?, ?, ?, ?, ?, 'active', ?)");
+        $stmt->execute([$username, $email, $hash, $fullName, $phone, $role, $assignedGates ?: 'ALL']);
 
         $userId = (int)$db->lastInsertId();
         $this->success(['user_id' => $userId], 'User created successfully', 201);
@@ -84,13 +85,14 @@ class UserController extends Controller {
         $phone = trim($input['phone'] ?? $targetUser['phone']);
         $status = $input['status'] ?? $targetUser['status'];
         $role = $input['role'] ?? $targetUser['role'];
+        $assignedGates = isset($input['assigned_gates']) ? trim($input['assigned_gates']) : ($targetUser['assigned_gates'] ?? 'ALL');
 
         if ($role === 'superadmin' && $currentUser['role'] !== 'superadmin') {
             $role = $targetUser['role'];
         }
 
-        $stmt = $db->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, status = ?, role = ? WHERE id = ?");
-        $stmt->execute([$fullName, $email, $phone, $status, $role, $id]);
+        $stmt = $db->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, status = ?, role = ?, assigned_gates = ? WHERE id = ?");
+        $stmt->execute([$fullName, $email, $phone, $status, $role, $assignedGates ?: 'ALL', $id]);
 
         $this->success([], 'User updated successfully');
     }

@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `phone` VARCHAR(30),
   `role` ENUM('superadmin', 'admin', 'operator') NOT NULL DEFAULT 'operator',
   `status` ENUM('active', 'inactive') DEFAULT 'active',
+  `assigned_gates` VARCHAR(255) DEFAULT 'ALL',
   `last_login` DATETIME NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -254,6 +255,8 @@ CREATE TABLE IF NOT EXISTS `gates_and_cameras` (
   `gate_type` ENUM('entry', 'exit', 'bidirectional') DEFAULT 'entry',
   `camera_name` VARCHAR(100) DEFAULT 'ANPR Cam 1',
   `camera_ip` VARCHAR(50) DEFAULT '192.168.1.101',
+  `camera_port` INT DEFAULT 80,
+  `rtsp_url` VARCHAR(255) NULL,
   `relay_ip` VARCHAR(50) DEFAULT '192.168.1.201',
   `relay_port` INT DEFAULT 8080,
   `relay_command` VARCHAR(100) DEFAULT 'OPEN_RELAY_1',

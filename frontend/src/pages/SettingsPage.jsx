@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useSettings } from '../context/SettingsContext';
+import GateManagementSection from '../components/gate/GateManagementSection';
 
 export default function SettingsPage() {
   const { refreshSettings } = useSettings();
@@ -380,9 +381,13 @@ export default function SettingsPage() {
             : computedLocalUrl;
 
         return (
-          <form onSubmit={handleSave}>
-            {/* 0. ANPR Camera Webhook Integration & Push URL Card */}
-            <div className="panel" style={{
+          <div>
+            {/* 1. Multi-Gate & ANPR Camera Configuration Manager */}
+            <GateManagementSection />
+
+            <form onSubmit={handleSave}>
+              {/* 0. ANPR Camera Webhook Integration & Push URL Card */}
+              <div className="panel" style={{
               marginBottom: '16px',
               border: '1.5px solid rgba(236, 72, 153, 0.4)',
               boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
@@ -1766,6 +1771,7 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
+    </div>
     );
   })()}
 </div>

@@ -20,13 +20,18 @@ import SearchableSelect from '../components/common/SearchableSelect';
 import { api } from '../services/api';
 import DataTable from '../components/common/DataTable';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function LiveLanes({ onOpenSimulator }) {
   const { formatCurrency } = useSettings();
-  const [entryBarrierOpen, setEntryBarrierOpen] = useState(false);
-  const [exitBarrierOpen, setExitBarrierOpen] = useState(false);
+  const { user, isAdmin } = useAuth();
+  const [gates, setGates] = useState([]);
+  const [entryBarrierOpen, setEntryBarrierOpen] = useState({});
+  const [exitBarrierOpen, setExitBarrierOpen] = useState({});
   const [overrideModalOpen, setOverrideModalOpen] = useState(false);
   const [selectedGate, setSelectedGate] = useState('GATE-IN-01');
+  const [activeEntryGateId, setActiveEntryGateId] = useState('');
+  const [activeExitGateId, setActiveExitGateId] = useState('');
   const [overrideInitialPlate, setOverrideInitialPlate] = useState('');
   const [overrideInitialSessionId, setOverrideInitialSessionId] = useState(null);
   const [barrierLogs, setBarrierLogs] = useState([]);
@@ -37,13 +42,32 @@ export default function LiveLanes({ onOpenSimulator }) {
 
   const loadData = async () => {
     try {
-      const [logsRes, sessRes] = await Promise.all([
+      const [logsRes, sessRes, gatesRes] = await Promise.all([
         api.getBarrierLogs(),
-        api.getSessions({ limit: 50 })
+        api.getSessions({ limit: 50 }),
+        api.getGates()
       ]);
 
       if (logsRes.success) {
         setBarrierLogs(logsRes.data.logs || []);
+      }
+
+      if (gatesRes.success) {
+        let allGates = gatesRes.data.gates || [];
+        // Filter by operator's assigned gates if not ALL and not admin
+        const assigned = user?.assigned_gates;
+        if (!isAdmin && assigned && assigned !== 'ALL') {
+          const allowed = assigned.split(',').map(g => g.trim());
+          allGates = allGates.filter(g => allowed.includes(g.gate_id));
+        }
+        setGates(allGates);
+
+        // Set default active entry & exit gates if not already set
+        const inGates = allGates.filter(g => g.gate_type === 'ENTRY');
+        const outGates = allGates.filter(g => g.gate_type === 'EXIT');
+
+        setActiveEntryGateId(prev => (prev && inGates.some(g => g.gate_id === prev)) ? prev : (inGates[0]?.gate_id || ''));
+        setActiveExitGateId(prev => (prev && outGates.some(g => g.gate_id === prev)) ? prev : (outGates[0]?.gate_id || ''));
       }
 
       if (sessRes.success) {
@@ -63,7 +87,7 @@ export default function LiveLanes({ onOpenSimulator }) {
     loadData();
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   const showToast = (msg, isError = false) => {
     setToastMessage({ text: msg, isError });
@@ -76,16 +100,17 @@ export default function LiveLanes({ onOpenSimulator }) {
     setActionLoading(true);
 
     try {
+      const exitGateCode = activeExitGateId || 'GATE-OUT-01';
       const res = await api.completeSessionExit(session.id, {
-        gate_id: 'GATE-OUT-01',
+        gate_id: exitGateCode,
         cash_payment: isCash,
-        reason: isCash ? 'Cash collected at exit gate' : 'Exit authorized at gate monitor'
+        reason: isCash ? `Cash collected at exit gate (${exitGateCode})` : `Exit authorized at gate monitor (${exitGateCode})`
       });
 
       if (res.success) {
-        setExitBarrierOpen(true);
-        setTimeout(() => setExitBarrierOpen(false), 5000);
-        showToast(`Vehicle ${session.plate_number} exit completed successfully! Exit boom barrier opened.`);
+        setExitBarrierOpen(prev => ({ ...prev, [exitGateCode]: true }));
+        setTimeout(() => setExitBarrierOpen(prev => ({ ...prev, [exitGateCode]: false })), 5000);
+        showToast(`Vehicle ${session.plate_number} exit completed at ${exitGateCode}! Exit boom barrier opened.`);
         loadData();
       }
     } catch (err) {
@@ -100,11 +125,11 @@ export default function LiveLanes({ onOpenSimulator }) {
       const res = await api.manualOverrideBarrier(payload);
       if (res.success) {
         if (payload.gate_id.includes('IN')) {
-          setEntryBarrierOpen(true);
-          setTimeout(() => setEntryBarrierOpen(false), 5000);
+          setEntryBarrierOpen(prev => ({ ...prev, [payload.gate_id]: true }));
+          setTimeout(() => setEntryBarrierOpen(prev => ({ ...prev, [payload.gate_id]: false })), 5000);
         } else {
-          setExitBarrierOpen(true);
-          setTimeout(() => setExitBarrierOpen(false), 5000);
+          setExitBarrierOpen(prev => ({ ...prev, [payload.gate_id]: true }));
+          setTimeout(() => setExitBarrierOpen(prev => ({ ...prev, [payload.gate_id]: false })), 5000);
         }
         showToast(res.message || 'Manual override barrier pulse executed!');
         loadData();
@@ -113,6 +138,12 @@ export default function LiveLanes({ onOpenSimulator }) {
       showToast(err.message || 'Override failed', true);
     }
   };
+
+  const entryGatesList = gates.filter(g => g.gate_type === 'ENTRY');
+  const exitGatesList = gates.filter(g => g.gate_type === 'EXIT');
+
+  const currentEntryGate = entryGatesList.find(g => g.gate_id === activeEntryGateId) || entryGatesList[0] || null;
+  const currentExitGate = exitGatesList.find(g => g.gate_id === activeExitGateId) || exitGatesList[0] || null;
 
   // Only populated when ANPR auto-detects or operator manually picks from dropdown
   const selectedVehicle = selectedExitSessionId
@@ -142,17 +173,42 @@ export default function LiveLanes({ onOpenSimulator }) {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+      {/* Operator Assignment Notification Banner */}
+      {user?.assigned_gates && user.assigned_gates !== 'ALL' && (
+        <div style={{
+          padding: '8px 14px',
+          background: 'rgba(236, 72, 153, 0.08)',
+          border: '1px solid rgba(236, 72, 153, 0.3)',
+          borderRadius: 'var(--radius-sm)',
+          marginBottom: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '0.78rem'
+        }}>
+          <div>
+            <strong style={{ color: 'var(--accent)' }}>Operator Lane Filter:</strong> You are assigned to monitor: {' '}
+            {user.assigned_gates.split(',').map((g, i) => (
+              <span key={i} className="badge badge-pink" style={{ marginLeft: '4px', fontSize: '0.72rem' }}>
+                {g.trim()}
+              </span>
+            ))}
+          </div>
+          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Admin can re-assign gates in User Management</span>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2 }}>
             Live Gate Monitor & Barrier Control Room
           </h2>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-            Real-time ANPR camera stream, loop sensor feedback, automated boom barrier relay control & exit checkout
+            Real-time multi-lane ANPR camera streams, IP cameras, loop sensor feedback, automated boom barrier relays & exit checkout
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <button className="btn btn-outline btn-sm" onClick={loadData}>
             <RefreshCw size={13} /> Refresh
           </button>
@@ -162,16 +218,33 @@ export default function LiveLanes({ onOpenSimulator }) {
         </div>
       </div>
 
-      {/* Dual Lane Split View */}
+      {/* Multi-Gate Lane Split View */}
       <div className="lane-monitor-grid">
-        {/* ENTRY LANE */}
+        {/* ENTRY LANE PANEL */}
         <div className="lane-card">
-          <div className="panel-header">
+          <div className="panel-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
             <span className="panel-title">
               <Video size={16} color="var(--status-green)" />
-              LANE 1: GATE-IN-01 (Main Hospital Entry)
+              ENTRY LANE: {currentEntryGate?.name || 'No Entry Gate'}
             </span>
-            <span className="badge badge-green">ANPR ACTIVE</span>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {entryGatesList.length > 1 && (
+                <select
+                  className="form-control"
+                  style={{ padding: '2px 8px', fontSize: '0.72rem', height: '26px' }}
+                  value={activeEntryGateId}
+                  onChange={(e) => setActiveEntryGateId(e.target.value)}
+                >
+                  {entryGatesList.map(g => (
+                    <option key={g.gate_id} value={g.gate_id}>
+                      {g.gate_id} - {g.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <span className="badge badge-green">ANPR ACTIVE</span>
+            </div>
           </div>
 
           <div className="lane-camera-viewport">
@@ -186,14 +259,32 @@ export default function LiveLanes({ onOpenSimulator }) {
               LIVE HD CAM
             </div>
 
+            <div style={{
+              position: 'absolute',
+              top: 10, right: 10,
+              background: 'rgba(0,0,0,0.7)', padding: '2px 8px', borderRadius: '4px',
+              color: '#38bdf8', fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-mono)'
+            }}>
+              {currentEntryGate?.camera_ip ? `${currentEntryGate.camera_ip}:${currentEntryGate.camera_port || 80}` : 'NO CAM IP'}
+            </div>
+
             <div style={{ textAlign: 'center', color: '#94a3b8' }}>
               <Video size={48} style={{ opacity: 0.3, margin: '0 auto 8px' }} />
-              <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>ANPR-CAM-01 · 192.168.1.101</div>
-              <div style={{ fontSize: '0.65rem', color: '#64748b' }}>Optical Character Recognition Active</div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#e2e8f0' }}>
+                {currentEntryGate?.gate_id || 'GATE-IN-01'} · IP: {currentEntryGate?.camera_ip || '192.168.1.101'}
+              </div>
+              <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>
+                HTTP Webhook / TCP Socket Active (Port {currentEntryGate?.camera_port || 80})
+              </div>
+              {currentEntryGate?.rtsp_url && (
+                <div style={{ fontSize: '0.62rem', color: '#64748b', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                  RTSP: {currentEntryGate.rtsp_url}
+                </div>
+              )}
             </div>
 
             <div className="lane-anpr-plate-overlay">
-              <span style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>ENTRY SENSOR:</span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>ENTRY SENSOR ({currentEntryGate?.gate_id}):</span>
               <span>READY</span>
               <span style={{ fontSize: '0.65rem', color: '#10b981' }}>AUTO-ALLOW</span>
             </div>
@@ -201,20 +292,23 @@ export default function LiveLanes({ onOpenSimulator }) {
 
           <div style={{ padding: '12px' }}>
             <BoomBarrierVisualizer
-              isOpen={entryBarrierOpen}
-              gateName="Entry Boom Barrier (Moxa Relay #1)"
-              onToggle={() => setEntryBarrierOpen(!entryBarrierOpen)}
+              isOpen={Boolean(entryBarrierOpen[currentEntryGate?.gate_id || 'GATE-IN-01'])}
+              gateName={`${currentEntryGate?.name || 'Entry Boom Barrier'} (${currentEntryGate?.barrier_relay_ip || 'Relay 1'})`}
+              onToggle={() => {
+                const gid = currentEntryGate?.gate_id || 'GATE-IN-01';
+                setEntryBarrierOpen(prev => ({ ...prev, [gid]: !prev[gid] }));
+              }}
             />
           </div>
 
           <div className="barrier-status-bar">
             <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-              Relay: <strong>192.168.1.201:8080</strong> (PULSE 800ms)
+              Relay IP: <strong>{currentEntryGate?.barrier_relay_ip || '192.168.1.201:8080'}</strong> (PULSE 800ms)
             </span>
             <button
               className="btn btn-danger btn-sm"
               onClick={() => {
-                setSelectedGate('GATE-IN-01');
+                setSelectedGate(currentEntryGate?.gate_id || 'GATE-IN-01');
                 setOverrideInitialPlate('');
                 setOverrideInitialSessionId(null);
                 setOverrideModalOpen(true);
@@ -225,14 +319,31 @@ export default function LiveLanes({ onOpenSimulator }) {
           </div>
         </div>
 
-        {/* EXIT LANE */}
+        {/* EXIT LANE PANEL */}
         <div className="lane-card">
-          <div className="panel-header">
+          <div className="panel-header" style={{ flexWrap: 'wrap', gap: '8px' }}>
             <span className="panel-title">
               <Video size={16} color="var(--status-blue)" />
-              LANE 2: GATE-OUT-01 (Main Hospital Exit)
+              EXIT LANE: {currentExitGate?.name || 'No Exit Gate'}
             </span>
-            <span className="badge badge-blue">ANPR ACTIVE</span>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              {exitGatesList.length > 1 && (
+                <select
+                  className="form-control"
+                  style={{ padding: '2px 8px', fontSize: '0.72rem', height: '26px' }}
+                  value={activeExitGateId}
+                  onChange={(e) => setActiveExitGateId(e.target.value)}
+                >
+                  {exitGatesList.map(g => (
+                    <option key={g.gate_id} value={g.gate_id}>
+                      {g.gate_id} - {g.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <span className="badge badge-blue">ANPR ACTIVE</span>
+            </div>
           </div>
 
           <div className="lane-camera-viewport">
@@ -247,14 +358,32 @@ export default function LiveLanes({ onOpenSimulator }) {
               LIVE HD CAM
             </div>
 
+            <div style={{
+              position: 'absolute',
+              top: 10, right: 10,
+              background: 'rgba(0,0,0,0.7)', padding: '2px 8px', borderRadius: '4px',
+              color: '#38bdf8', fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-mono)'
+            }}>
+              {currentExitGate?.camera_ip ? `${currentExitGate.camera_ip}:${currentExitGate.camera_port || 80}` : 'NO CAM IP'}
+            </div>
+
             <div style={{ textAlign: 'center', color: '#94a3b8' }}>
               <Video size={48} style={{ opacity: 0.3, margin: '0 auto 8px' }} />
-              <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>ANPR-CAM-02 · 192.168.1.102</div>
-              <div style={{ fontSize: '0.65rem', color: '#64748b' }}>Exit Payment Sensor Interlocked</div>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#e2e8f0' }}>
+                {currentExitGate?.gate_id || 'GATE-OUT-01'} · IP: {currentExitGate?.camera_ip || '192.168.1.102'}
+              </div>
+              <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>
+                Exit Payment & Barrier Interlock (Port {currentExitGate?.camera_port || 80})
+              </div>
+              {currentExitGate?.rtsp_url && (
+                <div style={{ fontSize: '0.62rem', color: '#64748b', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
+                  RTSP: {currentExitGate.rtsp_url}
+                </div>
+              )}
             </div>
 
             <div className="lane-anpr-plate-overlay">
-              <span style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>EXIT SENSOR:</span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>EXIT SENSOR ({currentExitGate?.gate_id}):</span>
               <span style={{ color: selectedVehicle ? '#fff' : '#64748b' }}>
                 {selectedVehicle ? selectedVehicle.plate_number : 'WAITING...'}
               </span>
@@ -282,7 +411,7 @@ export default function LiveLanes({ onOpenSimulator }) {
                 options={activeSessions.map(s => ({
                   value: s.id,
                   label: s.plate_number,
-                  meta: `[${s.status}]  Entry: ${s.entry_time ? s.entry_time.slice(11,16) : ''}  •  ${s.total_duration_minutes || 0} min parked`
+                  meta: `[${s.status}] In: ${s.entry_gate_id || 'GATE-IN-01'} @ ${s.entry_time ? s.entry_time.slice(11,16) : ''} • ${s.total_duration_minutes || 0}m`
                 }))}
                 value={selectedExitSessionId}
                 onChange={(val) => setSelectedExitSessionId(val ? parseInt(val) : null)}
@@ -317,11 +446,12 @@ export default function LiveLanes({ onOpenSimulator }) {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '0.68rem', color: 'var(--text-secondary)', marginBottom: '10px', flexWrap: 'wrap' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                     <Clock size={11} /> Parked: {selectedVehicle.total_duration_minutes || 0}m
                   </span>
-                  <span>Entry: {selectedVehicle.entry_time.slice(11, 16)}</span>
+                  <span>In Route: <strong>{selectedVehicle.entry_gate_id || 'GATE-IN-01'}</strong> → Out: <strong>{currentExitGate?.gate_id || 'GATE-OUT-01'}</strong></span>
+                  <span>Entry: {selectedVehicle.entry_time ? selectedVehicle.entry_time.slice(11, 16) : ''}</span>
                   <span>Code: {selectedVehicle.session_code}</span>
                 </div>
 
@@ -335,7 +465,7 @@ export default function LiveLanes({ onOpenSimulator }) {
                       disabled={actionLoading}
                       onClick={() => handleCompleteExit(selectedVehicle, true)}
                     >
-                      <Coins size={13} /> Collect Cash & Open Exit
+                      <Coins size={13} /> Collect Cash & Open {currentExitGate?.gate_id || 'Exit'}
                     </button>
                   ) : (
                     <button
@@ -345,7 +475,7 @@ export default function LiveLanes({ onOpenSimulator }) {
                       disabled={actionLoading}
                       onClick={() => handleCompleteExit(selectedVehicle, false)}
                     >
-                      <CheckCircle2 size={13} /> Authorize Exit & Open Barrier
+                      <CheckCircle2 size={13} /> Authorize Exit & Open {currentExitGate?.gate_id || 'Barrier'}
                     </button>
                   )}
 
@@ -354,7 +484,7 @@ export default function LiveLanes({ onOpenSimulator }) {
                     className="btn btn-outline btn-sm"
                     style={{ fontSize: '0.72rem' }}
                     onClick={() => {
-                      setSelectedGate('GATE-OUT-01');
+                      setSelectedGate(currentExitGate?.gate_id || 'GATE-OUT-01');
                       setOverrideInitialPlate(selectedVehicle.plate_number);
                       setOverrideInitialSessionId(selectedVehicle.id);
                       setOverrideModalOpen(true);
@@ -373,20 +503,23 @@ export default function LiveLanes({ onOpenSimulator }) {
 
           <div style={{ padding: '12px' }}>
             <BoomBarrierVisualizer
-              isOpen={exitBarrierOpen}
-              gateName="Exit Boom Barrier (Moxa Relay #2)"
-              onToggle={() => setExitBarrierOpen(!exitBarrierOpen)}
+              isOpen={Boolean(exitBarrierOpen[currentExitGate?.gate_id || 'GATE-OUT-01'])}
+              gateName={`${currentExitGate?.name || 'Exit Boom Barrier'} (${currentExitGate?.barrier_relay_ip || 'Relay 2'})`}
+              onToggle={() => {
+                const gid = currentExitGate?.gate_id || 'GATE-OUT-01';
+                setExitBarrierOpen(prev => ({ ...prev, [gid]: !prev[gid] }));
+              }}
             />
           </div>
 
           <div className="barrier-status-bar">
             <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
-              Relay: <strong>192.168.1.202:8080</strong> (PULSE 800ms)
+              Relay IP: <strong>{currentExitGate?.barrier_relay_ip || '192.168.1.202:8080'}</strong> (PULSE 800ms)
             </span>
             <button
               className="btn btn-danger btn-sm"
               onClick={() => {
-                setSelectedGate('GATE-OUT-01');
+                setSelectedGate(currentExitGate?.gate_id || 'GATE-OUT-01');
                 setOverrideInitialPlate(selectedVehicle ? selectedVehicle.plate_number : '');
                 setOverrideInitialSessionId(selectedVehicle ? selectedVehicle.id : null);
                 setOverrideModalOpen(true);

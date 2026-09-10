@@ -100,6 +100,14 @@ export const api = {
   saveVehicle: (data) => request('/vehicles', { method: 'POST', body: data }),
   deleteVehicle: (id) => request(`/vehicles/${id}`, { method: 'DELETE' }),
 
+  // Gates & ANPR Cameras (Multi-Gate Management)
+  getGates: () => request('/gates'),
+  createGate: (data) => request('/gates', { method: 'POST', body: data }),
+  updateGate: (id, data) => request(`/gates/${id}`, { method: 'PUT', body: data }),
+  deleteGate: (id) => request(`/gates/${id}`, { method: 'DELETE' }),
+  testGatePulse: (id) => request(`/gates/${id}/test-pulse`, { method: 'POST' }),
+  testCameraPing: (id) => request(`/gates/${id}/test-camera`, { method: 'POST' }),
+
   // Dashboard & Analytics
   getDashboardMetrics: () => request('/dashboard/metrics'),
   getReportsSummary: (params = {}) => {

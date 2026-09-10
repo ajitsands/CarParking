@@ -73,10 +73,11 @@ class AuthController extends Controller {
         }
 
         $token = JWT::encode([
-            'user_id'  => (int)$user['id'],
-            'username' => $user['username'],
-            'role'     => $user['role'],
-            'full_name'=> $user['full_name']
+            'user_id'       => (int)$user['id'],
+            'username'      => $user['username'],
+            'role'          => $user['role'],
+            'full_name'     => $user['full_name'],
+            'assigned_gates'=> $user['assigned_gates'] ?? 'ALL'
         ]);
 
         $db->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$user['id']]);
@@ -84,11 +85,12 @@ class AuthController extends Controller {
         $this->success([
             'token' => $token,
             'user'  => [
-                'id'        => (int)$user['id'],
-                'username'  => $user['username'],
-                'email'     => $user['email'],
-                'full_name' => $user['full_name'],
-                'role'      => $user['role']
+                'id'            => (int)$user['id'],
+                'username'      => $user['username'],
+                'email'         => $user['email'],
+                'full_name'     => $user['full_name'],
+                'role'          => $user['role'],
+                'assigned_gates'=> $user['assigned_gates'] ?? 'ALL'
             ]
         ], 'Login successful');
     }
