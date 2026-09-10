@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Settings, Globe, DollarSign, Clock, Building2, Upload, CheckCircle2, 
   AlertCircle, Palette, Sparkles, Receipt, Calculator, Video, Copy, Check, 
-  Server, Wifi, Send, ExternalLink, Terminal, Radio, Folder, Cpu, Layers, HardDrive 
+  Server, Wifi, Send, ExternalLink, Terminal, Radio, Folder, Cpu, Layers, HardDrive, HelpCircle, BookOpen 
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useSettings } from '../context/SettingsContext';
@@ -414,7 +414,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <span style={{
                     fontSize: '0.7rem',
                     fontWeight: 700,
@@ -438,6 +438,39 @@ export default function SettingsPage() {
                   }}>
                     Endpoint Active
                   </span>
+                  <a
+                    href="/ANPR_Configuration_Procedure_Guide.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '3px 10px',
+                      borderRadius: '4px',
+                      background: 'rgba(236, 72, 153, 0.15)',
+                      color: '#ec4899',
+                      border: '1px solid rgba(236, 72, 153, 0.4)',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(236, 72, 153, 0.25)';
+                      e.currentTarget.style.borderColor = 'rgba(236, 72, 153, 0.7)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(236, 72, 153, 0.15)';
+                      e.currentTarget.style.borderColor = 'rgba(236, 72, 153, 0.4)';
+                    }}
+                    title="Open ANPR Camera Webhook & Configuration Setup Help Guide"
+                  >
+                    <BookOpen size={12} />
+                    Camera Setup Help
+                    <ExternalLink size={11} style={{ opacity: 0.8 }} />
+                  </a>
                 </div>
               </div>
 
