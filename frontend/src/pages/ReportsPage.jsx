@@ -197,6 +197,83 @@ export default function ReportsPage() {
             )
           },
           {
+            key: 'plate_number',
+            label: 'Vehicle Number',
+            render: (log) => {
+              if (!log.plate_number || log.plate_number === '-') {
+                return <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>-</span>;
+              }
+              return (
+                <div style={{
+                  display: 'inline-block',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 800,
+                  fontSize: '0.78rem',
+                  color: 'var(--text-primary)'
+                }}>
+                  {log.plate_number}
+                </div>
+              );
+            }
+          },
+          {
+            key: 'start_time',
+            label: 'Start Time',
+            render: (log) => (
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                {log.start_time || log.created_at || '-'}
+              </span>
+            )
+          },
+          {
+            key: 'end_time',
+            label: 'End Time',
+            render: (log) => {
+              if (log.end_time) {
+                return (
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                    {log.end_time}
+                  </span>
+                );
+              }
+              if (log.plate_number && log.plate_number !== '-') {
+                return (
+                  <span className="badge badge-green" style={{ fontSize: '0.65rem' }}>
+                    Inside / Active
+                  </span>
+                );
+              }
+              return <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>-</span>;
+            }
+          },
+          {
+            key: 'duration_minutes',
+            label: 'Total Parked (Min/Hr)',
+            render: (log) => {
+              const mins = log.duration_minutes !== null && log.duration_minutes !== undefined ? parseInt(log.duration_minutes, 10) : null;
+              if (mins === null || isNaN(mins)) {
+                return <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>-</span>;
+              }
+              const formatted = mins >= 60 
+                ? `${Math.floor(mins / 60)}h ${mins % 60}m (${mins}m)`
+                : `${mins} mins`;
+              return (
+                <span style={{ 
+                  fontFamily: 'var(--font-mono)', 
+                  fontWeight: 700, 
+                  fontSize: '0.76rem',
+                  color: mins > 120 ? 'var(--status-amber)' : 'var(--text-primary)'
+                }}>
+                  {formatted}
+                </span>
+              );
+            }
+          },
+          {
             key: 'username',
             label: 'User / Operator',
             render: (log) => <span style={{ fontWeight: 600 }}>{log.username || 'System'}</span>

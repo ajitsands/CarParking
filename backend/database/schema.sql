@@ -266,12 +266,17 @@ CREATE TABLE IF NOT EXISTS `audit_logs` (
   `user_id` INT NULL,
   `username` VARCHAR(50) NULL,
   `action` VARCHAR(100) NOT NULL,
+  `plate_number` VARCHAR(30) NULL,
+  `start_time` DATETIME NULL,
+  `end_time` DATETIME NULL,
+  `duration_minutes` INT NULL,
   `entity_type` VARCHAR(50) NOT NULL,
   `entity_id` VARCHAR(50) NULL,
   `details` TEXT NULL,
   `ip_address` VARCHAR(50) NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   INDEX `idx_audit_action` (`action`),
+  INDEX `idx_audit_plate` (`plate_number`),
   INDEX `idx_audit_time` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
