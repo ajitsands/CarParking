@@ -34,110 +34,156 @@ class ReportsController extends Controller {
         $queryParams = [];
 
         if (!empty($startDate)) {
-            $whereClauses[] = "DATE(a.created_at) >= :start_date";
+            $whereClauses[] = "DATE(created_at) >= :start_date";
             $queryParams[':start_date'] = $startDate;
         }
         if (!empty($endDate)) {
-            $whereClauses[] = "DATE(a.created_at) <= :end_date";
+            $whereClauses[] = "DATE(created_at) <= :end_date";
             $queryParams[':end_date'] = $endDate;
         }
 
         $whereSql = !empty($whereClauses) ? "WHERE " . implode(" AND ", $whereClauses) : "";
 
-        $auditSql = "
-            SELECT 
-                a.id,
-                a.user_id,
-                a.username,
-                a.action,
-                COALESCE(
-                    NULLIF(a.plate_number, ''),
-                    s.plate_number,
-                    CASE 
-                        WHEN a.details REGEXP 'Plate: ([A-Za-z0-9 ]+)' THEN TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(a.details, 'Plate: ', -1), ' |', 1))
-                        ELSE '-'
-                    END
-                ) as plate_number,
-                COALESCE(a.start_time, s.entry_time, a.created_at) as start_time,
-                COALESCE(
-                    a.end_time, 
-                    s.exit_time,
-                    CASE 
-                        WHEN a.details LIKE '%Direction: EXIT%' OR a.entity_id LIKE '%OUT%' OR a.action LIKE '%EXIT%' THEN a.created_at
-                        ELSE NULL 
-                    END
-                ) as end_time,
-                COALESCE(
-                    a.duration_minutes, 
-                    s.total_duration_minutes,
-                    CASE 
-                        WHEN s.entry_time IS NOT NULL AND s.exit_time IS NOT NULL THEN TIMESTAMPDIFF(MINUTE, s.entry_time, s.exit_time)
-                        WHEN s.entry_time IS NOT NULL AND (a.details LIKE '%Direction: EXIT%' OR a.entity_id LIKE '%OUT%') THEN TIMESTAMPDIFF(MINUTE, s.entry_time, a.created_at)
-                        WHEN s.entry_time IS NOT NULL AND s.status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED') AND s.exit_time IS NULL THEN TIMESTAMPDIFF(MINUTE, s.entry_time, NOW())
-                        ELSE NULL
-                    END
-                ) as duration_minutes,
-                s.status as session_status,
-                CASE 
-                    WHEN s.id IS NOT NULL AND s.exit_time IS NULL AND s.status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED') 
-                         AND NOT (a.details LIKE '%Direction: EXIT%' OR a.entity_id LIKE '%OUT%') THEN 1
-                    ELSE 0
-                END as is_currently_inside,
-                COALESCE(
-                    s.entry_gate_id,
-                    CASE WHEN a.entity_id LIKE 'GATE%' AND a.details LIKE '%Direction: ENTRY%' THEN a.entity_id ELSE NULL END,
-                    CASE WHEN a.entity_id LIKE 'GATE%' THEN a.entity_id ELSE NULL END,
-                    'GATE-IN-01'
-                ) as entry_gate,
-                s.exit_gate_id as exit_gate,
-                CASE
-                    WHEN s.entry_gate_id IS NOT NULL AND s.exit_gate_id IS NOT NULL THEN CONCAT(s.entry_gate_id, ' → ', s.exit_gate_id)
-                    WHEN s.exit_gate_id IS NOT NULL THEN s.exit_gate_id
-                    WHEN s.entry_gate_id IS NOT NULL THEN s.entry_gate_id
-                    WHEN a.entity_id LIKE 'GATE%' THEN a.entity_id
-                    ELSE 'GATE-IN-01'
-                END as gate_route,
-                CASE 
-                    WHEN a.details LIKE 'Override Reason: %' THEN SUBSTRING_INDEX(SUBSTRING_INDEX(a.details, 'Override Reason: ', -1), ' |', 1)
-                    WHEN a.details LIKE 'Reason: %' THEN SUBSTRING_INDEX(SUBSTRING_INDEX(a.details, 'Reason: ', -1), ' |', 1)
-                    WHEN a.details LIKE '%AUTO_CLOSED_NEW_ENTRY%' THEN 'Auto Closed (Anti-Passback Duplicate Entry Reconciled)'
-                    ELSE NULL
-                END as override_reason,
-                a.entity_type,
-                a.entity_id,
-                a.details,
-                a.ip_address,
-                a.created_at
-            FROM audit_logs a
-            LEFT JOIN parking_sessions s ON (
-                (a.entity_type = 'parking_sessions' AND a.entity_id = CAST(s.id AS CHAR))
-                OR (
-                    (a.plate_number IS NOT NULL AND a.plate_number != '' AND s.plate_number = a.plate_number)
-                    AND s.id = (
-                        SELECT ps.id FROM parking_sessions ps 
-                        WHERE ps.plate_number = a.plate_number 
-                          AND ps.entry_time <= a.created_at 
-                        ORDER BY ps.id DESC LIMIT 1
-                    )
-                )
-                OR (
-                    a.details REGEXP 'Plate: ([A-Za-z0-9 ]+)'
-                    AND s.plate_number = TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(a.details, 'Plate: ', -1), ' |', 1))
-                    AND s.id = (
-                        SELECT ps.id FROM parking_sessions ps 
-                        WHERE ps.plate_number = TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(a.details, 'Plate: ', -1), ' |', 1))
-                          AND ps.entry_time <= a.created_at 
-                        ORDER BY ps.id DESC LIMIT 1
-                    )
-                )
-            )
-            {$whereSql}
-            ORDER BY a.id DESC 
-            LIMIT 300
-        ";
-        $stmtAudit = $db->prepare($auditSql);
+        // Query raw audit logs cleanly without cross-table collation conflicts
+        $stmtAudit = $db->prepare("SELECT * FROM audit_logs {$whereSql} ORDER BY id DESC LIMIT 300");
         $stmtAudit->execute($queryParams);
-        $auditLogs = $stmtAudit->fetchAll();
+        $rawLogs = $stmtAudit->fetchAll();
+
+        // Load recent parking sessions for enrichment
+        $stmtSess = $db->query("SELECT id, session_code, plate_number, entry_time, exit_time, total_duration_minutes, status, entry_gate_id, exit_gate_id FROM parking_sessions ORDER BY id DESC LIMIT 500");
+        $allSessions = $stmtSess->fetchAll();
+
+        $sessionsById = [];
+        $sessionsByPlate = [];
+        foreach ($allSessions as $sess) {
+            $sessionsById[$sess['id']] = $sess;
+            $cleanP = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($sess['plate_number'] ?? ''));
+            if ($cleanP !== '') {
+                $sessionsByPlate[$cleanP][] = $sess;
+            }
+        }
+
+        $auditLogs = [];
+        foreach ($rawLogs as $log) {
+            $details = $log['details'] ?? '';
+            $plate = !empty($log['plate_number']) ? $log['plate_number'] : null;
+
+            // Extract plate from details if not in plate_number column
+            if (!$plate && preg_match('/Plate:\s*([A-Za-z0-9 ]+?)(?:\s*\||$)/i', $details, $m)) {
+                $plate = trim($m[1]);
+            }
+
+            // Find matching parking session
+            $matchedSession = null;
+            if ($log['entity_type'] === 'parking_sessions' && !empty($log['entity_id']) && is_numeric($log['entity_id'])) {
+                $matchedSession = $sessionsById[(int)$log['entity_id']] ?? null;
+            }
+
+            if (!$matchedSession && $plate) {
+                $cleanP = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($plate));
+                if (!empty($sessionsByPlate[$cleanP])) {
+                    $logTime = strtotime($log['created_at']);
+                    // Find session with entry_time <= audit created_at (or closest)
+                    foreach ($sessionsByPlate[$cleanP] as $cand) {
+                        $candEntryTs = strtotime($cand['entry_time'] ?? '');
+                        if ($candEntryTs && $candEntryTs <= ($logTime + 60)) {
+                            $matchedSession = $cand;
+                            break;
+                        }
+                    }
+                    if (!$matchedSession) {
+                        $matchedSession = $sessionsByPlate[$cleanP][0];
+                    }
+                }
+            }
+
+            $isExitEvent = (stripos($details, 'Direction: EXIT') !== false) || 
+                           (stripos($log['entity_id'] ?? '', 'OUT') !== false) ||
+                           (stripos($log['action'] ?? '', 'EXIT') !== false);
+
+            $startTime = !empty($log['start_time']) 
+                ? $log['start_time'] 
+                : ($matchedSession['entry_time'] ?? $log['created_at']);
+
+            $endTime = !empty($log['end_time'])
+                ? $log['end_time']
+                : ($matchedSession['exit_time'] ?? ($isExitEvent ? $log['created_at'] : null));
+
+            // Determine if vehicle is ACTUALLY currently inside
+            $isCurrentlyInside = false;
+            if ($matchedSession) {
+                $sessStatus = $matchedSession['status'] ?? '';
+                $isCompleted = in_array($sessStatus, ['EXIT_COMPLETED', 'COMPLETED', 'CANCELLED'], true) || !empty($matchedSession['exit_time']);
+                if (!$isCompleted && !$isExitEvent) {
+                    $isCurrentlyInside = true;
+                }
+            }
+
+            // Calculate duration in minutes
+            $durMins = null;
+            if ($log['duration_minutes'] !== null && $log['duration_minutes'] !== '') {
+                $durMins = (int)$log['duration_minutes'];
+            } elseif (!empty($matchedSession['total_duration_minutes'])) {
+                $durMins = (int)$matchedSession['total_duration_minutes'];
+            } elseif ($startTime && $endTime) {
+                $sTs = strtotime($startTime);
+                $eTs = strtotime($endTime);
+                if ($sTs && $eTs && $eTs >= $sTs) {
+                    $durMins = max(1, (int)round(($eTs - $sTs) / 60));
+                }
+            } elseif ($isCurrentlyInside && $startTime) {
+                $sTs = strtotime($startTime);
+                if ($sTs) {
+                    $durMins = max(0, (int)round((time() - $sTs) / 60));
+                }
+            }
+
+            // Gate Route
+            $entryGate = $matchedSession['entry_gate_id'] ?? ($isExitEvent ? null : ($log['entity_id'] ?? 'GATE-IN-01'));
+            $exitGate = $matchedSession['exit_gate_id'] ?? ($isExitEvent ? ($log['entity_id'] ?? 'GATE-OUT-01') : null);
+            $gateRoute = 'GATE-IN-01';
+            if ($entryGate && $exitGate) {
+                $gateRoute = "{$entryGate} → {$exitGate}";
+            } elseif ($exitGate) {
+                $gateRoute = $exitGate;
+            } elseif ($entryGate) {
+                $gateRoute = $entryGate;
+            } elseif (!empty($log['entity_id']) && str_starts_with($log['entity_id'], 'GATE')) {
+                $gateRoute = $log['entity_id'];
+            }
+
+            // Override Reason extraction
+            $overrideReason = null;
+            if (preg_match('/Override Reason:\s*([^|]+)/i', $details, $rm)) {
+                $overrideReason = trim($rm[1]);
+            } elseif (preg_match('/Reason:\s*([^|]+)/i', $details, $rm)) {
+                $overrideReason = trim($rm[1]);
+            } elseif (stripos($details, 'AUTO_CLOSED_NEW_ENTRY') !== false) {
+                $overrideReason = 'Auto Closed (Anti-Passback Duplicate Entry Reconciled)';
+            }
+
+            $auditLogs[] = [
+                'id'                  => (int)$log['id'],
+                'user_id'             => $log['user_id'] ? (int)$log['user_id'] : null,
+                'username'            => $log['username'] ?? 'System',
+                'action'              => $log['action'],
+                'plate_number'        => $plate ?: ($matchedSession['plate_number'] ?? '-'),
+                'start_time'          => $startTime,
+                'end_time'            => $endTime,
+                'duration_minutes'    => $durMins,
+                'session_status'      => $matchedSession['status'] ?? null,
+                'is_currently_inside' => $isCurrentlyInside ? 1 : 0,
+                'entry_gate'          => $entryGate,
+                'exit_gate'           => $exitGate,
+                'gate_route'          => $gateRoute,
+                'override_reason'     => $overrideReason,
+                'entity_type'         => $log['entity_type'],
+                'entity_id'           => $log['entity_id'],
+                'details'             => $details,
+                'ip_address'          => $log['ip_address'],
+                'created_at'          => $log['created_at']
+            ];
+        }
 
         $this->success([
             'totals' => [

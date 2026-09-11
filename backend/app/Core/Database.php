@@ -46,6 +46,7 @@ class Database {
         try {
             self::$instance = new PDO($dsn, $conn['username'], $conn['password'], $conn['options']);
             try {
+                self::$instance->exec("SET NAMES utf8mb4");
                 $tzOffset = \App\Helpers\TimezoneHelper::getOffset();
                 self::$instance->exec("SET time_zone = '{$tzOffset}'");
             } catch (\Throwable $tzErr) {
