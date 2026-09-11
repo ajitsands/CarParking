@@ -554,38 +554,38 @@ function SetupGuide() {
   const steps = [
     {
       step: '1',
-      title: 'Install Expo Go',
-      desc: 'Download "Expo Go" from Google Play Store on the Android tablet/phone that will be mounted at the exit gate.',
+      title: 'Download & Install Android APK',
+      desc: 'Download the standalone ParkingDisplayBoard.apk directly from the "Download APK" tab and install it on the Android tablet or screen mounted at the exit gate.',
       icon: Smartphone,
       color: '#3b82f6'
     },
     {
       step: '2',
-      title: 'Connect to Same Network',
-      desc: 'Ensure the device and this PC are on the same WiFi/LAN network. Check your PC IP with ipconfig.',
+      title: 'Connect Tablet to Network',
+      desc: 'Ensure the tablet has WiFi or LAN connectivity to reach the parking server (either https://parking.sandslab.com or your local gateway IP).',
       icon: Wifi,
       color: '#8b5cf6'
     },
     {
       step: '3',
-      title: 'Scan QR Code',
-      desc: 'Open Expo Go app → tap "Enter URL manually" and enter exp://192.168.8.11:8081 or scan the QR from the terminal window running expo start.',
-      icon: QrCode,
+      title: 'Set Server URL & Gate ID',
+      desc: 'Open the app on first boot. Enter Server URL (e.g., https://parking.sandslab.com) and assign the exit Gate ID (e.g., GATE-OUT-01).',
+      icon: Settings,
       color: '#ec4899'
     },
     {
       step: '4',
-      title: 'Configure Gate',
-      desc: 'In the Display Board app, set Local URL to this server\'s IP:8080, set the Gate ID (e.g. GATE-OUT-01), then tap Launch Kiosk Display.',
-      icon: Settings,
-      color: '#f59e0b'
+      title: 'Test Connection & Launch Kiosk',
+      desc: 'Tap "Test Connection" to verify the green online indicator, then tap "🚀 Launch Kiosk Display". The app locks in full-screen kiosk mode and auto-starts on boot.',
+      icon: Play,
+      color: '#22c55e'
     },
     {
       step: '5',
-      title: 'Test with Simulator',
-      desc: 'Use the Kiosk Simulator tab above to push a vehicle to the exit gate. Watch the display board react within 2–3 seconds.',
-      icon: Play,
-      color: '#22c55e'
+      title: 'Real-Time Operation & Admin Access',
+      desc: 'The display reacts instantly to vehicles approaching the exit. To re-open the settings menu or change the Gate ID anytime, rapidly tap the screen 5 times.',
+      icon: ShieldCheck,
+      color: '#f59e0b'
     }
   ];
 
@@ -628,32 +628,33 @@ function SetupGuide() {
 // ── Connection Info Cards ─────────────────────────────────────────────────────
 
 function ConnectionInfo() {
-  const [localIp, setLocalIp] = useState('192.168.8.11');
+  const [localIp, setLocalIp] = useState(window.location.hostname || 'parking.sandslab.com');
+  const origin = window.location.origin || `https://${localIp}`;
 
   const cards = [
     {
-      label: 'Metro Bundler (Expo Dev)',
-      value: `exp://${localIp}:8081`,
-      sub: 'Enter this in Expo Go app',
-      icon: Smartphone,
-      color: '#3b82f6',
-      copy: `exp://${localIp}:8081`
-    },
-    {
-      label: 'Backend API (Local WiFi)',
-      value: `http://${localIp}:8080`,
-      sub: 'Enter as Local URL in Display Board setup',
+      label: 'Production / Cloud Server URL',
+      value: origin,
+      sub: 'Enter as Server URL in the Display Board tablet app settings',
       icon: Wifi,
-      color: '#8b5cf6',
-      copy: `http://${localIp}:8080`
+      color: '#3b82f6',
+      copy: origin
     },
     {
-      label: 'Kiosk Status Endpoint',
-      value: `/api/v1/kiosk/status?gate_id=GATE-OUT-01`,
-      sub: 'Polled every 2s by the display board app',
+      label: 'Kiosk Status Endpoint (Live Polling)',
+      value: `${origin}/api/v1/kiosk/status?gate_id=GATE-OUT-01`,
+      sub: 'Polled every 2s by the display board tablet to show live vehicle state',
       icon: Activity,
+      color: '#8b5cf6',
+      copy: `${origin}/api/v1/kiosk/status?gate_id=GATE-OUT-01`
+    },
+    {
+      label: 'On-Premise LAN Gateway (Optional Fallback)',
+      value: `http://${localIp}:8080`,
+      sub: 'Use if operating on a closed local subnet without public internet access',
+      icon: Smartphone,
       color: '#ec4899',
-      copy: `http://${localIp}:8080/api/v1/kiosk/status?gate_id=GATE-OUT-01`
+      copy: `http://${localIp}:8080`
     }
   ];
 
@@ -666,14 +667,14 @@ function ConnectionInfo() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
         <Info size={14} color="var(--text-muted)" />
         <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-          Edit Local IP if different:
+          Server Hostname / IP:
         </span>
         <input
           className="form-input"
-          style={{ width: '150px', padding: '4px 10px', fontSize: '0.8rem' }}
+          style={{ width: '220px', padding: '4px 10px', fontSize: '0.8rem' }}
           value={localIp}
           onChange={e => setLocalIp(e.target.value)}
-          placeholder="192.168.x.x"
+          placeholder="parking.sandslab.com or IP"
         />
       </div>
 
