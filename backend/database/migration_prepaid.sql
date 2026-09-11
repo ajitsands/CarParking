@@ -1,4 +1,5 @@
-USE `car_parking_solution`;
+-- Prepaid Passes Migration
+
 
 CREATE TABLE IF NOT EXISTS `prepaid_passes` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,

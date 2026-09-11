@@ -1,5 +1,5 @@
 -- Seed Data for Smart Hospital Parking & Visitor Validation System
-USE `car_parking_solution`;
+
 
 -- 1. System Settings Defaults
 INSERT INTO `system_settings` (`setting_key`, `setting_value`, `category`) VALUES

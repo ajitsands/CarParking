@@ -1,9 +1,7 @@
 -- Smart Hospital Parking Management & Visitor Validation System
--- Database Schema for MySQL 8.x
--- Local: car_parking_solution / Server: sandsl23_parking_db
+-- Database Schema for MySQL 8.x / MariaDB
+-- Dynamic: imports into whichever database is active (local or cPanel)
 
-CREATE DATABASE IF NOT EXISTS `car_parking_solution` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `car_parking_solution`;
 
 -- 1. System Settings Table
 CREATE TABLE IF NOT EXISTS `system_settings` (
