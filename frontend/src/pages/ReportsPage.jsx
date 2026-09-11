@@ -437,10 +437,10 @@ export default function ReportsPage() {
                   </span>
                 );
               }
-              if (log.plate_number && log.plate_number !== '-') {
+              if (log.is_currently_inside && log.plate_number && log.plate_number !== '-') {
                 return (
                   <span className="badge badge-green" style={{ fontSize: '0.65rem' }}>
-                    Inside / Active
+                    ● Inside / Active
                   </span>
                 );
               }

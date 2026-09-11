@@ -59,16 +59,30 @@ class ReportsController extends Controller {
                     END
                 ) as plate_number,
                 COALESCE(a.start_time, s.entry_time, a.created_at) as start_time,
-                COALESCE(a.end_time, s.exit_time) as end_time,
+                COALESCE(
+                    a.end_time, 
+                    s.exit_time,
+                    CASE 
+                        WHEN a.details LIKE '%Direction: EXIT%' OR a.entity_id LIKE '%OUT%' OR a.action LIKE '%EXIT%' THEN a.created_at
+                        ELSE NULL 
+                    END
+                ) as end_time,
                 COALESCE(
                     a.duration_minutes, 
                     s.total_duration_minutes,
                     CASE 
                         WHEN s.entry_time IS NOT NULL AND s.exit_time IS NOT NULL THEN TIMESTAMPDIFF(MINUTE, s.entry_time, s.exit_time)
-                        WHEN s.entry_time IS NOT NULL THEN TIMESTAMPDIFF(MINUTE, s.entry_time, NOW())
+                        WHEN s.entry_time IS NOT NULL AND (a.details LIKE '%Direction: EXIT%' OR a.entity_id LIKE '%OUT%') THEN TIMESTAMPDIFF(MINUTE, s.entry_time, a.created_at)
+                        WHEN s.entry_time IS NOT NULL AND s.status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED') AND s.exit_time IS NULL THEN TIMESTAMPDIFF(MINUTE, s.entry_time, NOW())
                         ELSE NULL
                     END
                 ) as duration_minutes,
+                s.status as session_status,
+                CASE 
+                    WHEN s.id IS NOT NULL AND s.exit_time IS NULL AND s.status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED') 
+                         AND NOT (a.details LIKE '%Direction: EXIT%' OR a.entity_id LIKE '%OUT%') THEN 1
+                    ELSE 0
+                END as is_currently_inside,
                 COALESCE(
                     s.entry_gate_id,
                     CASE WHEN a.entity_id LIKE 'GATE%' AND a.details LIKE '%Direction: ENTRY%' THEN a.entity_id ELSE NULL END,
@@ -95,7 +109,28 @@ class ReportsController extends Controller {
                 a.ip_address,
                 a.created_at
             FROM audit_logs a
-            LEFT JOIN parking_sessions s ON (a.entity_type = 'parking_sessions' AND a.entity_id = s.id)
+            LEFT JOIN parking_sessions s ON (
+                (a.entity_type = 'parking_sessions' AND a.entity_id = CAST(s.id AS CHAR))
+                OR (
+                    (a.plate_number IS NOT NULL AND a.plate_number != '' AND s.plate_number = a.plate_number)
+                    AND s.id = (
+                        SELECT ps.id FROM parking_sessions ps 
+                        WHERE ps.plate_number = a.plate_number 
+                          AND ps.entry_time <= a.created_at 
+                        ORDER BY ps.id DESC LIMIT 1
+                    )
+                )
+                OR (
+                    a.details REGEXP 'Plate: ([A-Za-z0-9 ]+)'
+                    AND s.plate_number = TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(a.details, 'Plate: ', -1), ' |', 1))
+                    AND s.id = (
+                        SELECT ps.id FROM parking_sessions ps 
+                        WHERE ps.plate_number = TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(a.details, 'Plate: ', -1), ' |', 1))
+                          AND ps.entry_time <= a.created_at 
+                        ORDER BY ps.id DESC LIMIT 1
+                    )
+                )
+            )
             {$whereSql}
             ORDER BY a.id DESC 
             LIMIT 300

@@ -28,11 +28,7 @@ class BarrierController extends Controller {
         $db = Database::getInstance();
         $nowStr = TimezoneHelper::now();
 
-        // 1. Audit log
-        $db->prepare("INSERT INTO audit_logs (user_id, username, action, entity_type, entity_id, details) VALUES (?, ?, 'MANUAL_BARRIER_OVERRIDE', 'gates_and_cameras', ?, ?)")
-           ->execute([$userId, $currentUser['username'] ?? 'operator', $gateId, "Override Reason: {$reason} | Direction: {$direction} | Plate: {$plate}"]);
-
-        // 2a. If this is an EXIT gate override, close the active vehicle session!
+        // Audit log will be recorded with session linkage below after direction handling
         $sessionUpdated = false;
         $closedSession = null;
         $createdSession = null;
@@ -202,6 +198,19 @@ class BarrierController extends Controller {
                     'is_whitelisted' => (bool)$wlVehicle
                 ];
             }
+        }
+
+        // Record structured Audit Log with full session and timestamp linkage
+        if ($direction === 'EXIT' || str_contains($gateId, 'OUT')) {
+            $sessId = $closedSession ? (string)$closedSession['session_id'] : $gateId;
+            $entryTime = !empty($session['entry_time']) ? $session['entry_time'] : $nowStr;
+            $durMins = isset($durationMin) ? $durationMin : 0;
+            $db->prepare("INSERT INTO audit_logs (user_id, username, action, plate_number, start_time, end_time, duration_minutes, entity_type, entity_id, details) VALUES (?, ?, 'MANUAL_BARRIER_OVERRIDE', ?, ?, ?, ?, 'parking_sessions', ?, ?)")
+               ->execute([$userId, $currentUser['username'] ?? 'operator', $plate !== 'MANUAL_OVERRIDE' ? $plate : null, $entryTime, $nowStr, $durMins, $sessId, "Override Reason: {$reason} | Direction: EXIT | Plate: {$plate}"]);
+        } else {
+            $sessId = $createdSession ? (string)$createdSession['session_id'] : $gateId;
+            $db->prepare("INSERT INTO audit_logs (user_id, username, action, plate_number, start_time, end_time, duration_minutes, entity_type, entity_id, details) VALUES (?, ?, 'MANUAL_BARRIER_OVERRIDE', ?, ?, NULL, NULL, 'parking_sessions', ?, ?)")
+               ->execute([$userId, $currentUser['username'] ?? 'operator', $plate !== 'MANUAL_OVERRIDE' ? $plate : null, $nowStr, $sessId, "Override Reason: {$reason} | Direction: ENTRY | Plate: {$plate}"]);
         }
 
         $msg = "Manual barrier override pulse executed for {$gateId}.";
