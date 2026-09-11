@@ -22,8 +22,16 @@ class ParkingSessionController extends Controller {
         $bindings = [];
 
         if ($status) {
-            $where[] = "status = ?";
-            $bindings[] = $status;
+            if ($status === 'PAID') {
+                $where[] = "(status = 'PAID' OR payment_status = 'paid')";
+            } elseif ($status === 'EXIT_COMPLETED' || $status === 'COMPLETED') {
+                $where[] = "status IN ('EXIT_COMPLETED', 'COMPLETED')";
+            } elseif ($status === 'VALIDATED') {
+                $where[] = "(status = 'VALIDATED' OR payment_status = 'waived')";
+            } else {
+                $where[] = "status = ?";
+                $bindings[] = $status;
+            }
         }
 
         if ($search) {
