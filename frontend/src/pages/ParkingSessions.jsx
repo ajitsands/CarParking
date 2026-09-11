@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Car, Search, Filter, RefreshCw, Eye, CheckCircle2, CreditCard, AlertCircle, ArrowRightCircle } from 'lucide-react';
+import { 
+  Car, Search, Filter, RefreshCw, Eye, CheckCircle2, CreditCard, 
+  AlertCircle, ArrowRightCircle, Calendar, ShieldCheck, Building2, 
+  Clock, Zap, Activity, ChevronRight, UserCheck, AlertTriangle
+} from 'lucide-react';
 import { api } from '../services/api';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
@@ -13,11 +17,28 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [search, setSearch] = useState('');
   const [selectedSession, setSelectedSession] = useState(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [error, setError] = useState('');
   const [toastMsg, setToastMsg] = useState(null);
+
+  // Date Filter State
+  const [datePreset, setDatePreset] = useState('all'); // 'all', 'today', 'yesterday', 'custom'
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
+  // Live Inside Counts summary
+  const [insideCounts, setInsideCounts] = useState({
+    total_inside: 0,
+    charging: 0,
+    free_grace: 0,
+    validated: 0,
+    admin_staff: 0,
+    company_vendor: 0,
+    general_visitor: 0
+  });
 
   // Modern Confirmation Modal state
   const [exitModal, setExitModal] = useState({
@@ -27,18 +48,36 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
     loading: false
   });
 
+  const isInsideTab = ['CHARGING', 'INSIDE', 'ACTIVE'].includes(statusFilter);
+
   const loadSessions = async () => {
     setLoading(true);
     setError('');
     try {
-      const res = await api.getSessions({
+      const params = {
         status: statusFilter,
+        category: categoryFilter,
         search: search.trim(),
         limit: 100
-      });
+      };
+
+      // Only attach date filters when NOT on inside/charging tab
+      if (!isInsideTab) {
+        if (datePreset === 'today' || datePreset === 'yesterday') {
+          params.date_preset = datePreset;
+        } else if (datePreset === 'custom') {
+          if (fromDate) params.from_date = fromDate;
+          if (toDate) params.to_date = toDate;
+        }
+      }
+
+      const res = await api.getSessions(params);
       if (res.success) {
         setSessions(res.data.sessions || []);
         setTotal(res.data.total || 0);
+        if (res.data.inside_counts) {
+          setInsideCounts(res.data.inside_counts);
+        }
       }
     } catch (err) {
       setError(err.message || 'Failed to load parking sessions');
@@ -58,11 +97,24 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
       clearInterval(interval);
       window.removeEventListener('anpr-event-simulated', handleSim);
     };
-  }, [statusFilter]);
+  }, [statusFilter, categoryFilter, datePreset, fromDate, toDate]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     loadSessions();
+  };
+
+  const handleDatePresetChange = (preset) => {
+    setDatePreset(preset);
+    if (preset !== 'custom') {
+      setFromDate('');
+      setToDate('');
+    } else {
+      // Default custom to today if empty
+      const today = new Date().toISOString().split('T')[0];
+      if (!fromDate) setFromDate(today);
+      if (!toDate) setToDate(today);
+    }
   };
 
   const openDetails = async (id) => {
@@ -77,7 +129,6 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
     }
   };
 
-  // Trigger modern modal instead of native window.confirm
   const handleOpenExitModal = (sess, isCash = false) => {
     setExitModal({
       isOpen: true,
@@ -116,24 +167,65 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
 
   const statusTabs = [
     { id: '', label: 'All Sessions' },
-    { id: 'VALIDATION_PENDING', label: 'Validation Pending' },
+    { id: 'INSIDE', label: 'Currently Inside (Active)', count: insideCounts.total_inside },
+    { id: 'CHARGING', label: 'Charging', count: insideCounts.charging },
+    { id: 'VALIDATION_PENDING', label: 'Validation Pending', count: insideCounts.free_grace },
     { id: 'VALIDATED', label: 'Validated (Free)' },
-    { id: 'CHARGING', label: 'Charging' },
     { id: 'PAID', label: 'Paid' },
     { id: 'EXIT_COMPLETED', label: 'Completed' },
     { id: 'BLACKLISTED', label: 'Blacklisted' },
     { id: 'MANUAL_REVIEW', label: 'Manual Review' }
   ];
 
+  const getCategoryBadge = (category, accessStatus) => {
+    const cat = (category || '').toLowerCase();
+    const acc = (accessStatus || '').toLowerCase();
+
+    if (acc === 'whitelisted' || ['staff', 'doctor', 'hospital_owned', 'admin'].includes(cat)) {
+      return {
+        bg: '#eff6ff',
+        color: '#1d4ed8',
+        border: '#bfdbfe',
+        label: cat === 'doctor' ? 'Doctor' : cat === 'staff' ? 'Staff' : cat === 'hospital_owned' ? 'Hospital Fleet' : 'Admin / Staff'
+      };
+    }
+    if (['vendor', 'company', 'contractor', 'supplier'].includes(cat)) {
+      return {
+        bg: '#faf5ff',
+        color: '#7e22ce',
+        border: '#e9d5ff',
+        label: 'Company / Vendor'
+      };
+    }
+    if (cat === 'emergency') {
+      return {
+        bg: '#fef2f2',
+        color: '#b91c1c',
+        border: '#fecaca',
+        label: 'Emergency'
+      };
+    }
+    if (['patient', 'visitor'].includes(cat)) {
+      return {
+        bg: '#ecfdf5',
+        color: '#047857',
+        border: '#a7f3d0',
+        label: cat === 'patient' ? 'Patient' : 'Visitor'
+      };
+    }
+    return null;
+  };
+
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2 }}>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2, margin: 0 }}>
             Parking Sessions Management
           </h2>
-          <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-            Real-time record of all vehicles, validation countdowns, duration, and exit status
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '4px 0 0 0' }}>
+            Real-time tracking of active parked vehicles, category distribution, and completed exits
           </p>
         </div>
 
@@ -142,7 +234,342 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
         </button>
       </div>
 
-      {/* Success / Error Notification Toast */}
+      {/* Real-time Inside Parking Metric KPI Cards */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+        gap: '12px',
+        marginBottom: '16px'
+      }}>
+        {/* Total Inside */}
+        <div 
+          onClick={() => { setStatusFilter('INSIDE'); setCategoryFilter(''); }}
+          style={{
+            padding: '12px 14px',
+            borderRadius: '10px',
+            background: statusFilter === 'INSIDE' && !categoryFilter ? 'linear-gradient(135deg, #1e293b, #0f172a)' : 'var(--bg-surface)',
+            color: statusFilter === 'INSIDE' && !categoryFilter ? '#fff' : 'inherit',
+            border: `1px solid ${statusFilter === 'INSIDE' && !categoryFilter ? '#334155' : 'var(--border-color)'}`,
+            cursor: 'pointer',
+            boxShadow: 'var(--shadow-sm)',
+            transition: 'all 0.2s'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.85 }}>
+              Total Inside Parking
+            </span>
+            <Car size={16} color={statusFilter === 'INSIDE' && !categoryFilter ? '#38bdf8' : 'var(--brand-primary)'} />
+          </div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, lineHeight: 1 }}>
+            {insideCounts.total_inside}
+          </div>
+          <div style={{ fontSize: '0.68rem', marginTop: '4px', opacity: 0.75 }}>
+            Active vehicles inside premises
+          </div>
+        </div>
+
+        {/* Charging (Paid) */}
+        <div 
+          onClick={() => { setStatusFilter('CHARGING'); setCategoryFilter(''); }}
+          style={{
+            padding: '12px 14px',
+            borderRadius: '10px',
+            background: statusFilter === 'CHARGING' ? 'linear-gradient(135deg, #7f1d1d, #991b1b)' : 'var(--bg-surface)',
+            color: statusFilter === 'CHARGING' ? '#fff' : 'inherit',
+            border: `1px solid ${statusFilter === 'CHARGING' ? '#dc2626' : 'var(--border-color)'}`,
+            cursor: 'pointer',
+            boxShadow: 'var(--shadow-sm)',
+            transition: 'all 0.2s'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: statusFilter === 'CHARGING' ? '#fff' : 'var(--status-red)' }}>
+              Charging (Paid)
+            </span>
+            <Zap size={16} color={statusFilter === 'CHARGING' ? '#fca5a5' : 'var(--status-red)'} />
+          </div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, lineHeight: 1, color: statusFilter === 'CHARGING' ? '#fff' : 'var(--status-red)' }}>
+            {insideCounts.charging}
+          </div>
+          <div style={{ fontSize: '0.68rem', marginTop: '4px', opacity: 0.75 }}>
+            Accruing hourly tariffs
+          </div>
+        </div>
+
+        {/* Free Grace Period */}
+        <div 
+          onClick={() => { setStatusFilter('VALIDATION_PENDING'); setCategoryFilter(''); }}
+          style={{
+            padding: '12px 14px',
+            borderRadius: '10px',
+            background: statusFilter === 'VALIDATION_PENDING' ? 'linear-gradient(135deg, #78350f, #92400e)' : 'var(--bg-surface)',
+            color: statusFilter === 'VALIDATION_PENDING' ? '#fff' : 'inherit',
+            border: `1px solid ${statusFilter === 'VALIDATION_PENDING' ? '#d97706' : 'var(--border-color)'}`,
+            cursor: 'pointer',
+            boxShadow: 'var(--shadow-sm)',
+            transition: 'all 0.2s'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: statusFilter === 'VALIDATION_PENDING' ? '#fff' : 'var(--status-amber)' }}>
+              Free Grace Window
+            </span>
+            <Clock size={16} color={statusFilter === 'VALIDATION_PENDING' ? '#fde68a' : 'var(--status-amber)'} />
+          </div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, lineHeight: 1, color: statusFilter === 'VALIDATION_PENDING' ? '#fff' : 'var(--status-amber)' }}>
+            {insideCounts.free_grace}
+          </div>
+          <div style={{ fontSize: '0.68rem', marginTop: '4px', opacity: 0.75 }}>
+            Validation pending / grace
+          </div>
+        </div>
+
+        {/* Administration & Staff */}
+        <div 
+          onClick={() => { setStatusFilter('INSIDE'); setCategoryFilter('staff'); }}
+          style={{
+            padding: '12px 14px',
+            borderRadius: '10px',
+            background: statusFilter === 'INSIDE' && categoryFilter === 'staff' ? 'linear-gradient(135deg, #1e3a8a, #1d4ed8)' : 'var(--bg-surface)',
+            color: statusFilter === 'INSIDE' && categoryFilter === 'staff' ? '#fff' : 'inherit',
+            border: `1px solid ${statusFilter === 'INSIDE' && categoryFilter === 'staff' ? '#2563eb' : 'var(--border-color)'}`,
+            cursor: 'pointer',
+            boxShadow: 'var(--shadow-sm)',
+            transition: 'all 0.2s'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: statusFilter === 'INSIDE' && categoryFilter === 'staff' ? '#fff' : '#2563eb' }}>
+              Administration & Staff
+            </span>
+            <ShieldCheck size={16} color={statusFilter === 'INSIDE' && categoryFilter === 'staff' ? '#bfdbfe' : '#2563eb'} />
+          </div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, lineHeight: 1, color: statusFilter === 'INSIDE' && categoryFilter === 'staff' ? '#fff' : '#2563eb' }}>
+            {insideCounts.admin_staff}
+          </div>
+          <div style={{ fontSize: '0.68rem', marginTop: '4px', opacity: 0.75 }}>
+            Doctors, Staff & Hospital Fleet
+          </div>
+        </div>
+
+        {/* Company & Vendors */}
+        <div 
+          onClick={() => { setStatusFilter('INSIDE'); setCategoryFilter('vendor'); }}
+          style={{
+            padding: '12px 14px',
+            borderRadius: '10px',
+            background: statusFilter === 'INSIDE' && categoryFilter === 'vendor' ? 'linear-gradient(135deg, #581c87, #6b21a8)' : 'var(--bg-surface)',
+            color: statusFilter === 'INSIDE' && categoryFilter === 'vendor' ? '#fff' : 'inherit',
+            border: `1px solid ${statusFilter === 'INSIDE' && categoryFilter === 'vendor' ? '#9333ea' : 'var(--border-color)'}`,
+            cursor: 'pointer',
+            boxShadow: 'var(--shadow-sm)',
+            transition: 'all 0.2s'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: statusFilter === 'INSIDE' && categoryFilter === 'vendor' ? '#fff' : '#7e22ce' }}>
+              Company & Vendors
+            </span>
+            <Building2 size={16} color={statusFilter === 'INSIDE' && categoryFilter === 'vendor' ? '#e9d5ff' : '#7e22ce'} />
+          </div>
+          <div style={{ fontSize: '1.4rem', fontWeight: 800, lineHeight: 1, color: statusFilter === 'INSIDE' && categoryFilter === 'vendor' ? '#fff' : '#7e22ce' }}>
+            {insideCounts.company_vendor}
+          </div>
+          <div style={{ fontSize: '0.68rem', marginTop: '4px', opacity: 0.75 }}>
+            Corporate & Suppliers
+          </div>
+        </div>
+      </div>
+
+      {/* Date Filter & Preset Toolbar */}
+      <div style={{
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-color)',
+        borderRadius: '10px',
+        padding: '12px 16px',
+        marginBottom: '14px',
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '12px',
+        boxShadow: 'var(--shadow-xs)'
+      }}>
+        {/* Left: Presets */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <Calendar size={14} /> Date Filter:
+          </span>
+
+          <div style={{ display: 'inline-flex', background: 'var(--bg-body)', padding: '2px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <button
+              type="button"
+              disabled={isInsideTab}
+              onClick={() => handleDatePresetChange('all')}
+              style={{
+                padding: '4px 10px',
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                border: 'none',
+                borderRadius: '6px',
+                cursor: isInsideTab ? 'not-allowed' : 'pointer',
+                background: datePreset === 'all' && !isInsideTab ? 'var(--brand-primary)' : 'transparent',
+                color: datePreset === 'all' && !isInsideTab ? '#fff' : 'var(--text-secondary)'
+              }}
+            >
+              All Time
+            </button>
+            <button
+              type="button"
+              disabled={isInsideTab}
+              onClick={() => handleDatePresetChange('today')}
+              style={{
+                padding: '4px 10px',
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                border: 'none',
+                borderRadius: '6px',
+                cursor: isInsideTab ? 'not-allowed' : 'pointer',
+                background: datePreset === 'today' && !isInsideTab ? 'var(--brand-primary)' : 'transparent',
+                color: datePreset === 'today' && !isInsideTab ? '#fff' : 'var(--text-secondary)'
+              }}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              disabled={isInsideTab}
+              onClick={() => handleDatePresetChange('yesterday')}
+              style={{
+                padding: '4px 10px',
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                border: 'none',
+                borderRadius: '6px',
+                cursor: isInsideTab ? 'not-allowed' : 'pointer',
+                background: datePreset === 'yesterday' && !isInsideTab ? 'var(--brand-primary)' : 'transparent',
+                color: datePreset === 'yesterday' && !isInsideTab ? '#fff' : 'var(--text-secondary)'
+              }}
+            >
+              Yesterday
+            </button>
+            <button
+              type="button"
+              disabled={isInsideTab}
+              onClick={() => handleDatePresetChange('custom')}
+              style={{
+                padding: '4px 10px',
+                fontSize: '0.74rem',
+                fontWeight: 600,
+                border: 'none',
+                borderRadius: '6px',
+                cursor: isInsideTab ? 'not-allowed' : 'pointer',
+                background: datePreset === 'custom' && !isInsideTab ? 'var(--brand-primary)' : 'transparent',
+                color: datePreset === 'custom' && !isInsideTab ? '#fff' : 'var(--text-secondary)'
+              }}
+            >
+              Custom Date Range
+            </button>
+          </div>
+
+          {/* Custom Date Inputs */}
+          {datePreset === 'custom' && !isInsideTab && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <input
+                type="date"
+                className="form-input"
+                style={{ padding: '4px 8px', fontSize: '0.74rem', width: '135px' }}
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+              />
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>to</span>
+              <input
+                type="date"
+                className="form-input"
+                style={{ padding: '4px 8px', fontSize: '0.74rem', width: '135px' }}
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Informative Note when viewing Inside/Charging */}
+        {isInsideTab ? (
+          <div style={{
+            fontSize: '0.72rem',
+            fontWeight: 600,
+            color: 'var(--brand-primary)',
+            background: 'var(--status-blue-bg, #eff6ff)',
+            border: '1px solid var(--status-blue-border, #bfdbfe)',
+            borderRadius: '6px',
+            padding: '4px 10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}>
+            <Activity size={13} /> Live Inside View: Showing all currently parked vehicles (no date cutoff).
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+              Category:
+            </span>
+            <select
+              className="form-input"
+              style={{ padding: '4px 8px', fontSize: '0.74rem', minWidth: '150px' }}
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+            >
+              <option value="">All Categories</option>
+              <option value="staff">Administration & Staff</option>
+              <option value="doctor">Doctors</option>
+              <option value="vendor">Company & Vendors</option>
+              <option value="patient">Patients</option>
+              <option value="visitor">Visitors</option>
+              <option value="emergency">Emergency</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* Filter Tabs */}
+      <div style={{
+        display: 'flex',
+        gap: '6px',
+        overflowX: 'auto',
+        paddingBottom: '8px',
+        marginBottom: '12px'
+      }}>
+        {statusTabs.map(tab => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`btn btn-sm ${statusFilter === tab.id ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => {
+              setStatusFilter(tab.id);
+            }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}
+          >
+            <span>{tab.label}</span>
+            {tab.count !== undefined && (
+              <span style={{
+                background: statusFilter === tab.id ? 'rgba(255,255,255,0.25)' : 'var(--bg-surface)',
+                color: statusFilter === tab.id ? '#fff' : 'var(--text-secondary)',
+                padding: '1px 6px',
+                borderRadius: '10px',
+                fontSize: '0.68rem',
+                fontWeight: 700
+              }}>
+                {tab.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Notification Toast */}
       {toastMsg && (
         <div style={{
           padding: '10px 16px',
@@ -163,26 +590,6 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
         </div>
       )}
 
-      {/* Filter Tabs */}
-      <div style={{
-        display: 'flex',
-        gap: '6px',
-        overflowX: 'auto',
-        paddingBottom: '8px',
-        marginBottom: '12px'
-      }}>
-        {statusTabs.map(tab => (
-          <button
-            key={tab.id}
-            type="button"
-            className={`btn btn-sm ${statusFilter === tab.id ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setStatusFilter(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
       {/* Search Bar */}
       <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
         <div style={{ position: 'relative', flex: 1 }}>
@@ -191,7 +598,7 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
             type="text"
             className="form-input"
             style={{ paddingLeft: '34px' }}
-            placeholder="Search by vehicle plate number (e.g. BHR 12345) or session code..."
+            placeholder="Search by vehicle plate number (e.g. 2150, BHR 12345) or session code..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -216,26 +623,44 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
           {
             key: 'plate_number',
             label: 'Plate Number',
-            render: (sess) => (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  padding: '3px 8px',
-                  borderRadius: '4px',
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-color)',
-                  fontFamily: 'var(--font-mono)',
-                  fontWeight: 800,
-                  fontSize: '0.84rem'
-                }}>
-                  {sess.plate_number}
+            render: (sess) => {
+              const catBadge = getCategoryBadge(sess.category, sess.access_status);
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{
+                      padding: '3px 8px',
+                      borderRadius: '4px',
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border-color)',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 800,
+                      fontSize: '0.84rem'
+                    }}>
+                      {sess.plate_number}
+                    </div>
+                    {catBadge && (
+                      <span style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        background: catBadge.bg,
+                        color: catBadge.color,
+                        border: `1px solid ${catBadge.border}`
+                      }}>
+                        {catBadge.label}
+                      </span>
+                    )}
+                  </div>
+                  {sess.owner_name && (
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      {sess.owner_name} {sess.owner_department ? `(${sess.owner_department})` : ''}
+                    </span>
+                  )}
                 </div>
-                {sess.category && sess.category !== 'general' && (
-                  <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>
-                    {sess.category}
-                  </span>
-                )}
-              </div>
-            )
+              );
+            }
           },
           {
             key: 'session_code',
@@ -298,7 +723,7 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
             key: 'payment_status',
             label: 'Payment',
             render: (sess) => (
-              <span className={`badge ${sess.payment_status === 'paid' ? 'badge-green' : 'badge-gray'}`}>
+              <span className={`badge ${sess.payment_status === 'paid' ? 'badge-green' : sess.payment_status === 'waived' ? 'badge-blue' : 'badge-gray'}`}>
                 {sess.payment_status}
               </span>
             )

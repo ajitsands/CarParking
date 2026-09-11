@@ -12,7 +12,14 @@ class ParkingSessionController extends Controller {
         $db = Database::getInstance();
         $params = $this->getQueryParams();
 
+        TimezoneHelper::init();
+
         $status = $params['status'] ?? '';
+        $category = $params['category'] ?? '';
+        $insideType = $params['inside_type'] ?? '';
+        $datePreset = $params['date_preset'] ?? '';
+        $fromDate = $params['from_date'] ?? '';
+        $toDate = $params['to_date'] ?? '';
         $search = trim($params['search'] ?? '');
         $limit = min(200, max(10, (int)($params['limit'] ?? 50)));
         $page = max(1, (int)($params['page'] ?? 1));
@@ -21,8 +28,42 @@ class ParkingSessionController extends Controller {
         $where = ["1=1"];
         $bindings = [];
 
+        // Check if viewing currently parked inside vehicles
+        $isInsideView = in_array($status, ['CHARGING', 'INSIDE', 'ACTIVE']);
+
+        // Date Range Filtering (Bypassed for currently parked inside vehicles so active vehicles are never missed)
+        if (!$isInsideView) {
+            $today = date('Y-m-d');
+            $yesterday = date('Y-m-d', strtotime('-1 day'));
+
+            if ($datePreset === 'today') {
+                $where[] = "entry_time >= ? AND entry_time <= ?";
+                $bindings[] = $today . ' 00:00:00';
+                $bindings[] = $today . ' 23:59:59';
+            } elseif ($datePreset === 'yesterday') {
+                $where[] = "entry_time >= ? AND entry_time <= ?";
+                $bindings[] = $yesterday . ' 00:00:00';
+                $bindings[] = $yesterday . ' 23:59:59';
+            } elseif ($fromDate || $toDate) {
+                if ($fromDate) {
+                    $where[] = "entry_time >= ?";
+                    $bindings[] = $fromDate . ' 00:00:00';
+                }
+                if ($toDate) {
+                    $where[] = "entry_time <= ?";
+                    $bindings[] = $toDate . ' 23:59:59';
+                }
+            }
+        }
+
+        // Status Lifecycle Filtering
         if ($status) {
-            if ($status === 'PAID') {
+            if ($status === 'CHARGING' || $status === 'INSIDE' || $status === 'ACTIVE') {
+                $where[] = "exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED')";
+                if ($status === 'CHARGING' && $insideType === 'charging_only') {
+                    $where[] = "(status = 'CHARGING' OR (net_amount > 0 AND payment_status != 'paid'))";
+                }
+            } elseif ($status === 'PAID') {
                 $where[] = "(status = 'PAID' OR payment_status = 'paid')";
             } elseif ($status === 'EXIT_COMPLETED' || $status === 'COMPLETED') {
                 $where[] = "status IN ('EXIT_COMPLETED', 'COMPLETED')";
@@ -31,6 +72,22 @@ class ParkingSessionController extends Controller {
             } else {
                 $where[] = "status = ?";
                 $bindings[] = $status;
+            }
+        }
+
+        // Category Filter (if specified)
+        if ($category) {
+            $catPlatesStmt = $db->prepare("SELECT plate_number FROM vehicles WHERE category = ? OR (access_status = 'whitelisted' AND ? IN ('admin', 'staff', 'doctor', 'hospital_owned'))");
+            $catPlatesStmt->execute([$category, $category]);
+            $catPlates = $catPlatesStmt->fetchAll(\PDO::FETCH_COLUMN);
+            if (!empty($catPlates)) {
+                $inPlaceholders = implode(',', array_fill(0, count($catPlates), '?'));
+                $where[] = "plate_number IN ({$inPlaceholders})";
+                foreach ($catPlates as $cp) {
+                    $bindings[] = $cp;
+                }
+            } else {
+                $where[] = "1=0";
             }
         }
 
@@ -53,6 +110,51 @@ class ParkingSessionController extends Controller {
         $stmt->execute($bindings);
         $sessions = $stmt->fetchAll();
 
+        // Preload Vehicle Directory for fast metadata enrichment (zero collation issues)
+        $vehiclesMap = [];
+        try {
+            $vStmt = $db->query("SELECT plate_number, category, access_status, owner_name, owner_department, vehicle_type FROM vehicles");
+            while ($vRow = $vStmt->fetch()) {
+                $vehiclesMap[strtoupper(trim($vRow['plate_number']))] = $vRow;
+            }
+        } catch (\Throwable $e) {}
+
+        // Calculate Real-Time Live Counts for Currently Inside Parking
+        $insideCounts = [
+            'total_inside'    => 0,
+            'charging'        => 0,
+            'free_grace'      => 0,
+            'validated'       => 0,
+            'admin_staff'     => 0,
+            'company_vendor'  => 0,
+            'general_visitor' => 0
+        ];
+
+        try {
+            $activeStmt = $db->query("SELECT id, plate_number, status, payment_status, net_amount, entry_time FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED')");
+            $activeSessions = $activeStmt->fetchAll();
+            $insideCounts['total_inside'] = count($activeSessions);
+
+            foreach ($activeSessions as $act) {
+                $actPlate = strtoupper(trim($act['plate_number']));
+                $actMeta = $vehiclesMap[$actPlate] ?? null;
+                $cat = strtolower($actMeta['category'] ?? 'general');
+                $acc = strtolower($actMeta['access_status'] ?? 'standard');
+
+                if (in_array($cat, ['staff', 'doctor', 'hospital_owned', 'admin', 'management']) || $acc === 'whitelisted') {
+                    $insideCounts['admin_staff']++;
+                } elseif (in_array($cat, ['vendor', 'company', 'contractor', 'supplier'])) {
+                    $insideCounts['company_vendor']++;
+                } elseif ($act['status'] === 'VALIDATED' || $act['payment_status'] === 'waived') {
+                    $insideCounts['validated']++;
+                } elseif ($act['status'] === 'CHARGING' || ((float)$act['net_amount'] > 0 && $act['payment_status'] !== 'paid')) {
+                    $insideCounts['charging']++;
+                } else {
+                    $insideCounts['free_grace']++;
+                }
+            }
+        } catch (\Throwable $e) {}
+
         // Dynamically compute current duration and tariff for active sessions
         \App\Helpers\TimezoneHelper::init();
         $adminGraceMinutes = TariffCalculator::getAdminGraceMinutes();
@@ -60,6 +162,22 @@ class ParkingSessionController extends Controller {
         $nowTs = strtotime($nowStr);
 
         foreach ($sessions as &$sess) {
+            $cleanPlate = strtoupper(trim($sess['plate_number']));
+            $vMeta = $vehiclesMap[$cleanPlate] ?? null;
+            if ($vMeta) {
+                $sess['category'] = $vMeta['category'] ?? ($sess['category'] ?? 'general');
+                $sess['access_status'] = $vMeta['access_status'] ?? 'standard';
+                $sess['owner_name'] = $vMeta['owner_name'] ?? null;
+                $sess['owner_department'] = $vMeta['owner_department'] ?? null;
+                $sess['vehicle_type'] = $vMeta['vehicle_type'] ?? 'car';
+            } else {
+                $sess['category'] = $sess['category'] ?? 'general';
+                $sess['access_status'] = $sess['access_status'] ?? 'standard';
+                $sess['owner_name'] = null;
+                $sess['owner_department'] = null;
+                $sess['vehicle_type'] = 'car';
+            }
+
             $entryTs = strtotime($sess['entry_time']);
             $exitTs = !empty($sess['exit_time']) ? strtotime($sess['exit_time']) : $nowTs;
 
@@ -113,10 +231,11 @@ class ParkingSessionController extends Controller {
         }
 
         $this->success([
-            'sessions' => $sessions,
-            'total'    => $total,
-            'page'     => $page,
-            'limit'    => $limit
+            'sessions'      => $sessions,
+            'total'         => $total,
+            'page'          => $page,
+            'limit'         => $limit,
+            'inside_counts' => $insideCounts
         ]);
     }
 
