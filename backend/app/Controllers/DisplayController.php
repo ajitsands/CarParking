@@ -402,9 +402,10 @@ class DisplayController extends Controller {
     // Private helpers
     // ──────────────────────────────────────────────────────────
 
-    /** Generate a secure, time-limited QR token for a session */
+    /** Generate a secure, time-limited QR token for a session (stable 15-second rotation window) */
     private function generateQrToken(int $sessionId): string {
-        $ts   = time();
+        $interval = 15; // 15 seconds stable rotation window
+        $ts   = (int)(floor(time() / $interval) * $interval);
         $hmac = hash_hmac('sha256', "{$sessionId}:{$ts}", self::QR_SECRET);
         $data = "{$sessionId}:{$ts}:{$hmac}";
         return base64_encode($data);

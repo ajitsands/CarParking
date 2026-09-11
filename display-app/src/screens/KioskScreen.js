@@ -232,7 +232,7 @@ function PaymentScreen({ data, backendUrl }) {
   const fadeIn = useRef(new Animated.Value(0)).current;
   const qrScale = useRef(new Animated.Value(0.8)).current;
   const alertPulse = useRef(new Animated.Value(1)).current;
-  const [countdown, setCountdown] = useState(30);
+  const [countdown, setCountdown] = useState(() => 15 - (Math.floor(Date.now() / 1000) % 15));
 
   useEffect(() => {
     Animated.parallel([
@@ -247,7 +247,10 @@ function PaymentScreen({ data, backendUrl }) {
       ])
     ).start();
 
-    const cd = setInterval(() => setCountdown(prev => prev <= 1 ? 30 : prev - 1), 1000);
+    const cd = setInterval(() => {
+      const remaining = 15 - (Math.floor(Date.now() / 1000) % 15);
+      setCountdown(remaining);
+    }, 1000);
     return () => clearInterval(cd);
   }, []);
 
