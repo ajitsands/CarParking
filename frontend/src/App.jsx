@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SettingsProvider, useSettings } from './context/SettingsContext';
@@ -30,7 +30,7 @@ import QrScannerModal from './components/validation/QrScannerModal';
 import { api } from './services/api';
 
 function MainApp() {
-  const { user, loading } = useAuth();
+  const { user, loading, isReception } = useAuth();
   const { license } = useSettings();
   // Restore last active tab from localStorage so refresh keeps the user on the same page
   const [activeTab, setActiveTabState] = useState(
@@ -41,6 +41,13 @@ function MainApp() {
     localStorage.setItem('parking_active_tab', tab);
     setActiveTabState(tab);
   };
+
+  // Enforce role-based menu isolation for Reception
+  useEffect(() => {
+    if (isReception && !['dashboard', 'sessions', 'validation'].includes(activeTab)) {
+      setActiveTab('dashboard');
+    }
+  }, [isReception, activeTab]);
   
   // Modals state
   const [simulatorOpen, setSimulatorOpen] = useState(false);

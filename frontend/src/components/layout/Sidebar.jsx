@@ -17,10 +17,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
 
 export default function Sidebar({ activeTab, setActiveTab, onOpenSimulator }) {
-  const { isSuperadmin, isAdmin } = useAuth();
+  const { isSuperadmin, isAdmin, isReception } = useAuth();
   const { settings } = useSettings();
 
-  const navItems = [
+  const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'live-lanes', label: 'Live Gate Monitor', icon: Video },
     { id: 'sessions', label: 'Parking Sessions', icon: Car },
@@ -29,6 +29,11 @@ export default function Sidebar({ activeTab, setActiveTab, onOpenSimulator }) {
     { id: 'vehicles', label: 'Vehicle Access Lists', icon: ShieldAlert },
     { id: 'reports', label: 'Reports & Audits', icon: BarChart3 }
   ];
+
+  // For Reception, ONLY show Dashboard, Parking Sessions, and Visitor Validation
+  const navItems = isReception
+    ? allNavItems.filter(item => ['dashboard', 'sessions', 'validation'].includes(item.id))
+    : allNavItems;
 
   const adminItems = [
     { id: 'settings', label: 'System Settings', icon: Settings },
@@ -83,7 +88,7 @@ export default function Sidebar({ activeTab, setActiveTab, onOpenSimulator }) {
           );
         })}
 
-        {isAdmin && (
+        {!isReception && isAdmin && (
           <>
             <div className="nav-section-title">Administration</div>
             {adminItems.map((item) => {
@@ -102,7 +107,7 @@ export default function Sidebar({ activeTab, setActiveTab, onOpenSimulator }) {
           </>
         )}
 
-        {isSuperadmin && (
+        {!isReception && isSuperadmin && (
           <>
             <div className="nav-section-title" style={{ color: 'var(--gold)' }}>
               Superadmin Control
@@ -125,17 +130,19 @@ export default function Sidebar({ activeTab, setActiveTab, onOpenSimulator }) {
           </>
         )}
 
-        <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
-          <button
-            type="button"
-            className="btn btn-warning"
-            style={{ width: '100%', fontSize: '0.75rem', padding: '8px 10px', boxShadow: '0 2px 10px rgba(217, 119, 6, 0.3)' }}
-            onClick={onOpenSimulator}
-          >
-            <Sparkles size={14} />
-            Launch ANPR Simulator
-          </button>
-        </div>
+        {!isReception && (
+          <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
+            <button
+              type="button"
+              className="btn btn-warning"
+              style={{ width: '100%', fontSize: '0.75rem', padding: '8px 10px', boxShadow: '0 2px 10px rgba(217, 119, 6, 0.3)' }}
+              onClick={onOpenSimulator}
+            >
+              <Sparkles size={14} />
+              Launch ANPR Simulator
+            </button>
+          </div>
+        )}
       </nav>
 
       <div className="sidebar-footer">

@@ -21,7 +21,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulator }) {
-  const { isSuperadmin, isAdmin } = useAuth();
+  const { isSuperadmin, isAdmin, isReception } = useAuth();
   const { settings } = useSettings();
   const { theme } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -40,7 +40,7 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const navItems = [
+  const allNavItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'live-lanes', label: 'Live Gate Monitor', icon: Video },
     { id: 'sessions', label: 'Parking Sessions', icon: Car },
@@ -51,6 +51,11 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
     { id: 'reports', label: 'Reports & Audits', icon: BarChart3 },
     { id: 'display-board', label: 'Display Board', icon: Monitor }
   ];
+
+  // For Reception, ONLY show Dashboard, Parking Sessions, and Visitor Validation
+  const navItems = isReception
+    ? allNavItems.filter(item => ['dashboard', 'sessions', 'validation'].includes(item.id))
+    : allNavItems;
 
   // Admin configurable menu colors (Default: Pink & Blue combination)
   const primaryColor = settings.menu_color_primary || '#ec4899';     // Pink
@@ -366,20 +371,22 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
             </div>
           )}
 
-          {/* Far Right Action: In-App ANPR Camera Simulator */}
-          <button
-            type="button"
-            className="btn-anpr-simulator-pulse"
-            onClick={onOpenSimulator}
-            title="Open Live ANPR Camera Event Simulator"
-            style={{
-              background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
-              boxShadow: `0 2px 10px ${primaryColor}50`
-            }}
-          >
-            <Sparkles size={14} className="sparkle-anim" />
-            <span>ANPR Simulator</span>
-          </button>
+          {/* Far Right Action: In-App ANPR Camera Simulator (Hidden for Reception) */}
+          {!isReception && (
+            <button
+              type="button"
+              className="btn-anpr-simulator-pulse"
+              onClick={onOpenSimulator}
+              title="Open Live ANPR Camera Event Simulator"
+              style={{
+                background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
+                boxShadow: `0 2px 10px ${primaryColor}50`
+              }}
+            >
+              <Sparkles size={14} className="sparkle-anim" />
+              <span>ANPR Simulator</span>
+            </button>
+          )}
         </div>
       </div>
     </nav>

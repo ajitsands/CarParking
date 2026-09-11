@@ -55,6 +55,7 @@ export function AuthProvider({ children }) {
 
   const isSuperadmin = user?.role === 'superadmin';
   const isAdmin = user?.role === 'admin' || isSuperadmin;
+  const isReception = user?.role === 'receptionist' || user?.role === 'reception' || (user?.username && user.username.toLowerCase().includes('reception'));
   const isOperator = !!user;
 
   return (
@@ -66,6 +67,7 @@ export function AuthProvider({ children }) {
       logout,
       isSuperadmin,
       isAdmin,
+      isReception,
       isOperator
     }}>
       {children}
