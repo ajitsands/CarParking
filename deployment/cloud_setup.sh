@@ -124,6 +124,7 @@ server {
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript;
 
+    # 1. API Reverse Proxy (Strict Zero Cache & No Buffering)
     location /api/ {
         proxy_pass http://127.0.0.1:8081;
         proxy_http_version 1.1;
@@ -133,16 +134,43 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Bypass and disable any proxy caching & buffering for instant live updates
+        proxy_buffering off;
+        proxy_cache_bypass $http_upgrade;
+        proxy_no_cache 1;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
     }
 
+    # 2. Standalone Android APK Downloads
     location /downloads/ {
         alias /var/www/parking/frontend/downloads/;
         autoindex off;
         add_header Content-Disposition 'attachment';
     }
 
+    # 3. Hashed Static Assets
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        access_log off;
+    }
+
+    # 4. Never Cache HTML / index.html
+    location = /index.html {
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+    }
+
+    # 5. Frontend SPA Route Fallback
     location / {
         try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
     }
 }
 EOF

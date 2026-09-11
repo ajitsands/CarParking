@@ -1119,13 +1119,13 @@ table.data-table tr:last-child td {
 
 .sands-popup {
   position: relative;
-  background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: #ffffff; /* Clean Light Background by default */
+  border: 1px solid #e2e8f0;
   border-radius: 20px;
   padding: 36px 32px 28px;
   width: 360px;
   max-width: 95vw;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(236,72,153,0.15);
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.05);
   text-align: center;
   animation: sandsPopupIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
 }
@@ -1139,45 +1139,48 @@ table.data-table tr:last-child td {
   position: absolute;
   top: 14px;
   right: 16px;
-  background: rgba(255,255,255,0.08);
+  background: #f1f5f9;
   border: none;
-  color: rgba(255,255,255,0.5);
-  width: 28px;
-  height: 28px;
+  color: #64748b;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .sands-popup__close:hover {
-  background: rgba(236,72,153,0.25);
-  color: #ec4899;
+  background: #fee2e2;
+  color: #ef4444;
 }
 
 .sands-popup__logo-wrap {
-  background: linear-gradient(135deg, #ec4899 0%, #2563eb 100%);
-  border-radius: 14px;
-  padding: 18px 24px;
-  margin: 0 auto 16px;
+  background: transparent; /* Clean transparent logo container for light theme */
+  padding: 0;
+  margin: 0 auto 12px;
   width: fit-content;
-  box-shadow: 0 8px 24px rgba(236,72,153,0.3);
+  box-shadow: none;
 }
 
 .sands-popup__logo {
   display: block;
-  height: 52px;
+  height: 54px;
   width: auto;
   object-fit: contain;
+  margin: 0 auto;
 }
 
 .sands-popup__tagline {
-  color: rgba(255,255,255,0.45);
-  font-size: 0.78rem;
+  color: #64748b;
+  font-size: 0.85rem;
   margin: 0 0 24px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
   letter-spacing: 0.02em;
 }
 

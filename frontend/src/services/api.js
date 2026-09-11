@@ -6,11 +6,15 @@ async function request(endpoint, options = {}) {
   const token = localStorage.getItem('token');
   const headers = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...(options.headers || {})
   };
 
   const config = {
+    cache: 'no-store',
     ...options,
     headers
   };
@@ -19,7 +23,12 @@ async function request(endpoint, options = {}) {
     config.body = JSON.stringify(config.body);
   }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, config);
+  // Cache-busting timestamp on GET requests to bypass any server/proxy/NGINX cache
+  const isGet = !config.method || config.method.toUpperCase() === 'GET';
+  const sep = endpoint.includes('?') ? '&' : '?';
+  const url = isGet ? `${BASE_URL}${endpoint}${sep}_t=${Date.now()}` : `${BASE_URL}${endpoint}`;
+
+  const response = await fetch(url, config);
   const data = await response.json().catch(() => ({ success: false, error: 'Invalid JSON response' }));
 
   if (!response.ok) {

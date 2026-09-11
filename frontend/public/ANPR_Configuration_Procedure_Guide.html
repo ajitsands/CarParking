@@ -149,20 +149,185 @@
       margin: 16px 0;
       font-size: 0.88rem;
     }
-    .print-btn {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-      color: #fff;
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-logo {
+      height: 48px;
+      width: auto;
+      background: #ffffff;
+      padding: 6px 14px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    /* ── App Footer (Matching Application) ─────────────────── */
+    .app-footer {
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 0.88rem;
+      color: #64748b;
+      margin-top: 40px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+    }
+    .footer-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      justifyContent: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .app-footer__rights {
+      color: #475569;
+    }
+    .app-footer__sep {
+      color: #cbd5e1;
+      margin: 0 4px;
+    }
+    .app-footer__powered {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .app-footer__sands-btn {
+      background: none;
       border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
+      color: #2563eb;
       font-weight: 700;
       cursor: pointer;
       font-size: 0.88rem;
-      box-shadow: 0 2px 10px rgba(236,72,153,0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      text-decoration: underline;
+    }
+    .app-footer__sands-btn:hover {
+      color: #ec4899;
+      background: #fdf2f8;
+    }
+
+    /* ── SaNDS Lab Light Background Modal Popup ───────────── */
+    .sands-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: sandsOverlayIn 0.2s ease;
+    }
+    @keyframes sandsOverlayIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .sands-popup {
+      position: relative;
+      background: #ffffff; /* Clean Light Background by default */
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 36px 32px 28px;
+      width: 360px;
+      max-width: 92vw;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.05);
+      text-align: center;
+      animation: sandsPopupIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes sandsPopupIn {
+      from { transform: scale(0.85) translateY(20px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .sands-popup__close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .sands-popup__close:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+    .sands-popup__logo-wrap {
+      background: transparent; /* No colored background on logo */
+      padding: 0;
+      margin: 0 auto 12px;
+      width: fit-content;
+    }
+    .sands-popup__logo {
+      display: block;
+      height: 54px;
+      width: auto;
+      object-fit: contain;
+      margin: 0 auto;
+    }
+    .sands-popup__tagline {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin: 0 0 24px;
+      font-weight: 500;
+    }
+    .sands-popup__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sands-popup__action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .sands-popup__action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    .sands-popup__action-btn:active {
+      transform: translateY(0);
+    }
+    .sands-popup__btn-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .sands-popup__action-btn--whatsapp {
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      color: #fff;
+    }
+    .sands-popup__action-btn--website {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #fff;
+    }
+    .sands-popup__action-btn--products {
+      background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+      color: #fff;
     }
     @media print {
       .header-banner { padding: 20px 0; }
-      .print-btn { display: none; }
+      .print-btn, .app-footer, .sands-overlay { display: none; }
       body { background: #fff; }
       .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
     }
@@ -172,11 +337,18 @@
 
   <div class="header-banner">
     <div class="header-container">
-      <div>
-        <div class="doc-badge">TECHNICAL REFERENCE MANUAL</div>
-        <h1>ANPR Camera Webhook Integration & Configuration Guide</h1>
-        <div style="font-size: 0.85rem; color: #94a3b8;">
-          System: Smart Hospital Car Parking & Visitor Validation Solution | KIMSHEALTH Bahrain
+      <div class="header-branding">
+        <img
+          src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
+          alt="SaNDS Lab Logo"
+          class="header-logo"
+        />
+        <div>
+          <div class="doc-badge">TECHNICAL REFERENCE MANUAL</div>
+          <h1>ANPR Camera Webhook Integration &amp; Configuration Guide</h1>
+          <div style="font-size: 0.85rem; color: #94a3b8;">
+            System: Smart Hospital Car Parking &amp; Visitor Validation Solution | KIMSHEALTH Bahrain
+          </div>
         </div>
       </div>
       <div>
@@ -462,6 +634,94 @@
     </div>
 
   </div>
+
+  <!-- Application Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <span class="app-footer__rights">
+        &copy; 2026 All Rights Reserved &mdash; <strong>KIMSHEALTH Hospital Parking Solution</strong>
+      </span>
+      <span class="app-footer__sep">|</span>
+      <span class="app-footer__powered">
+        Powered by <button class="app-footer__sands-btn" onclick="openSandsPopup()" aria-label="About SaNDS Lab">SaNDS Lab</button>
+      </span>
+    </div>
+  </footer>
+
+  <!-- SaNDS Lab Light Background Modal Popup -->
+  <div id="sandsOverlay" class="sands-overlay" style="display:none;" onclick="closeSandsPopup()">
+    <div class="sands-popup" onclick="event.stopPropagation()" role="dialog" aria-modal="true">
+      <button class="sands-popup__close" onclick="closeSandsPopup()" aria-label="Close dialog">&#x2715;</button>
+
+      <div class="sands-popup__logo-wrap">
+        <img
+          src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
+          alt="SaNDS Lab Logo"
+          class="sands-popup__logo"
+        />
+      </div>
+
+      <p class="sands-popup__tagline">Innovative Solutions &amp; Digital Services</p>
+
+      <div class="sands-popup__actions">
+        <a
+          href="https://wa.me/97335078079"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--whatsapp"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" class="sands-popup__btn-icon">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+          </svg>
+          Connect on WhatsApp
+        </a>
+
+        <a
+          href="https://www.sandslab.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--website"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sands-popup__btn-icon">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          Visit Our Website
+        </a>
+
+        <a
+          href="https://sandslab.com/products/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--products"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sands-popup__btn-icon">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+          Our Latest Products
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openSandsPopup() {
+      const overlay = document.getElementById('sandsOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    }
+
+    function closeSandsPopup() {
+      const overlay = document.getElementById('sandsOverlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeSandsPopup();
+    });
+  </script>
 
 </body>
 </html>
