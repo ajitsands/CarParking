@@ -20,7 +20,8 @@ import {
   Activity,
   Download,
   CreditCard,
-  ShieldCheck
+  ShieldCheck,
+  Search
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -67,6 +68,265 @@ function StatusBadge({ state }) {
   );
 }
 
+// ── Counter Payment (No QR / Cash / POS) Section ─────────────────────────────
+
+function ExitCounterPaymentSection({ gateId, liveStatus, onRefresh }) {
+  const [searchPlate, setSearchPlate] = useState('');
+  const [searchedSession, setSearchedSession] = useState(null);
+  const [searchedTariff, setSearchedTariff] = useState(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [checkoutMsg, setCheckoutMsg] = useState(null);
+
+  // Determine active session: either from live gate status or from manual lookup
+  const hasLiveVehicle = Boolean(liveStatus?.has_vehicle && liveStatus?.session_id);
+  const activeSessionId = searchedSession ? searchedSession.id : (hasLiveVehicle ? liveStatus.session_id : null);
+  const activePlate = searchedSession ? searchedSession.plate_number : (hasLiveVehicle ? liveStatus.plate_number : null);
+  const activeEntryTime = searchedSession ? searchedSession.entry_time : (hasLiveVehicle ? liveStatus.entry_time : null);
+  const activeDuration = searchedSession ? searchedSession.duration_minutes : (hasLiveVehicle ? liveStatus.duration_minutes : null);
+  const activeAmount = searchedTariff ? searchedTariff.net_amount : (hasLiveVehicle ? liveStatus.amount_due : 0);
+  const activeFormattedAmount = searchedTariff
+    ? `${searchedTariff.currency_symbol || 'BD'} ${Number(searchedTariff.net_amount || 0).toFixed(3)}`
+    : (hasLiveVehicle ? (liveStatus.formatted_amount || `${liveStatus.currency_symbol || 'BD'} ${Number(liveStatus.amount_due || 0).toFixed(3)}`) : 'BD 0.000');
+
+  const handleManualLookup = async (e) => {
+    if (e) e.preventDefault();
+    const query = searchPlate.trim();
+    if (!query) return;
+
+    setLookupLoading(true);
+    setLookupError('');
+    setSearchedSession(null);
+    setSearchedTariff(null);
+    setCheckoutMsg(null);
+
+    try {
+      const res = await api.calculateTariff({ plate_number: query });
+      if (res.success && res.data) {
+        setSearchedSession(res.data.session);
+        setSearchedTariff(res.data.tariff);
+      } else {
+        setLookupError(res.message || 'Vehicle session not found or already exited');
+      }
+    } catch (err) {
+      setLookupError(err.message || 'No active session found for plate');
+    } finally {
+      setLookupLoading(false);
+    }
+  };
+
+  const handleCounterCheckout = async (method) => {
+    if (!activeSessionId) return;
+    setSubmitting(true);
+    setCheckoutMsg(null);
+    try {
+      const reasonMap = {
+        cash: 'Cash collected by cashier at exit gate',
+        card: 'Card / POS payment collected at exit gate',
+        waived: 'Fee waived by operator at exit gate'
+      };
+      await api.completeSessionExit(activeSessionId, {
+        cash_payment: method === 'cash',
+        payment_method: method,
+        gate_id: gateId,
+        reason: reasonMap[method] || 'Counter payment'
+      });
+      setCheckoutMsg({ 
+        type: 'success', 
+        text: `✓ Payment (${method.toUpperCase()}) recorded successfully! Boom barrier opened & Kiosk display updated to SUCCESS.` 
+      });
+      if (onRefresh) await onRefresh();
+      setSearchedSession(null);
+      setSearchedTariff(null);
+    } catch (err) {
+      setCheckoutMsg({ type: 'error', text: err.message || 'Failed to complete counter checkout' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div style={{
+      marginTop: '16px',
+      background: 'rgba(37, 99, 235, 0.04)',
+      border: '1px solid rgba(37, 99, 235, 0.25)',
+      borderRadius: '12px',
+      padding: '20px'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '8px',
+            background: 'rgba(37, 99, 235, 0.15)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <DollarSign size={18} color="#2563eb" />
+          </div>
+          <div>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', margin: 0 }}>
+              Exit Counter Payment & Manual Clearance
+            </h3>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+              For drivers without QR payment app or when QR scanning is unavailable
+            </span>
+          </div>
+        </div>
+
+        {activeSessionId && (
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>Total Fee Due</span>
+            <strong style={{ color: '#ec4899', fontSize: '1.1rem', fontFamily: 'var(--font-mono)' }}>
+              {activeFormattedAmount}
+            </strong>
+          </div>
+        )}
+      </div>
+
+      <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', margin: '0 0 14px', lineHeight: 1.5 }}>
+        Collect payment via Cash or Card/POS at the counter. Clicking any button below will complete the exit session, trigger the boom barrier relay, and show <strong>SUCCESS / HAVE A SAFE TRIP</strong> on the driver's kiosk screen.
+      </p>
+
+      {/* Lookup Form (Always available) */}
+      <form onSubmit={handleManualLookup} style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: '200px', position: 'relative' }}>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Enter Vehicle Plate (e.g. BHR 43210)"
+            value={searchPlate}
+            onChange={e => setSearchPlate(e.target.value.toUpperCase())}
+            style={{ width: '100%', fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+          />
+        </div>
+        <button
+          type="submit"
+          className="btn btn-primary btn-sm"
+          disabled={lookupLoading || !searchPlate.trim()}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+        >
+          <Search size={14} />
+          {lookupLoading ? 'Searching...' : 'Lookup Vehicle'}
+        </button>
+      </form>
+
+      {lookupError && (
+        <div style={{
+          padding: '8px 12px', borderRadius: '6px', fontSize: '0.76rem',
+          marginBottom: '12px', background: 'rgba(239, 68, 68, 0.1)',
+          color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.25)'
+        }}>
+          {lookupError}
+        </div>
+      )}
+
+      {checkoutMsg && (
+        <div style={{
+          padding: '10px 14px', borderRadius: '8px', fontSize: '0.8rem',
+          marginBottom: '14px', fontWeight: 600,
+          background: checkoutMsg.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+          color: checkoutMsg.type === 'success' ? '#16a34a' : '#dc2626',
+          border: `1px solid ${checkoutMsg.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+        }}>
+          {checkoutMsg.text}
+        </div>
+      )}
+
+      {/* Active Vehicle Card */}
+      {activeSessionId ? (
+        <div style={{
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '10px',
+          padding: '14px',
+          marginBottom: '14px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '6px' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+              {searchedSession ? 'Manually Selected Vehicle' : 'Vehicle at Exit Gate Sensor'}
+            </span>
+            <span style={{
+              fontSize: '0.7rem', padding: '2px 8px', borderRadius: '6px',
+              background: 'rgba(37,99,235,0.1)', color: '#60a5fa', fontWeight: 600
+            }}>
+              Session #{activeSessionId}
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '14px' }}>
+            <div>
+              <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>PLATE NUMBER</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>
+                {activePlate || '—'}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>ENTRY TIME</div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                {formatDateTime(activeEntryTime)}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>PARKING DURATION</div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                {formatDuration(activeDuration)}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>PAYABLE AMOUNT</div>
+              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#ec4899', fontFamily: 'var(--font-mono)' }}>
+                {activeFormattedAmount}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-success btn-sm"
+              onClick={() => handleCounterCheckout('cash')}
+              disabled={submitting}
+              style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px' }}
+            >
+              <DollarSign size={15} />
+              {submitting ? 'Processing...' : 'Collect Cash & Open Gate'}
+            </button>
+
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => handleCounterCheckout('card')}
+              disabled={submitting}
+              style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px' }}
+            >
+              <CreditCard size={15} />
+              {submitting ? 'Processing...' : 'Collect Card / POS & Open Gate'}
+            </button>
+
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => handleCounterCheckout('waived')}
+              disabled={submitting}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 12px' }}
+            >
+              <CheckCircle2 size={15} />
+              Waive Fee & Open Gate
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          padding: '12px 14px', borderRadius: '8px', background: 'var(--bg-surface)',
+          border: '1px dashed var(--border-color)', fontSize: '0.76rem', color: 'var(--text-muted)',
+          display: 'flex', alignItems: 'center', gap: '8px'
+        }}>
+          <Info size={14} />
+          No vehicle is currently waiting at the gate sensor. Use the lookup box above to search any plate manually and complete checkout.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Live Kiosk Status Monitor ─────────────────────────────────────────────────
 
 function LiveKioskMonitor({ gateId }) {
@@ -74,8 +334,6 @@ function LiveKioskMonitor({ gateId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastPoll, setLastPoll] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [checkoutMsg, setCheckoutMsg] = useState(null);
   const pollRef = useRef(null);
 
   const poll = useCallback(async () => {
@@ -106,34 +364,6 @@ function LiveKioskMonitor({ gateId }) {
       </div>
     );
   }
-
-  const handleCounterCheckout = async (method) => {
-    if (!status?.session_id) return;
-    setSubmitting(true);
-    setCheckoutMsg(null);
-    try {
-      const reasonMap = {
-        cash: 'Cash collected by cashier at exit gate',
-        card: 'Card / POS payment collected at exit gate',
-        waived: 'Fee waived by operator at exit gate'
-      };
-      await api.completeSessionExit(status.session_id, {
-        cash_payment: method === 'cash',
-        payment_method: method,
-        gate_id: gateId,
-        reason: reasonMap[method] || 'Counter payment'
-      });
-      setCheckoutMsg({ 
-        type: 'success', 
-        text: `✓ Payment (${method.toUpperCase()}) collected successfully! Boom barrier opened & Kiosk display updated to SUCCESS.` 
-      });
-      await poll();
-    } catch (err) {
-      setCheckoutMsg({ type: 'error', text: err.message || 'Failed to complete counter checkout' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const ds = status?.display_state || 'IDLE';
 
@@ -190,7 +420,8 @@ function LiveKioskMonitor({ gateId }) {
           padding: '16px',
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: '12px'
+          gap: '12px',
+          marginBottom: '14px'
         }}>
           {[
             { label: 'Plate', value: status.plate_number, icon: Car },
@@ -209,77 +440,8 @@ function LiveKioskMonitor({ gateId }) {
         </div>
       )}
 
-      {/* Cashier Counter Manual Payment & Gate Clearance */}
-      {status?.has_vehicle && status?.session_id && (ds === 'PAYMENT_REQUIRED' || Number(status.amount_due || 0) > 0) && (
-        <div style={{
-          marginTop: '14px',
-          background: 'rgba(37, 99, 235, 0.05)',
-          border: '1px solid rgba(37, 99, 235, 0.25)',
-          borderRadius: '12px',
-          padding: '16px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-            <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <DollarSign size={16} color="#2563eb" />
-              Cashier Counter Payment (No QR / Cash / POS)
-            </span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Amount Due: <strong style={{ color: '#ec4899', fontSize: '0.98rem' }}>{status.formatted_amount || `${status.currency_symbol || 'BD'} ${Number(status.amount_due || 0).toFixed(3)}`}</strong>
-            </span>
-          </div>
-
-          <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', margin: '0 0 12px', lineHeight: 1.5 }}>
-            If the driver does not have a QR payment app or cannot scan the kiosk screen, collect payment at the counter below. The barrier will open immediately and the display unit will show <strong>SUCCESS / HAVE A SAFE TRIP</strong>.
-          </p>
-
-          {checkoutMsg && (
-            <div style={{
-              padding: '8px 12px',
-              borderRadius: '6px',
-              fontSize: '0.78rem',
-              marginBottom: '12px',
-              fontWeight: 600,
-              background: checkoutMsg.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-              color: checkoutMsg.type === 'success' ? '#16a34a' : '#dc2626',
-              border: `1px solid ${checkoutMsg.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
-            }}>
-              {checkoutMsg.text}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button
-              className="btn btn-success btn-sm"
-              onClick={() => handleCounterCheckout('cash')}
-              disabled={submitting}
-              style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <DollarSign size={14} />
-              {submitting ? 'Processing...' : 'Collect Cash & Open Gate'}
-            </button>
-
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => handleCounterCheckout('card')}
-              disabled={submitting}
-              style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <CreditCard size={14} />
-              {submitting ? 'Processing...' : 'Collect Card / POS & Open Gate'}
-            </button>
-
-            <button
-              className="btn btn-outline btn-sm"
-              onClick={() => handleCounterCheckout('waived')}
-              disabled={submitting}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <CheckCircle2 size={14} />
-              Waive Fee & Open Gate
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Always Visible Counter Payment & Cashier Override Module */}
+      <ExitCounterPaymentSection gateId={gateId} liveStatus={status} onRefresh={poll} />
     </div>
   );
 }
@@ -656,11 +818,12 @@ export default function DisplayBoardPage() {
   const [monitorGate, setMonitorGate] = useState('GATE-OUT-01');
 
   const sections = [
-    { id: 'apk',       label: 'Download APK',   icon: Download },
-    { id: 'monitor',   label: 'Live Monitor',   icon: Eye },
-    { id: 'simulator', label: 'Kiosk Simulator', icon: Zap },
-    { id: 'setup',     label: 'Setup Guide',     icon: Info },
-    { id: 'connect',   label: 'Connection Info', icon: Wifi },
+    { id: 'apk',       label: 'Download APK',           icon: Download },
+    { id: 'monitor',   label: 'Live Monitor',           icon: Eye },
+    { id: 'counter',   label: 'Counter Payment (No QR)', icon: DollarSign },
+    { id: 'simulator', label: 'Kiosk Simulator',        icon: Zap },
+    { id: 'setup',     label: 'Setup Guide',            icon: Info },
+    { id: 'connect',   label: 'Connection Info',        icon: Wifi },
   ];
 
   return (
@@ -731,6 +894,7 @@ export default function DisplayBoardPage() {
       }}>
         {activeSection === 'apk' && <DownloadApkSection />}
         {activeSection === 'monitor' && <LiveKioskMonitor gateId={monitorGate} />}
+        {activeSection === 'counter' && <ExitCounterPaymentSection gateId={monitorGate} />}
         {activeSection === 'simulator' && <KioskSimulator />}
         {activeSection === 'setup' && <SetupGuide />}
         {activeSection === 'connect' && <ConnectionInfo />}
