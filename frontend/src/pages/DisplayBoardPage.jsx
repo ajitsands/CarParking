@@ -900,19 +900,33 @@ export default function DisplayBoardPage() {
         {activeSection === 'connect' && <ConnectionInfo />}
       </div>
 
-      {/* Footer note */}
+      {/* Production Info Footer */}
       <div style={{
-        marginTop: '16px', padding: '10px 14px',
+        marginTop: '16px', padding: '12px 16px',
         background: 'rgba(59,130,246,0.06)',
         border: '1px solid rgba(59,130,246,0.2)',
         borderRadius: '8px',
-        display: 'flex', gap: '8px', alignItems: 'flex-start'
+        display: 'flex', gap: '10px', alignItems: 'flex-start'
       }}>
-        <Info size={14} color="#60a5fa" style={{ marginTop: '1px', flexShrink: 0 }} />
-        <p style={{ margin: 0, fontSize: '0.73rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          The <strong style={{ color: 'var(--text-primary)' }}>Display Board App</strong> is a React Native (Expo) app located in <code>display-app/</code>.
-          Run it with <code>npx expo start --go</code> and scan the QR code with Expo Go on your Android device.
-          The app polls <code>GET /api/v1/kiosk/status</code> every 2 seconds to show real-time vehicle state at the exit gate.
+        <Info size={16} color="#60a5fa" style={{ marginTop: '2px', flexShrink: 0 }} />
+        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+          {activeSection === 'counter' ? (
+            <>
+              <strong style={{ color: 'var(--text-primary)' }}>Exit Counter Clearance:</strong> Use this module when a driver cannot scan the kiosk QR code or wishes to pay by cash/card at the counter. Collecting payment here automatically clears the session, triggers the boom barrier relay, and updates the driver's display screen to <em>SUCCESS</em>.
+            </>
+          ) : activeSection === 'monitor' ? (
+            <>
+              <strong style={{ color: 'var(--text-primary)' }}>Live Gate Monitor:</strong> Shows the real-time vehicle state, ANPR detection, and tariff calculations at <code>{monitorGate}</code>. The gate tablet display synchronizes with this feed in real-time.
+            </>
+          ) : activeSection === 'apk' ? (
+            <>
+              <strong style={{ color: 'var(--text-primary)' }}>Android Kiosk Display:</strong> Download and install the APK on any Android 8.0+ tablet or screen mounted at the exit gate for automatic full-screen kiosk operation.
+            </>
+          ) : (
+            <>
+              <strong style={{ color: 'var(--text-primary)' }}>Smart Parking Kiosk System:</strong> The gate-mounted display unit communicates securely with the parking server to provide contactless QR payment, whitelist pass-through, and automated barrier control.
+            </>
+          )}
         </p>
       </div>
     </div>
