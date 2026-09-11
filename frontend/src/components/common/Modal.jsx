@@ -1,10 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 
 export default function Modal({ isOpen, onClose, title, children, maxWidth = '540px' }) {
+  const [isShaking, setIsShaking] = useState(false);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
+      // Optional: keep escape key closing if requested or keep it disabled if pure dialog window
+      if (e.key === 'Escape' && onClose) {
+        onClose();
+      }
     };
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown);
@@ -18,10 +23,22 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '54
 
   if (!isOpen) return null;
 
+  const handleBackdropClick = (e) => {
+    // Prevent closing when clicking outside the dialog window
+    e.stopPropagation();
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 300);
+  };
+
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div 
+      className="modal-backdrop" 
+      onClick={handleBackdropClick}
+      role="dialog"
+      aria-modal="true"
+    >
       <div 
-        className="modal-card" 
+        className={`modal-card ${isShaking ? 'modal-dialog-shake' : ''}`}
         style={{ maxWidth }} 
         onClick={(e) => e.stopPropagation()}
       >
@@ -31,7 +48,17 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '54
             type="button" 
             className="btn-icon" 
             onClick={onClose}
-            title="Close"
+            title="Close Dialog Window"
+            aria-label="Close"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }}
           >
             <X size={18} />
           </button>
@@ -43,3 +70,4 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '54
     </div>
   );
 }
+

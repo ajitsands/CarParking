@@ -165,9 +165,6 @@ class BarrierController extends Controller {
                     ];
                 }
             }
-        }
-
-
 
         $msg = "Manual barrier override pulse executed for {$gateId}.";
         if ($sessionUpdated) {
@@ -192,10 +189,37 @@ class BarrierController extends Controller {
 
     public function getLogs(): void {
         $db = Database::getInstance();
-        $stmt = $db->query("SELECT b.*, u.full_name as operator_name 
+        $direction = strtoupper(trim($_GET['direction'] ?? 'ALL'));
+        $startDate = trim($_GET['start_date'] ?? '');
+        $endDate   = trim($_GET['end_date'] ?? '');
+        $limit     = min(1000, max(10, (int)($_GET['limit'] ?? 500)));
+
+        $where = [];
+        $params = [];
+
+        if ($direction === 'ENTRY' || $direction === 'EXIT') {
+            $where[] = "b.direction = ?";
+            $params[] = $direction;
+        }
+
+        if ($startDate) {
+            $where[] = "b.created_at >= ?";
+            $params[] = $startDate . (strlen($startDate) === 10 ? ' 00:00:00' : '');
+        }
+
+        if ($endDate) {
+            $where[] = "b.created_at <= ?";
+            $params[] = $endDate . (strlen($endDate) === 10 ? ' 23:59:59' : '');
+        }
+
+        $whereSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        $stmt = $db->prepare("SELECT b.*, u.full_name as operator_name 
             FROM barrier_logs b 
             LEFT JOIN users u ON b.operator_id = u.id 
-            ORDER BY b.id DESC LIMIT 100");
+            {$whereSql}
+            ORDER BY b.id DESC LIMIT {$limit}");
+        $stmt->execute($params);
         $logs = $stmt->fetchAll();
 
         $this->success(['logs' => $logs]);

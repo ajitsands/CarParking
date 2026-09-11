@@ -21,6 +21,7 @@ import SettingsPage from './pages/SettingsPage';
 import ServerConfigPage from './pages/ServerConfigPage';
 import LicenseManagementPage from './pages/LicenseManagementPage';
 import UserManagementPage from './pages/UserManagementPage';
+import DisplayBoardPage from './pages/DisplayBoardPage';
 import LoginPage from './pages/LoginPage';
 
 import AnprSimulatorModal from './components/simulator/AnprSimulatorModal';
@@ -165,6 +166,10 @@ function MainApp() {
 
         {activeTab === 'users' && (
           <UserManagementPage />
+        )}
+
+        {activeTab === 'display-board' && (
+          <DisplayBoardPage />
         )}
       </main>
 

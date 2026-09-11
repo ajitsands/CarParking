@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # ── 1. MySQL Database ────────────────────────────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: parking_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-S@nds1@b_Root_2026}
+      MYSQL_DATABASE: ${DB_DATABASE:-car_parking_solution}
+      MYSQL_USER: ${DB_USERNAME:-parking_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-S@nds1@b_Secret_2026}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../backend/database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ../backend/database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - parking_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 2. PHP Backend API ───────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.backend
+    container_name: parking_backend
+    restart: always
+    environment:
+      APP_ENV: production
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-car_parking_solution}
+      DB_USERNAME: ${DB_USERNAME:-parking_user}
+      DB_PASSWORD: ${DB_PASSWORD:-S@nds1@b_Secret_2026}
+      TIMEZONE: Asia/Bahrain
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - parking_net
+    ports:
+      - "8081:8081"
+
+  # ── 3. Nginx Web Server + Production Frontend ────────────────────────────────
+  frontend:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile.frontend
+    container_name: parking_frontend
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+    volumes:
+      - ../ParkingDisplayBoard_v1.0.apk:/usr/share/nginx/html/downloads/ParkingDisplayBoard.apk:ro
+    networks:
+      - parking_net
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  parking_net:
+    driver: bridge

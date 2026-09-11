@@ -1,0 +1,3 @@
+Admin: admin / admin123
+Superadmin: superadmin / admin123
+Operator: operator / operator123

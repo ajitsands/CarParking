@@ -13,7 +13,8 @@ import {
   Sparkles,
   WalletCards,
   Key,
-  ChevronDown
+  ChevronDown,
+  Monitor
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -47,7 +48,8 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
     { id: 'validation', label: 'Visitor Validation', icon: QrCode },
     { id: 'cashier', label: 'Cashier Terminal', icon: CreditCard },
     { id: 'vehicles', label: 'Access Lists', icon: ShieldAlert },
-    { id: 'reports', label: 'Reports & Audits', icon: BarChart3 }
+    { id: 'reports', label: 'Reports & Audits', icon: BarChart3 },
+    { id: 'display-board', label: 'Display Board', icon: Monitor }
   ];
 
   // Admin configurable menu colors (Default: Pink & Blue combination)

@@ -1,0 +1,42 @@
+<IfModule mod_rewrite.c>
+    Options -MultiViews
+    RewriteEngine On
+
+    # 1. API Endpoint Routing -> PHP Router
+    RewriteRule ^api/(.*)$ backend/public/index.php [QSA,L]
+    RewriteRule ^api$ backend/public/index.php [QSA,L]
+
+    # 2. Allow Direct File Downloads
+    RewriteRule ^downloads/(.*)$ downloads/$1 [L]
+
+    # 3. Serve existing static files & directories directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # 4. React Single Page Application (SPA) fallback to index.html
+    RewriteRule ^ index.html [L]
+</IfModule>
+
+# Security: Block sensitive file extensions
+<FilesMatch "\.(env|sql|bat|log|md|git.*|yml|yaml|json)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Allow public access to manifest / custom assets if needed
+<FilesMatch "^(custom_db\.json)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# Enable GZIP compression for faster loading
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain text/html text/xml text/css application/xml application/xhtml+xml application/rss+xml application/javascript application/x-javascript application/json
+</IfModule>

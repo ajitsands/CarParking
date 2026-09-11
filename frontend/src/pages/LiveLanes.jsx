@@ -11,7 +11,10 @@ import {
   CreditCard, 
   ArrowRightCircle, 
   Clock, 
-  Coins 
+  Coins,
+  Calendar,
+  Filter,
+  RotateCcw
 } from 'lucide-react';
 import BoomBarrierVisualizer from '../components/gate/BoomBarrierVisualizer';
 import ManualOverrideModal from '../components/gate/ManualOverrideModal';
@@ -21,6 +24,14 @@ import { api } from '../services/api';
 import DataTable from '../components/common/DataTable';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
+
+const getTodayStr = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export default function LiveLanes({ onOpenSimulator }) {
   const { formatCurrency } = useSettings();
@@ -40,10 +51,21 @@ export default function LiveLanes({ onOpenSimulator }) {
   const [actionLoading, setActionLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState(null);
 
+  // Barrier Log Filters
+  const [logDirectionFilter, setLogDirectionFilter] = useState('ALL'); // 'ALL' | 'ENTRY' | 'EXIT'
+  const [logStartDate, setLogStartDate] = useState(getTodayStr());      // Default to Today's date
+  const [logEndDate, setLogEndDate] = useState(getTodayStr());          // Default to Today's date
+  const [activeDatePreset, setActiveDatePreset] = useState('today');   // 'today' | 'yesterday' | 'last7' | 'all' | 'custom'
+
   const loadData = async () => {
     try {
+      const logParams = {};
+      if (logDirectionFilter !== 'ALL') logParams.direction = logDirectionFilter;
+      if (logStartDate) logParams.start_date = logStartDate;
+      if (logEndDate) logParams.end_date = logEndDate;
+
       const [logsRes, sessRes, gatesRes] = await Promise.all([
-        api.getBarrierLogs(),
+        api.getBarrierLogs(logParams),
         api.getSessions({ limit: 50 }),
         api.getGates()
       ]);
@@ -87,7 +109,43 @@ export default function LiveLanes({ onOpenSimulator }) {
     loadData();
     const interval = setInterval(loadData, 5000);
     return () => clearInterval(interval);
-  }, [user]);
+  }, [user, logDirectionFilter, logStartDate, logEndDate]);
+
+  const handlePresetToday = () => {
+    const today = getTodayStr();
+    setLogStartDate(today);
+    setLogEndDate(today);
+    setActiveDatePreset('today');
+  };
+
+  const handlePresetYesterday = () => {
+    const y = new Date();
+    y.setDate(y.getDate() - 1);
+    const yStr = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`;
+    setLogStartDate(yStr);
+    setLogEndDate(yStr);
+    setActiveDatePreset('yesterday');
+  };
+
+  const handlePresetLast7 = () => {
+    const d7 = new Date();
+    d7.setDate(d7.getDate() - 6);
+    const d7Str = `${d7.getFullYear()}-${String(d7.getMonth() + 1).padStart(2, '0')}-${String(d7.getDate()).padStart(2, '0')}`;
+    setLogStartDate(d7Str);
+    setLogEndDate(getTodayStr());
+    setActiveDatePreset('last7');
+  };
+
+  const handlePresetAllTime = () => {
+    setLogStartDate('');
+    setLogEndDate('');
+    setActiveDatePreset('all');
+  };
+
+  const handleResetFilters = () => {
+    setLogDirectionFilter('ALL');
+    handlePresetToday();
+  };
 
   const showToast = (msg, isError = false) => {
     setToastMessage({ text: msg, isError });
@@ -531,6 +589,124 @@ export default function LiveLanes({ onOpenSimulator }) {
         </div>
       </div>
 
+      {/* Barrier Audit Logs Toolbar: Lane Filter (In/Out/All) & Date Between */}
+      <div className="card" style={{ padding: '12px 18px', marginBottom: '14px', background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '10px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          
+          {/* Lane Filter Tabs: ALL, IN LIST (ENTRY), OUT LIST (EXIT) */}
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', marginRight: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Filter size={13} /> Lane:
+            </span>
+            <button
+              className={`btn btn-sm ${logDirectionFilter === 'ALL' ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setLogDirectionFilter('ALL')}
+              style={{ fontSize: '0.74rem', padding: '5px 12px', borderRadius: '6px' }}
+            >
+              All Operations ({barrierLogs.length})
+            </button>
+            <button
+              className={`btn btn-sm ${logDirectionFilter === 'ENTRY' ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setLogDirectionFilter('ENTRY')}
+              style={{ 
+                fontSize: '0.74rem', 
+                padding: '5px 12px', 
+                borderRadius: '6px', 
+                borderColor: logDirectionFilter === 'ENTRY' ? 'var(--primary-color)' : 'rgba(59,130,246,0.3)',
+                color: logDirectionFilter === 'ENTRY' ? '#fff' : '#60a5fa' 
+              }}
+            >
+              🔵 In List (ENTRY)
+            </button>
+            <button
+              className={`btn btn-sm ${logDirectionFilter === 'EXIT' ? 'btn-primary' : 'btn-outline'}`}
+              onClick={() => setLogDirectionFilter('EXIT')}
+              style={{ 
+                fontSize: '0.74rem', 
+                padding: '5px 12px', 
+                borderRadius: '6px', 
+                borderColor: logDirectionFilter === 'EXIT' ? 'var(--primary-color)' : 'rgba(34,197,94,0.3)',
+                color: logDirectionFilter === 'EXIT' ? '#fff' : '#4ade80' 
+              }}
+            >
+              🟢 Out List (EXIT)
+            </button>
+          </div>
+
+          {/* Date Filter: Quick Presets & Date Between */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+            {/* Quick Presets */}
+            <div style={{ display: 'flex', gap: '4px' }}>
+              <button
+                className={`btn btn-xs ${activeDatePreset === 'today' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={handlePresetToday}
+                style={{ fontSize: '0.72rem', padding: '4px 8px' }}
+              >
+                Today
+              </button>
+              <button
+                className={`btn btn-xs ${activeDatePreset === 'yesterday' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={handlePresetYesterday}
+                style={{ fontSize: '0.72rem', padding: '4px 8px' }}
+              >
+                Yesterday
+              </button>
+              <button
+                className={`btn btn-xs ${activeDatePreset === 'last7' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={handlePresetLast7}
+                style={{ fontSize: '0.72rem', padding: '4px 8px' }}
+              >
+                Last 7 Days
+              </button>
+              <button
+                className={`btn btn-xs ${activeDatePreset === 'all' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={handlePresetAllTime}
+                style={{ fontSize: '0.72rem', padding: '4px 8px' }}
+              >
+                All Dates
+              </button>
+            </div>
+
+            {/* Date Between Inputs */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '4px' }}>
+              <Calendar size={13} style={{ color: 'var(--text-muted)' }} />
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>From:</span>
+              <input
+                type="date"
+                className="input input-sm"
+                value={logStartDate}
+                onChange={(e) => {
+                  setLogStartDate(e.target.value);
+                  setActiveDatePreset('custom');
+                }}
+                style={{ fontSize: '0.74rem', padding: '4px 8px', width: '135px' }}
+              />
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>To:</span>
+              <input
+                type="date"
+                className="input input-sm"
+                value={logEndDate}
+                onChange={(e) => {
+                  setLogEndDate(e.target.value);
+                  setActiveDatePreset('custom');
+                }}
+                style={{ fontSize: '0.74rem', padding: '4px 8px', width: '135px' }}
+              />
+              {(logStartDate || logEndDate || logDirectionFilter !== 'ALL' || activeDatePreset !== 'today') && (
+                <button
+                  className="btn btn-outline btn-xs"
+                  onClick={handleResetFilters}
+                  title="Reset to Today & All Lanes"
+                  style={{ fontSize: '0.7rem', padding: '4px 8px', color: 'var(--text-muted)' }}
+                >
+                  <RotateCcw size={11} /> Reset
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Barrier Audit Logs DataTable */}
       <DataTable
         columns={[
@@ -569,11 +745,20 @@ export default function LiveLanes({ onOpenSimulator }) {
           {
             key: 'trigger_type',
             label: 'Trigger Event',
-            render: (log) => (
-              <span className="badge badge-gray" style={{ textTransform: 'uppercase' }}>
-                {log.trigger_type}
-              </span>
-            )
+            render: (log) => {
+              const type = log.trigger_type || 'SYSTEM_AUTO';
+              let badgeClass = 'badge-gray';
+              if (type.includes('payment') || type.includes('free_exit')) badgeClass = 'badge-green';
+              else if (type.includes('entry') || type.includes('exit')) badgeClass = 'badge-blue';
+              else if (type.includes('manual') || type.includes('override')) badgeClass = 'badge-amber';
+              else if (type.includes('emergency')) badgeClass = 'badge-red';
+
+              return (
+                <span className={`badge ${badgeClass}`} style={{ textTransform: 'uppercase', fontSize: '0.7rem' }}>
+                  {type.replace(/_/g, ' ')}
+                </span>
+              );
+            }
           },
           {
             key: 'command_sent',
@@ -605,13 +790,13 @@ export default function LiveLanes({ onOpenSimulator }) {
         ]}
         data={barrierLogs}
         title="Boom Barrier Operations & Override Audit Log"
-        subtitle="Real-time hardware relay triggers and operator overrides"
+        subtitle={`Real-time hardware relay triggers & overrides · ${logDirectionFilter === 'ALL' ? 'All Lanes' : logDirectionFilter === 'ENTRY' ? 'In List (ENTRY)' : 'Out List (EXIT)'} · ${logStartDate && logStartDate === logEndDate ? (logStartDate === getTodayStr() ? "Today's Operations" : `Date: ${logStartDate}`) : logStartDate || logEndDate ? `Date Between: ${logStartDate || 'Start'} to ${logEndDate || 'Now'}` : 'All Time'}`}
         icon={ShieldAlert}
         exportable={true}
         exportFileName="barrier_audit_logs"
         searchPlaceholder="Search gate, plate, operator, or reason..."
         defaultPageSize={10}
-        emptyMessage="No barrier logs recorded yet."
+        emptyMessage={`No barrier operations found for ${logDirectionFilter === 'ALL' ? 'selected criteria' : logDirectionFilter}.`}
         headerActions={(
           <button className="btn btn-outline btn-sm" onClick={loadData} style={{ fontSize: '0.72rem', padding: '4px 8px' }}>
             <RefreshCw size={12} /> Refresh

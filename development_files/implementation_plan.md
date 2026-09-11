@@ -43,15 +43,21 @@ Expand the Smart Car Parking & Hospital Visitor Validation System to support:
   - `GET /api/v1/prepaid/ledger`: Vehicle-based ledger records with monthly/date filtering.
   - `GET /api/v1/prepaid/stats`: Monthly & daily revenue KPIs (`collected_this_month`, `collected_today`, `active_count`).
   - `GET /api/v1/prepaid/vehicle/{plate}/history`: Full ledger history for a specific vehicle.
+- [DisplayController.php](file:///e:/parkingsolution/backend/app/Controllers/DisplayController.php):
+  - `GET /api/v1/kiosk/status`: Returns current vehicle detected at given gate (`gate_id`), plate number, entry/exit timestamp, duration in minutes, tariff amount, payment status, dynamic QR code payload (BenefitPay / UPI / Web Checkout URL), and barrier state.
+  - `POST /api/v1/kiosk/pay-qr`: Public endpoint allowing the driver's phone (or simulated scan) to complete payment for a session and trigger the exit barrier.
+  - `POST /api/v1/kiosk/simulate-approach`: Endpoint to test vehicle arrival at a specific exit gate for kiosk demo.
 - [DecisionEngine.php](file:///e:/parkingsolution/backend/app/Services/DecisionEngine.php):
   - On vehicle entry/exit, checks for active prepaid pass:
     - If active pass exists: marks as `PREPAID_PASS_ENTRY` / `PREPAID_PASS_EXIT`, opens boom barrier, and waives fee to `0.000`.
 - [SettingsController.php](file:///e:/parkingsolution/backend/app/Controllers/SettingsController.php):
   - Saves minute, hourly, daily, weekly, and monthly rates.
+- [public/index.php](file:///e:/parkingsolution/backend/public/index.php):
+  - Register `/api/v1/kiosk/*` routes.
 
 ---
 
-## 3. Frontend Implementation (React JS + Vite)
+## 3. Frontend Implementation (React JS + Vite) & Mobile Display Kiosk
 
 - **System Settings ([SettingsPage.jsx](file:///e:/parkingsolution/frontend/src/pages/SettingsPage.jsx))**:
   - Add Tariff Rate Configuration Panel: Per Minute, Per Hour, Per Day (24h Cap), Per Week, Per Month.

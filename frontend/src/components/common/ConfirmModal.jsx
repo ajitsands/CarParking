@@ -15,7 +15,17 @@ export default function ConfirmModal({
   loading = false,
   maxWidth = '480px'
 }) {
+  const [isShaking, setIsShaking] = React.useState(false);
+
   if (!isOpen) return null;
+
+  const handleBackdropClick = (e) => {
+    e.stopPropagation();
+    if (!loading) {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 300);
+    }
+  };
 
   const getIcon = () => {
     switch (type) {
@@ -48,11 +58,13 @@ export default function ConfirmModal({
   return (
     <div 
       className="modal-backdrop" 
-      onClick={!loading ? onClose : undefined}
+      onClick={handleBackdropClick}
       style={{ zIndex: 99999 }}
+      role="dialog"
+      aria-modal="true"
     >
       <div 
-        className="modal-card" 
+        className={`modal-card ${isShaking ? 'modal-dialog-shake' : ''}`}
         style={{ 
           maxWidth,
           borderRadius: '16px',

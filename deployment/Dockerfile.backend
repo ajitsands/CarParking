@@ -1,0 +1,22 @@
+FROM php:8.2-cli-alpine
+
+RUN apk add --no-cache \
+    mysql-client \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_mysql gd zip bcmath
+
+WORKDIR /var/www/html
+
+# Copy backend files
+COPY backend/ /var/www/html/backend/
+
+EXPOSE 8081
+
+CMD ["php", "-S", "0.0.0.0:8081", "-t", "/var/www/html/backend/public", "/var/www/html/backend/public/index.php"]

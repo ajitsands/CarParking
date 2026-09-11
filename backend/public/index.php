@@ -57,6 +57,7 @@ use App\Controllers\ReportsController;
 use App\Controllers\HisIntegrationController;
 use App\Controllers\PrepaidController;
 use App\Controllers\GateController;
+use App\Controllers\DisplayController;
 
 // Handle static files if using PHP built-in server
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -172,6 +173,16 @@ $router->post('/api/v1/prepaid/passes/{id}/renew', [PrepaidController::class, 'r
 $router->get('/api/v1/prepaid/stats', [PrepaidController::class, 'getStats'], [AuthMiddleware::class]);
 $router->get('/api/v1/prepaid/ledger', [PrepaidController::class, 'getLedger'], [AuthMiddleware::class]);
 $router->get('/api/v1/prepaid/vehicle/{plate}/history', [PrepaidController::class, 'getVehicleHistory'], [AuthMiddleware::class]);
+
+// ── Kiosk Display Board (Exit Gate Android App) ────────────
+// GET: Public — Android display board polls this every 2s
+$router->get('/api/v1/kiosk/status', [DisplayController::class, 'getStatus']);
+// POST: Public — Driver's phone confirms QR payment (no auth, token-secured)
+$router->post('/api/v1/kiosk/pay-qr', [DisplayController::class, 'payByQr']);
+// GET: Public redirect from QR scan (driver phone opens URL in browser)
+$router->get('/api/v1/kiosk/pay-qr', [DisplayController::class, 'payByQr']);
+// POST: Auth-protected — Simulate ANPR approach at exit gate for demo/testing
+$router->post('/api/v1/kiosk/simulate-approach', [DisplayController::class, 'simulateApproach'], [AuthMiddleware::class]);
 
 // Dispatch Request
 $router->dispatch();

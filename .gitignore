@@ -4,9 +4,10 @@ node_modules/
 vendor/
 */vendor/
 
-# Build artifacts
-dist/
-*/dist/
+# Build artifacts (dist allowed for cPanel deployment)
+display-app/android/app/build/
+display-app/android/build/
+display-app/.expo/
 build/
 */build/
 

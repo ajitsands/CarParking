@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANPR Camera Integration & System Configuration Manual - KIMSHEALTH Parking</title>
+  <style>
+    :root {
+      --primary: #ec4899;
+      --secondary: #2563eb;
+      --dark: #0f172a;
+      --surface: #1e293b;
+      --text: #334155;
+      --text-dark: #0f172a;
+      --border: #e2e8f0;
+      --accent: #10b981;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: #f8fafc;
+      margin: 0;
+      padding: 0;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #fff;
+      padding: 40px 20px;
+      border-bottom: 4px solid var(--primary);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .header-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      justifyContent: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .doc-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 30px auto 60px;
+      padding: 0 20px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px;
+      margin-bottom: 26px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.85rem;
+      color: #fff;
+      font-weight: 800;
+    }
+    h2 {
+      font-size: 1.35rem;
+      color: var(--text-dark);
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 10px;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h3 {
+      font-size: 1.05rem;
+      color: var(--secondary);
+      margin-top: 20px;
+    }
+    p, li {
+      font-size: 0.92rem;
+      color: #475569;
+    }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    pre {
+      background: #0f172a;
+      color: #a7f3d0;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      border: 1px solid #334155;
+    }
+    .url-box {
+      background: #0f172a;
+      border-left: 4px solid var(--primary);
+      padding: 14px 18px;
+      border-radius: 6px;
+      color: #38bdf8;
+      font-family: monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 10px 0 16px;
+      word-break: break-all;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.88rem;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 10px 14px;
+      text-align: left;
+    }
+    th {
+      background: #f8fafc;
+      color: var(--text-dark);
+      font-weight: 700;
+    }
+    tr:nth-child(even) {
+      background: #fdfdfd;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-primary { background: #fce7f3; color: #be185d; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .alert-box {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 14px 18px;
+      border-radius: 6px;
+      margin: 16px 0;
+      font-size: 0.88rem;
+    }
+    .print-btn {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.88rem;
+      box-shadow: 0 2px 10px rgba(236,72,153,0.3);
+    }
+    @media print {
+      .header-banner { padding: 20px 0; }
+      .print-btn { display: none; }
+      body { background: #fff; }
+      .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-banner">
+    <div class="header-container">
+      <div>
+        <div class="doc-badge">TECHNICAL REFERENCE MANUAL</div>
+        <h1>ANPR Camera Webhook Integration & Configuration Guide</h1>
+        <div style="font-size: 0.85rem; color: #94a3b8;">
+          System: Smart Hospital Car Parking & Visitor Validation Solution | KIMSHEALTH Bahrain
+        </div>
+      </div>
+      <div>
+        <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- 1. Overview & Architecture -->
+    <div class="card">
+      <h2>1. Architecture & Real-Time Flow</h2>
+      <p>
+        The parking solution interfaces directly with ANPR cameras at entry and exit gate lanes. When a vehicle passes through a lane, the camera captures the plate number and pushes an HTTP POST webhook request containing JSON metadata and snapshot images. The system processes the event in under 80 milliseconds, evaluates access permissions, controls the boom barrier, and tracks parking tariffs.
+      </p>
+      <div class="alert-box">
+        <strong>⚡ Decision Engine Response Time:</strong> &lt; 80ms.<br>
+        <strong>🔒 Whitelist / Emergency / Prepaid Passes:</strong> Instant automated boom barrier opening with fee waiver (BD 0.000).<br>
+        <strong>⏱️ Unvalidated Visitors:</strong> Entry barrier opens, grace period countdown starts, and automated tariff charging commences if unvalidated after grace minutes.
+      </div>
+    </div>
+
+    <!-- 2. Webhook URLs -->
+    <div class="card">
+      <h2>2. Webhook URLs to Configure in Camera Software</h2>
+      <p>Choose the target URL based on whether the camera is communicating on a Local Area Network (LAN) or Cloud WAN:</p>
+
+      <h3>Option A: Local Network (On-Premise LAN IP)</h3>
+      <p>Recommended for hospital sites where cameras and this computer are plugged into the same local router or switch:</p>
+      <div class="url-box">http://192.168.100.4:8000/api/v1/webhook/anpr</div>
+      <p style="font-size: 0.8rem; color: #64748b;">
+        * Note: Replace <code>192.168.100.4</code> with the static LAN IP assigned to your server machine by the hospital IT team.
+      </p>
+
+      <h3>Option B: Production Cloud Server (Domain Name)</h3>
+      <p>For cloud-hosted deployments where cameras push over the public internet with SSL encryption:</p>
+      <div class="url-box">https://parking.sandslab.com/api/v1/webhook/anpr</div>
+
+      <h3>Option C: Localhost (Testing on Same PC)</h3>
+      <div class="url-box">http://127.0.0.1:8000/api/v1/webhook/anpr</div>
+    </div>
+
+    <!-- 3. Dahua Setup -->
+    <div class="card">
+      <h2>3. Dahua ANPR Camera Configuration (Step-by-Step)</h2>
+      <p><strong>Supported Models:</strong> Dahua DHI-ITC413-PW4D, ITC237, ITC215, and all Dahua Traffic ITS cameras.</p>
+
+      <h3>Step 3.1: Enable Road Traffic Detection</h3>
+      <ol>
+        <li>Open browser and navigate to camera IP (default: <code>http://192.168.1.108</code>).</li>
+        <li>Login with camera admin credentials.</li>
+        <li>Go to: <strong>Setting</strong> &rarr; <strong>Event</strong> &rarr; <strong>Traffic Recognition</strong> (or <strong>Road Traffic</strong>).</li>
+        <li>Check <strong>Enable Road Traffic</strong>. Set Region to <strong>Bahrain (BHR)</strong> or <strong>GCC</strong>.</li>
+        <li>Click <strong>Save</strong>.</li>
+      </ol>
+
+      <h3>Step 3.2: Configure HTTP Push Webhook</h3>
+      <ol>
+        <li>Go to: <strong>Setting</strong> &rarr; <strong>Network</strong> &rarr; <strong>Access Platform</strong> &rarr; <strong>HTTP Push</strong> (or <strong>Alarm Server</strong>).</li>
+        <li>Configure the settings:
+          <ul>
+            <li><strong>Enable:</strong> Checked</li>
+            <li><strong>Protocol:</strong> HTTP</li>
+            <li><strong>Method:</strong> POST</li>
+            <li><strong>Destination IP:</strong> <code>192.168.100.4</code> (Your Host Server IP)</li>
+            <li><strong>Port:</strong> <code>8000</code></li>
+            <li><strong>Request Path / URL:</strong> <code>/api/v1/webhook/anpr</code></li>
+            <li><strong>Data Format:</strong> JSON (UTF-8)</li>
+            <li><strong>Upload Pictures:</strong> Check <strong>Plate Picture</strong> & <strong>Panoramic Overview Picture</strong>.</li>
+          </ul>
+        </li>
+        <li>Click <strong>Save</strong> and <strong>Apply</strong>.</li>
+      </ol>
+
+      <h3>Dahua JSON Payload Format Sent to Server:</h3>
+      <pre>{
+  "PlateNumber": "BHR 55443",
+  "PlateColor": "Blue",
+  "VehicleColor": "Silver",
+  "VehicleType": "Sedan",
+  "TimeStamp": "2026-09-10 12:45:00",
+  "Channel": 1,
+  "Lane": 1,
+  "SnapPicURL": "http://192.168.100.20/snapshot/img1.jpg"
+}</pre>
+    </div>
+
+    <!-- 4. Hikvision Setup -->
+    <div class="card">
+      <h2>4. Hikvision ANPR Camera Configuration</h2>
+      <p><strong>Supported Models:</strong> DS-2CD7A series, iDS-TCM403, iDS DeepinView Traffic IPC.</p>
+      <ol>
+        <li>Navigate to: <strong>Configuration</strong> &rarr; <strong>Network</strong> &rarr; <strong>Advanced Settings</strong> &rarr; <strong>HTTP Listening</strong> (or <strong>Alarm Server</strong>).</li>
+        <li>Set:
+          <ul>
+            <li><strong>Destination Address:</strong> <code>192.168.100.4</code></li>
+            <li><strong>Port:</strong> <code>8000</code></li>
+            <li><strong>URL:</strong> <code>/api/v1/webhook/anpr</code></li>
+            <li><strong>Protocol:</strong> HTTP POST</li>
+            <li><strong>Picture Upload:</strong> Enabled (Plate Cutout & Overview Snapshot).</li>
+          </ul>
+        </li>
+        <li>Under <strong>Road Traffic &rarr; Vehicle Detection</strong>, ensure region is GCC / Bahrain.</li>
+        <li>Click <strong>Save</strong>.</li>
+      </ol>
+      <pre>{
+  "licensePlate": "BHR 11223",
+  "laneNo": 1,
+  "dateTime": "2026-09-10 12:45:00",
+  "vehicleType": "Car",
+  "vehicleColor": "Silver",
+  "picture": ""
+}</pre>
+    </div>
+
+    <!-- 5. Manufacturer Column Mapping -->
+    <div class="card">
+      <h2>5. Camera Column & Parameter Mapping Table</h2>
+      <p>Configure or verify these mappings under <strong>System Settings &rarr; Camera Manufacturer Profile</strong>:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter Purpose</th>
+            <th>Dahua (ITC Series)</th>
+            <th>Hikvision (Smart LPR)</th>
+            <th>Uniview (UNV)</th>
+            <th>Generic / Custom</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>License Plate Key</strong></td>
+            <td><code>PlateNumber</code></td>
+            <td><code>licensePlate</code></td>
+            <td><code>PlateText</code></td>
+            <td><code>plate_number</code></td>
+          </tr>
+          <tr>
+            <td><strong>Gate / Channel Key</strong></td>
+            <td><code>Channel</code></td>
+            <td><code>laneNo</code></td>
+            <td><code>ChannelID</code></td>
+            <td><code>gate_code</code></td>
+          </tr>
+          <tr>
+            <td><strong>Lane Number</strong></td>
+            <td><code>Lane</code></td>
+            <td><code>laneNo</code></td>
+            <td><code>TollGateID</code></td>
+            <td><code>lane_number</code></td>
+          </tr>
+          <tr>
+            <td><strong>Timestamp Key</strong></td>
+            <td><code>TimeStamp</code> / <code>UTC</code></td>
+            <td><code>dateTime</code></td>
+            <td><code>PassTime</code></td>
+            <td><code>timestamp</code></td>
+          </tr>
+          <tr>
+            <td><strong>Vehicle Type Key</strong></td>
+            <td><code>VehicleType</code></td>
+            <td><code>vehicleType</code></td>
+            <td><code>CarType</code></td>
+            <td><code>vehicle_type</code></td>
+          </tr>
+          <tr>
+            <td><strong>Vehicle Color Key</strong></td>
+            <td><code>VehicleColor</code></td>
+            <td><code>vehicleColor</code></td>
+            <td><code>PlateColor</code></td>
+            <td><code>vehicle_color</code></td>
+          </tr>
+          <tr>
+            <td><strong>Snapshot Image Key</strong></td>
+            <td><code>Image</code> / <code>SnapPicURL</code></td>
+            <td><code>picture</code></td>
+            <td><code>ImageURL</code></td>
+            <td><code>image_base64</code></td>
+          </tr>
+          <tr>
+            <td><strong>Channel for Entry Gate</strong></td>
+            <td><code>1</code> &rarr; GATE-IN-01</td>
+            <td><code>1</code></td>
+            <td><code>1</code></td>
+            <td><code>GATE-IN-01</code></td>
+          </tr>
+          <tr>
+            <td><strong>Channel for Exit Gate</strong></td>
+            <td><code>2</code> &rarr; GATE-OUT-01</td>
+            <td><code>2</code></td>
+            <td><code>2</code></td>
+            <td><code>GATE-OUT-01</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 6. Snapshot Image Storage Path -->
+    <div class="card">
+      <h2>6. Camera Snapshot Storage Folder Path</h2>
+      <p>Incoming camera vehicle photos (Base64 data, multipart binary uploads, or snapshot links) are automatically stored onto disk:</p>
+
+      <div class="alert-box">
+        <strong>Configured Directory:</strong> <code>storage/uploads/anpr_snapshots</code><br>
+        <strong>Host Disk Absolute Path:</strong> <code>E:\parkingsolution\backend\storage\uploads\anpr_snapshots</code><br>
+        <strong>File Naming Format:</strong> <code>[PLATE]_[DIRECTION]_[YYYYMMDD_HHMMSS]_[RAND].jpg</code><br>
+        <em>Example:</em> <code>BHR_55443_entry_20260910_124500_91a2.jpg</code>
+      </div>
+      <p>Images stored here are directly indexed and visible in Parking Sessions, Live Monitor, and Audit Trails.</p>
+    </div>
+
+    <!-- 7. Boom Barrier Relay Hardware Setup -->
+    <div class="card">
+      <h2>7. Boom Barrier Relay Hardware Configuration</h2>
+      <p>The system triggers barrier opening via Ethernet IP Relay modules (Dry Contact NO/COM pulse):</p>
+      <ul>
+        <li><strong>Relay Wiring:</strong> Connect Relay Channel 1 (COM and NO terminals) to the Boom Barrier motherboard's <strong>Open Signal</strong> dry contact input.</li>
+        <li><strong>Relay Pulse Duration:</strong> <code>800 ms</code> (Configurable in Settings).</li>
+        <li><strong>Entry Barrier Relay Target:</strong> <code>192.168.1.201:8080</code> (Gate: GATE-IN-01)</li>
+        <li><strong>Exit Barrier Relay Target:</strong> <code>192.168.1.202:8080</code> (Gate: GATE-OUT-01)</li>
+        <li><strong>Relay Command:</strong> <code>RELAY_CH1_PULSE</code></li>
+      </ul>
+    </div>
+
+    <!-- 8. Prepaid Parking & Whitelisting -->
+    <div class="card">
+      <h2>8. Prepaid Passes & Automatic Whitelisting</h2>
+      <p>For vehicles paying for Day, Week, or Month parking passes:</p>
+      <ol>
+        <li>Go to <strong>Prepaid Passes</strong> in the top menu &rarr; click <strong>+ Issue New Prepaid Pass</strong>.</li>
+        <li>Enter Start Date, Duration Plan (Day/Week/Month), Plate Number, Vehicle Type, Owner Name, Contact Phone, and Payment Method (Cash, BenefitPay QR, Card).</li>
+        <li>Click <strong>Confirm & Issue Prepaid Pass</strong>.</li>
+      </ol>
+      <div class="alert-box">
+        <strong>Automatic Whitelisting Effect:</strong><br>
+        The vehicle is immediately inserted into the <code>vehicles</code> table with <code>access_status = 'whitelisted'</code>.<br>
+        When the ANPR camera detects the vehicle, the Decision Engine automatically recognizes the active pass, opens the boom barrier, waives the parking fee (<code>BD 0.000</code>), and records the transaction in the Financial and Vehicle-Specific Ledgers.
+      </div>
+    </div>
+
+    <!-- 9. Troubleshooting -->
+    <div class="card">
+      <h2>9. Field Verification & Troubleshooting</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Symptom</th>
+            <th>Possible Cause</th>
+            <th>Resolution</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Camera posts event but fails with timeout</td>
+            <td>Windows Firewall blocking Port 8000</td>
+            <td>Run: <code>New-NetFirewallRule -DisplayName "ANPR Webhook" -Direction Inbound -LocalPort 8000 -Protocol TCP -Action Allow</code></td>
+          </tr>
+          <tr>
+            <td>Server returns HTTP 400 "Plate not detected"</td>
+            <td>JSON column key mismatch</td>
+            <td>In System Settings, select the camera manufacturer preset (e.g., Dahua) or check exact plate field name.</td>
+          </tr>
+          <tr>
+            <td>Plate detected but barrier doesn't open</td>
+            <td>Relay IP offline or cable disconnected</td>
+            <td>Check Ethernet cable to IP relay (e.g. <code>192.168.1.201</code>). Test barrier manually with physical push button.</td>
+          </tr>
+          <tr>
+            <td>Prepaid vehicle charged a fee</td>
+            <td>Pass expired or plate typed with different spaces</td>
+            <td>Verify pass in Prepaid Passes registry; spaces are automatically normalized.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Default System Credentials:</h3>
+      <ul>
+        <li><strong>Hospital Admin:</strong> <code>admin</code> / <code>Admin@12345</code></li>
+        <li><strong>Gate Operator:</strong> <code>operator</code> / <code>User@12345</code></li>
+      </ul>
+    </div>
+
+  </div>
+
+</body>
+</html>

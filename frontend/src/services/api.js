@@ -90,7 +90,10 @@ export const api = {
 
   // Barrier Control
   manualOverrideBarrier: (payload) => request('/barrier/manual-override', { method: 'POST', body: payload }),
-  getBarrierLogs: () => request('/barrier/logs'),
+  getBarrierLogs: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/barrier/logs${qs ? '?' + qs : ''}`);
+  },
 
   // Vehicle Access (Whitelist / Blacklist)
   getVehicles: (params = {}) => {
@@ -137,5 +140,9 @@ export const api = {
     const qs = new URLSearchParams(params).toString();
     return request(`/prepaid/ledger${qs ? '?' + qs : ''}`);
   },
-  getPrepaidVehicleHistory: (plate) => request(`/prepaid/vehicle/${encodeURIComponent(plate)}/history`)
+  getPrepaidVehicleHistory: (plate) => request(`/prepaid/vehicle/${encodeURIComponent(plate)}/history`),
+
+  // Kiosk Display Board (Exit Gate Android App)
+  getKioskStatus: (gateId) => request(`/kiosk/status?gate_id=${encodeURIComponent(gateId)}`),
+  kioskSimulateApproach: (payload) => request('/kiosk/simulate-approach', { method: 'POST', body: payload }),
 };
