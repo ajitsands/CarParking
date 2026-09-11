@@ -75,13 +75,8 @@ class Router {
                     }
                 }
 
-                // Execute handler
-                if (is_callable($route['handler'])) {
-                    call_user_func_array($route['handler'], $matches);
-                    return;
-                }
-
-                if (is_array($route['handler']) && count($route['handler']) === 2) {
+                // Execute handler: If [ControllerClass, 'method'], instantiate object first
+                if (is_array($route['handler']) && count($route['handler']) === 2 && is_string($route['handler'][0])) {
                     [$class, $action] = $route['handler'];
                     if (class_exists($class)) {
                         $controller = new $class();
@@ -90,6 +85,11 @@ class Router {
                             return;
                         }
                     }
+                }
+
+                if (is_callable($route['handler'])) {
+                    call_user_func_array($route['handler'], $matches);
+                    return;
                 }
 
                 Response::json(['error' => 'Handler method not found'], 500);
