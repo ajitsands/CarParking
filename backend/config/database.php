@@ -1,10 +1,30 @@
 <?php
+// Polyfills for PHP 7.4 compatibility
+if (!function_exists('str_contains')) {
+    function str_contains(string $haystack, string $needle): bool {
+        return $needle === '' || strpos($haystack, $needle) !== false;
+    }
+}
+if (!function_exists('str_starts_with')) {
+    function str_starts_with(string $haystack, string $needle): bool {
+        return strncmp($haystack, $needle, strlen($needle)) === 0;
+    }
+}
+if (!function_exists('str_ends_with')) {
+    function str_ends_with(string $haystack, string $needle): bool {
+        return $needle === '' || substr($haystack, -strlen($needle)) === $needle;
+    }
+}
+
 // Dual Environment Database Configuration (Local vs Production)
-// Automatically detects cPanel / Sandslab cloud environment
+$cwd = __DIR__ . ' ' . (getcwd() ?: '');
+$httpHost = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? '';
+$user = getenv('USER') ?: (function_exists('get_current_user') ? get_current_user() : '');
 
 $isCloud = (getenv('APP_ENV') === 'production') || 
-    (isset($_SERVER['HTTP_HOST']) && (strpos($_SERVER['HTTP_HOST'], 'sandslab.com') !== false || strpos($_SERVER['HTTP_HOST'], 'parking') !== false)) ||
-    (isset($_SERVER['SERVER_NAME']) && (strpos($_SERVER['SERVER_NAME'], 'sandslab.com') !== false || strpos($_SERVER['SERVER_NAME'], 'parking') !== false));
+    (strpos($httpHost, 'sandslab.com') !== false || strpos($httpHost, 'parking') !== false) ||
+    (strpos($cwd, 'sandsl23') !== false || strpos($cwd, 'sandslab') !== false || strpos($cwd, 'parking') !== false) ||
+    ($user === 'sandsl23');
 
 return [
     'default' => $isCloud ? 'production' : (getenv('APP_ENV') ?: 'local'),

@@ -1,3 +1,26 @@
 Admin: admin / admin123
 Superadmin: superadmin / admin123
 Operator: operator / operator123
+
+
+Service Endpoints & Credentials
+Active Ports & Network Info
+Host Local IP: 192.168.8.11
+Web Dashboard: http://localhost:5173 (or http://192.168.8.11:5173)
+PHP Backend API: http://127.0.0.1:8081 (or http://192.168.8.11:8081)
+Expo Metro Bundler: http://localhost:19000 (or http://192.168.8.11:19000)
+Credentials (
+pass.txt
+)
+Admin: admin / admin123
+Superadmin: superadmin / admin123
+Operator: operator / operator123
+
+
+
+Live URLs After Running:
+Web Management Portal: https://parking.sandslab.com
+Live Lanes & Gate Monitor: https://parking.sandslab.com/lanes
+Display Board & Simulator: https://parking.sandslab.com/display-board
+Direct APK Download: https://parking.sandslab.com/downloads/ParkingDisplayBoard.apk
+In the Android Display App: Set Server Mode → Cloud Server with URL https://parking.sandslab.com

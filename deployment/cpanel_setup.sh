@@ -29,6 +29,8 @@ echo "[+] Deploying Frontend Production Bundle to Root..."
 if [ -d "frontend/dist" ]; then
     cp -r frontend/dist/* ./
     echo "    Copied index.html, assets, and icons from frontend/dist/ to domain root."
+elif [ -f "index.html" ] && [ -d "assets" ]; then
+    echo "    ✓ Production assets (index.html, assets/) are verified in root directory."
 else
     echo "    [i] frontend/dist not found. If Node.js/npm is available, building frontend now..."
     if command -v npm >/dev/null 2>&1; then
@@ -124,14 +126,14 @@ chmod -R 755 backend/storage 2>/dev/null || true
 # 7. Test Database Connectivity via PHP
 echo "[+] Testing Database Connectivity via PHP..."
 if command -v php >/dev/null 2>&1; then
-    php -r "
+    APP_ENV=production php -r "
     try {
         require_once 'backend/app/Core/Database.php';
-        \$pdo = \App\Core\Database::getInstance();
-        echo '    ✓ Database connection successful! Tables found: ' . \$pdo->query('SHOW TABLES')->rowCount() . PHP_EOL;
+        \$pdo = \App\Core\Database::getInstance('production');
+        echo '    ✓ Database connection successful! Tables in sandsl23_parking_db: ' . \$pdo->query('SHOW TABLES')->rowCount() . PHP_EOL;
     } catch (\Throwable \$e) {
         echo '    [!] Database check notice: ' . \$e->getMessage() . PHP_EOL;
-        echo '    Ensure MySQL database and user privileges are created in cPanel MySQL Databases.' . PHP_EOL;
+        echo '    Ensure MySQL database (sandsl23_parking_db) and user (sandsl23_parking_users) are assigned with ALL PRIVILEGES in cPanel -> MySQL Databases.' . PHP_EOL;
     }
     " 2>/dev/null || true
 fi
