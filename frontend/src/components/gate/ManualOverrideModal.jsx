@@ -200,12 +200,14 @@ export default function ManualOverrideModal({
             onChange={(e) => setReasonCategory(e.target.value)}
             required
           >
-            <option value="Emergency / Medical Escort">Emergency / Medical Escort</option>
-            <option value="Cash / Manual Payment Collected">Cash / Manual Payment Collected</option>
-            <option value="VIP / Doctor Emergency Convoy">VIP / Doctor Emergency Convoy</option>
-            <option value="Loop Sensor / Hardware Glitch">Loop Sensor / Hardware Glitch</option>
-            <option value="Plate Misread / ANPR Unreadable">Plate Misread / ANPR Unreadable</option>
+            <option value="Whitelisted Vehicle / Staff Access">Whitelisted Vehicle / Staff Access</option>
             <option value="Maintenance / Relay Testing">Maintenance / Relay Testing</option>
+            <option value="Emergency / Medical Escort">Emergency / Medical Escort</option>
+            <option value="VIP / Doctor Emergency Convoy">VIP / Doctor Emergency Convoy</option>
+            <option value="Plate Misread / ANPR Unreadable">Plate Misread / ANPR Unreadable</option>
+            <option value="Cash / Manual Payment Collected">Cash / Manual Payment Collected</option>
+            <option value="Contractor / Service Vehicle">Contractor / Service Vehicle</option>
+            <option value="Loop Sensor / Hardware Glitch">Loop Sensor / Hardware Glitch</option>
             <option value="Other Protocol Exception">Other Protocol Exception</option>
           </select>
         </div>

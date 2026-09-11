@@ -1181,8 +1181,6 @@ table.data-table tr:last-child td {
   font-weight: 500;
   letter-spacing: 0.01em;
 }
-  letter-spacing: 0.02em;
-}
 
 .sands-popup__actions {
   display: flex;

@@ -127,44 +127,82 @@ class BarrierController extends Controller {
                 // Anti-Passback Protection: Auto-close any previous unclosed session for this plate
                 \App\Services\AntiPassbackService::reconcileExistingActiveSessions($plate, $sessCode, $nowStr);
 
-                    // Default to VALIDATION_PENDING (standard flow)
+                // Check if vehicle is in Whitelist database or if reason is Whitelist/Maintenance/Emergency
+                $cleanPlate = preg_replace('/[^A-Za-z0-9]/', '', $plate);
+                $stmtWl = $db->prepare("SELECT * FROM vehicles 
+                    WHERE (plate_number = ? OR REPLACE(plate_number, ' ', '') = ?) 
+                    AND access_status = 'whitelisted' 
+                    AND (valid_to IS NULL OR valid_to >= ?) 
+                    LIMIT 1");
+                $stmtWl->execute([$plate, $cleanPlate, date('Y-m-d')]);
+                $wlVehicle = $stmtWl->fetch();
+
+                $isWhitelistedReason = stripos($reason, 'whitelist') !== false || 
+                                       stripos($reason, 'staff') !== false || 
+                                       stripos($reason, 'maintenance') !== false ||
+                                       stripos($reason, 'contractor') !== false ||
+                                       stripos($reason, 'doctor') !== false ||
+                                       stripos($reason, 'emergency') !== false;
+
+                $graceMinutes = TariffCalculator::getAdminGraceMinutes();
+                $validationDeadline = date('Y-m-d H:i:s', strtotime($nowStr) + ($graceMinutes * 60));
+
+                if ($wlVehicle || $isWhitelistedReason) {
+                    // Automatically mark as VALIDATED with zero fee
+                    $initialStatus = 'VALIDATED';
+                    $valMethod = (stripos($reason, 'emergency') !== false) ? 'emergency' : ($wlVehicle || stripos($reason, 'whitelist') !== false ? 'whitelisted' : 'manual_waived');
+                    $valRef = $wlVehicle ? ($wlVehicle['owner_name'] . ' (' . ucfirst($wlVehicle['category']) . ')') : "Manual Clearance: {$reason}";
+                    $validatedAt = $nowStr;
+                    $paymentStatus = 'waived';
+                } else {
+                    // Standard visitor vehicle
                     $initialStatus = 'VALIDATION_PENDING';
-                    $graceMinutes = TariffCalculator::getAdminGraceMinutes();
-                    $validationDeadline = date('Y-m-d H:i:s', strtotime($nowStr) + ($graceMinutes * 60));
-
-                    $stmtIns = $db->prepare("INSERT INTO parking_sessions 
-                        (session_code, plate_number, entry_time, entry_gate_id, status, 
-                         validation_deadline, grace_period_minutes, manual_review_reason) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmtIns->execute([
-                        $sessCode,
-                        $plate,
-                        $nowStr,
-                        $gateId,
-                        $initialStatus,
-                        $validationDeadline,
-                        $graceMinutes,
-                        "Manual Entry Override: {$reason} (Operator: " . ($currentUser['username'] ?? 'operator') . ")"
-                    ]);
-                    $newSessionId = (int)$db->lastInsertId();
-
-                    // Log an ANPR event for the manual entry
-                    $db->prepare("INSERT INTO anpr_events 
-                        (session_id, camera_id, gate_id, direction, plate_number, confidence, raw_payload) 
-                        VALUES (?, 'MANUAL-CAM', ?, 'ENTRY', ?, 100, ?)")
-                       ->execute([
-                           $newSessionId, $gateId, $plate,
-                           json_encode(['reason' => $reason, 'operator' => $currentUser['username'] ?? 'operator', 'type' => 'manual_override'])
-                       ]);
-
-                    $createdSession = [
-                        'session_id'   => $newSessionId,
-                        'session_code' => $sessCode,
-                        'plate_number' => $plate,
-                        'status'       => $initialStatus
-                    ];
+                    $valMethod = 'none';
+                    $valRef = null;
+                    $validatedAt = null;
+                    $paymentStatus = 'unpaid';
                 }
+
+                $stmtIns = $db->prepare("INSERT INTO parking_sessions 
+                    (session_code, plate_number, entry_time, entry_gate_id, status, 
+                     validation_deadline, validated_at, validation_method, validation_ref, validated_by,
+                     payment_status, grace_period_minutes, manual_review_reason) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmtIns->execute([
+                    $sessCode,
+                    $plate,
+                    $nowStr,
+                    $gateId,
+                    $initialStatus,
+                    $validationDeadline,
+                    $validatedAt,
+                    $valMethod,
+                    $valRef,
+                    $userId,
+                    $paymentStatus,
+                    $graceMinutes,
+                    "Manual Entry Override: {$reason} (Operator: " . ($currentUser['username'] ?? 'operator') . ")"
+                ]);
+                $newSessionId = (int)$db->lastInsertId();
+
+                // Log an ANPR event for the manual entry
+                $db->prepare("INSERT INTO anpr_events 
+                    (session_id, camera_id, gate_id, direction, plate_number, confidence, raw_payload) 
+                    VALUES (?, 'MANUAL-CAM', ?, 'ENTRY', ?, 100, ?)")
+                   ->execute([
+                       $newSessionId, $gateId, $plate,
+                       json_encode(['reason' => $reason, 'operator' => $currentUser['username'] ?? 'operator', 'type' => 'manual_override', 'is_whitelisted' => (bool)$wlVehicle])
+                   ]);
+
+                $createdSession = [
+                    'session_id'   => $newSessionId,
+                    'session_code' => $sessCode,
+                    'plate_number' => $plate,
+                    'status'       => $initialStatus,
+                    'is_whitelisted' => (bool)$wlVehicle
+                ];
             }
+        }
 
         $msg = "Manual barrier override pulse executed for {$gateId}.";
         if ($sessionUpdated) {
