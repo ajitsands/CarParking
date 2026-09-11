@@ -483,6 +483,40 @@ export default function SettingsPage() {
                     Camera Setup Help
                     <ExternalLink size={11} style={{ opacity: 0.8 }} />
                   </a>
+
+                  <a
+                    href="/Cloud_ANPR_Integration_Architecture_Guide.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '3px 10px',
+                      borderRadius: '4px',
+                      background: 'rgba(99, 102, 241, 0.15)',
+                      color: '#6366f1',
+                      border: '1px solid rgba(99, 102, 241, 0.4)',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(99, 102, 241, 0.25)';
+                      e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.7)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)';
+                      e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.4)';
+                    }}
+                    title="Open Cloud ANPR Architecture & Local Camera Integration Guide"
+                  >
+                    <Globe size={12} />
+                    Cloud Architecture Guide
+                    <ExternalLink size={11} style={{ opacity: 0.8 }} />
+                  </a>
                 </div>
               </div>
 
