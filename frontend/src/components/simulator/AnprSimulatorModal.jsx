@@ -69,6 +69,7 @@ export default function AnprSimulatorModal({ isOpen, onClose, onSimulated }) {
       }
 
       setResult(res);
+      window.dispatchEvent(new CustomEvent('anpr-event-simulated', { detail: res }));
       if (onSimulated) {
         onSimulated(res);
       }
@@ -261,7 +262,9 @@ export default function AnprSimulatorModal({ isOpen, onClose, onSimulated }) {
                 fontSize: '0.85rem',
                 color: result.data?.barrier_open ? 'var(--status-green)' : 'var(--status-red)'
               }}>
-                {result.data?.barrier_open ? 'BOOM BARRIER OPENED · EXIT COMPLETED' : 'BARRIER REMAINS CLOSED · PAYMENT REQUIRED'}
+                {direction === 'ENTRY'
+                  ? (result.data?.barrier_open ? 'BOOM BARRIER OPENED · ENTRY REGISTERED' : 'ENTRY ACCESS DENIED · BARRIER CLOSED')
+                  : (result.data?.barrier_open ? 'BOOM BARRIER OPENED · EXIT COMPLETED' : 'BARRIER REMAINS CLOSED · PAYMENT REQUIRED')}
               </strong>
             </div>
 

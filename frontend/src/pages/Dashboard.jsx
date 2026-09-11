@@ -39,7 +39,12 @@ export default function Dashboard({ onNavigate, onOpenPayment, onOpenValidation 
   useEffect(() => {
     loadDashboard();
     const interval = setInterval(loadDashboard, 8000); // auto-refresh every 8s
-    return () => clearInterval(interval);
+    const handleSim = () => loadDashboard();
+    window.addEventListener('anpr-event-simulated', handleSim);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('anpr-event-simulated', handleSim);
+    };
   }, []);
 
   if (loading && !data) {

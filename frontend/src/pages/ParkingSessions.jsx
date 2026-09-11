@@ -52,7 +52,12 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
     const interval = setInterval(() => {
       loadSessions();
     }, 8000);
-    return () => clearInterval(interval);
+    const handleSim = () => loadSessions();
+    window.addEventListener('anpr-event-simulated', handleSim);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('anpr-event-simulated', handleSim);
+    };
   }, [statusFilter]);
 
   const handleSearchSubmit = (e) => {

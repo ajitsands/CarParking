@@ -108,7 +108,12 @@ export default function LiveLanes({ onOpenSimulator }) {
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 5000);
-    return () => clearInterval(interval);
+    const handleSim = () => loadData();
+    window.addEventListener('anpr-event-simulated', handleSim);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('anpr-event-simulated', handleSim);
+    };
   }, [user, logDirectionFilter, logStartDate, logEndDate]);
 
   const handlePresetToday = () => {
