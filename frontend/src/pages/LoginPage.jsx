@@ -161,11 +161,11 @@ export default function LoginPage() {
               <Sparkles size={12} color="var(--gold)" />
               Quick Demo Access
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
-                style={{ fontSize: '0.72rem', padding: '6px' }}
+                style={{ fontSize: '0.72rem', padding: '6px', fontWeight: 600 }}
                 onClick={() => setDemoUser('admin', 'Admin@12345')}
               >
                 Admin
@@ -173,10 +173,18 @@ export default function LoginPage() {
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
-                style={{ fontSize: '0.72rem', padding: '6px' }}
+                style={{ fontSize: '0.72rem', padding: '6px', fontWeight: 600 }}
                 onClick={() => setDemoUser('operator', 'User@12345')}
               >
                 Operator
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.72rem', padding: '6px', fontWeight: 600, color: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' }}
+                onClick={() => setDemoUser('receptionist', 'User@12345')}
+              >
+                Reception
               </button>
             </div>
           </div>
