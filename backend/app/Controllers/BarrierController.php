@@ -203,13 +203,13 @@ class BarrierController extends Controller {
         }
 
         if ($startDate) {
-            $where[] = "b.created_at >= ?";
-            $params[] = $startDate . (strlen($startDate) === 10 ? ' 00:00:00' : '');
+            $where[] = "DATE(b.created_at) >= ?";
+            $params[] = substr($startDate, 0, 10);
         }
 
         if ($endDate) {
-            $where[] = "b.created_at <= ?";
-            $params[] = $endDate . (strlen($endDate) === 10 ? ' 23:59:59' : '');
+            $where[] = "DATE(b.created_at) <= ?";
+            $params[] = substr($endDate, 0, 10);
         }
 
         $whereSql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';

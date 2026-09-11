@@ -28,7 +28,8 @@ class BarrierRelayService {
 
         // 3. Immutable Barrier Audit Log
         try {
-            $stmtLog = $db->prepare("INSERT INTO barrier_logs (gate_id, direction, plate_number, trigger_type, command_sent, relay_response, operator_id, override_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $nowStr = \App\Helpers\TimezoneHelper::now();
+            $stmtLog = $db->prepare("INSERT INTO barrier_logs (gate_id, direction, plate_number, trigger_type, command_sent, relay_response, operator_id, override_reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmtLog->execute([
                 $gateId,
                 strtoupper($direction),
@@ -37,7 +38,8 @@ class BarrierRelayService {
                 $command,
                 $relayResponse['status'],
                 $operatorId,
-                $reason
+                $reason,
+                $nowStr
             ]);
             $logId = (int)$db->lastInsertId();
         } catch (\Throwable $e) {

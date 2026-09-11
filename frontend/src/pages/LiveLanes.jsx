@@ -603,7 +603,7 @@ export default function LiveLanes({ onOpenSimulator }) {
               onClick={() => setLogDirectionFilter('ALL')}
               style={{ fontSize: '0.74rem', padding: '5px 12px', borderRadius: '6px' }}
             >
-              All Operations ({barrierLogs.length})
+              All Operations
             </button>
             <button
               className={`btn btn-sm ${logDirectionFilter === 'ENTRY' ? 'btn-primary' : 'btn-outline'}`}
