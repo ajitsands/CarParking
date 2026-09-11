@@ -74,6 +74,8 @@ function LiveKioskMonitor({ gateId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastPoll, setLastPoll] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [checkoutMsg, setCheckoutMsg] = useState(null);
   const pollRef = useRef(null);
 
   const poll = useCallback(async () => {
@@ -104,9 +106,6 @@ function LiveKioskMonitor({ gateId }) {
       </div>
     );
   }
-
-  const [submitting, setSubmitting] = useState(false);
-  const [checkoutMsg, setCheckoutMsg] = useState(null);
 
   const handleCounterCheckout = async (method) => {
     if (!status?.session_id) return;
