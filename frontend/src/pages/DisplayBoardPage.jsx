@@ -18,7 +18,9 @@ import {
   Zap,
   Eye,
   Activity,
-  Download
+  Download,
+  CreditCard,
+  ShieldCheck
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -103,6 +105,37 @@ function LiveKioskMonitor({ gateId }) {
     );
   }
 
+  const [submitting, setSubmitting] = useState(false);
+  const [checkoutMsg, setCheckoutMsg] = useState(null);
+
+  const handleCounterCheckout = async (method) => {
+    if (!status?.session_id) return;
+    setSubmitting(true);
+    setCheckoutMsg(null);
+    try {
+      const reasonMap = {
+        cash: 'Cash collected by cashier at exit gate',
+        card: 'Card / POS payment collected at exit gate',
+        waived: 'Fee waived by operator at exit gate'
+      };
+      await api.completeSessionExit(status.session_id, {
+        cash_payment: method === 'cash',
+        payment_method: method,
+        gate_id: gateId,
+        reason: reasonMap[method] || 'Counter payment'
+      });
+      setCheckoutMsg({ 
+        type: 'success', 
+        text: `✓ Payment (${method.toUpperCase()}) collected successfully! Boom barrier opened & Kiosk display updated to SUCCESS.` 
+      });
+      await poll();
+    } catch (err) {
+      setCheckoutMsg({ type: 'error', text: err.message || 'Failed to complete counter checkout' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const ds = status?.display_state || 'IDLE';
 
   return (
@@ -174,6 +207,78 @@ function LiveKioskMonitor({ gateId }) {
               <div style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{value || '—'}</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Cashier Counter Manual Payment & Gate Clearance */}
+      {status?.has_vehicle && status?.session_id && (ds === 'PAYMENT_REQUIRED' || Number(status.amount_due || 0) > 0) && (
+        <div style={{
+          marginTop: '14px',
+          background: 'rgba(37, 99, 235, 0.05)',
+          border: '1px solid rgba(37, 99, 235, 0.25)',
+          borderRadius: '12px',
+          padding: '16px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <DollarSign size={16} color="#2563eb" />
+              Cashier Counter Payment (No QR / Cash / POS)
+            </span>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Amount Due: <strong style={{ color: '#ec4899', fontSize: '0.98rem' }}>{status.formatted_amount || `${status.currency_symbol || 'BD'} ${Number(status.amount_due || 0).toFixed(3)}`}</strong>
+            </span>
+          </div>
+
+          <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', margin: '0 0 12px', lineHeight: 1.5 }}>
+            If the driver does not have a QR payment app or cannot scan the kiosk screen, collect payment at the counter below. The barrier will open immediately and the display unit will show <strong>SUCCESS / HAVE A SAFE TRIP</strong>.
+          </p>
+
+          {checkoutMsg && (
+            <div style={{
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '0.78rem',
+              marginBottom: '12px',
+              fontWeight: 600,
+              background: checkoutMsg.type === 'success' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              color: checkoutMsg.type === 'success' ? '#16a34a' : '#dc2626',
+              border: `1px solid ${checkoutMsg.type === 'success' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+            }}>
+              {checkoutMsg.text}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button
+              className="btn btn-success btn-sm"
+              onClick={() => handleCounterCheckout('cash')}
+              disabled={submitting}
+              style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <DollarSign size={14} />
+              {submitting ? 'Processing...' : 'Collect Cash & Open Gate'}
+            </button>
+
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => handleCounterCheckout('card')}
+              disabled={submitting}
+              style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <CreditCard size={14} />
+              {submitting ? 'Processing...' : 'Collect Card / POS & Open Gate'}
+            </button>
+
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => handleCounterCheckout('waived')}
+              disabled={submitting}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            >
+              <CheckCircle2 size={14} />
+              Waive Fee & Open Gate
+            </button>
+          </div>
         </div>
       )}
     </div>
