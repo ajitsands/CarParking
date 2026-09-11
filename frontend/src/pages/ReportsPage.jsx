@@ -14,7 +14,8 @@ import {
   FileText,
   Layers,
   Info,
-  ShieldCheck
+  ShieldCheck,
+  Car
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useSettings } from '../context/SettingsContext';
@@ -25,6 +26,7 @@ export default function ReportsPage() {
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeReportTab, setActiveReportTab] = useState('sessions');
 
   // Date Range Search Filter States
   const [startDate, setStartDate] = useState('');
@@ -151,7 +153,7 @@ export default function ReportsPage() {
       )}
 
       {/* KPI Cards */}
-      <div className="stat-grid">
+      <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
         <div className="stat-card">
           <div>
             <div className="stat-label">Total Parking Sessions</div>
@@ -159,6 +161,18 @@ export default function ReportsPage() {
           </div>
           <div className="stat-icon-wrap stat-icon-blue">
             <TrendingUp size={20} />
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div>
+            <div className="stat-label">Currently Parked (Active)</div>
+            <div className="stat-value" style={{ color: '#22c55e' }}>
+              {totals.active_parked ?? 0}
+            </div>
+          </div>
+          <div className="stat-icon-wrap" style={{ background: 'rgba(34, 197, 94, 0.12)', color: '#22c55e' }}>
+            <Car size={20} />
           </div>
         </div>
 
@@ -347,11 +361,199 @@ export default function ReportsPage() {
         </form>
       </div>
 
-      {/* Modern DataTable for Security Audit Trail with Expandable Child Rows */}
-      <DataTable
-        title="Immutable System & Security Audit Logs"
-        subtitle={`Total logged events: ${(report?.audit_logs || []).length} ${startDate || endDate ? `(Filtered: ${startDate || 'Start'} to ${endDate || 'Now'})` : ''}`}
-        icon={ShieldAlert}
+      {/* Report Table Switcher Tabs */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '14px',
+        flexWrap: 'wrap',
+        gap: '10px'
+      }}>
+        <div style={{
+          display: 'flex',
+          gap: '6px',
+          background: 'var(--bg-surface)',
+          padding: '4px',
+          borderRadius: '8px',
+          border: '1px solid var(--border-color)'
+        }}>
+          <button
+            type="button"
+            className={`btn btn-sm ${activeReportTab === 'sessions' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setActiveReportTab('sessions')}
+            style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px' }}
+          >
+            <Car size={14} />
+            Vehicle Parking Sessions Report ({(report?.sessions_report || []).length})
+          </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${activeReportTab === 'audit' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setActiveReportTab('audit')}
+            style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px' }}
+          >
+            <ShieldAlert size={14} />
+            Security & Barrier Audit Logs ({(report?.audit_logs || []).length})
+          </button>
+        </div>
+      </div>
+
+      {activeReportTab === 'sessions' ? (
+        /* Full Vehicle Parking Sessions Report */
+        <DataTable
+          title="Vehicle Parking Sessions Report"
+          subtitle={`Total parking sessions recorded: ${(report?.sessions_report || []).length} (${totals.active_parked ?? 0} currently active inside)`}
+          icon={Car}
+          columns={[
+            {
+              key: 'plate_number',
+              label: 'Plate Number',
+              width: '130px',
+              render: (s) => (
+                <div style={{
+                  display: 'inline-block',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-color)',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 800,
+                  fontSize: '0.8rem',
+                  color: 'var(--text-primary)'
+                }}>
+                  {s.plate_number || '—'}
+                </div>
+              )
+            },
+            {
+              key: 'session_code',
+              label: 'Session Code',
+              width: '150px',
+              render: (s) => (
+                <span style={{ fontSize: '0.73rem', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
+                  {s.session_code}
+                </span>
+              )
+            },
+            {
+              key: 'entry_time',
+              label: 'Entry Time (Start)',
+              width: '150px',
+              render: (s) => (
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                  {s.entry_time || '—'}
+                </span>
+              )
+            },
+            {
+              key: 'exit_time',
+              label: 'Exit Time (End)',
+              width: '150px',
+              render: (s) => {
+                if (s.exit_time) {
+                  return (
+                    <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                      {s.exit_time}
+                    </span>
+                  );
+                }
+                if (s.is_currently_inside) {
+                  return (
+                    <span className="badge badge-green" style={{ fontSize: '0.65rem' }}>
+                      ● Inside / Active
+                    </span>
+                  );
+                }
+                return <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>—</span>;
+              }
+            },
+            {
+              key: 'total_duration_minutes',
+              label: 'Duration',
+              width: '110px',
+              render: (s) => {
+                const mins = s.total_duration_minutes;
+                if (mins === null || mins === undefined || isNaN(mins)) {
+                  return <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem' }}>—</span>;
+                }
+                const formatted = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
+                return (
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.76rem', color: s.is_currently_inside ? '#22c55e' : 'var(--text-primary)' }}>
+                    {formatted}
+                  </span>
+                );
+              }
+            },
+            {
+              key: 'status',
+              label: 'Status',
+              width: '130px',
+              render: (s) => {
+                const isPaid = s.payment_status === 'paid';
+                const isVal = s.status === 'VALIDATED';
+                const isExit = s.status === 'EXIT_COMPLETED' || s.status === 'COMPLETED';
+                const badgeCls = isExit ? 'badge-blue' : isVal ? 'badge-green' : 'badge-amber';
+                return (
+                  <span className={`badge ${badgeCls}`} style={{ fontSize: '0.68rem', textTransform: 'capitalize' }}>
+                    {s.status ? s.status.toLowerCase().replace('_', ' ') : '—'}
+                  </span>
+                );
+              }
+            },
+            {
+              key: 'net_amount',
+              label: 'Net Fee',
+              width: '110px',
+              render: (s) => (
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.76rem', color: 'var(--gold)' }}>
+                  {formatCurrency(s.net_amount || 0)}
+                </span>
+              )
+            },
+            {
+              key: 'payment_status',
+              label: 'Payment',
+              width: '100px',
+              render: (s) => {
+                const isPaid = s.payment_status === 'paid';
+                const isWaived = s.payment_status === 'waived';
+                return (
+                  <span className={`badge ${isPaid ? 'badge-green' : isWaived ? 'badge-blue' : 'badge-gray'}`} style={{ fontSize: '0.65rem' }}>
+                    ● {s.payment_status || 'unpaid'}
+                  </span>
+                );
+              }
+            },
+            {
+              key: 'gate_route',
+              label: 'Gate / Route',
+              width: '150px',
+              render: (s) => {
+                const inGate = s.entry_gate_id || 'GATE-IN-01';
+                const outGate = s.exit_gate_id;
+                const route = outGate ? `${inGate} → ${outGate}` : inGate;
+                return (
+                  <span style={{ fontSize: '0.72rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                    {route}
+                  </span>
+                );
+              }
+            }
+          ]}
+          data={report?.sessions_report || []}
+          loading={loading}
+          exportable={true}
+          exportFileName="parking_sessions_report"
+          searchPlaceholder="Search vehicle sessions by plate, session code, or status..."
+          emptyMessage="No parking sessions found for the selected period."
+        />
+      ) : (
+        /* Modern DataTable for Security Audit Trail with Expandable Child Rows */
+        <DataTable
+          title="Immutable System & Security Audit Logs"
+          subtitle={`Total security audit events: ${(report?.audit_logs || []).length} ${startDate || endDate ? `(Filtered: ${startDate || 'Start'} to ${endDate || 'Now'})` : ''}`}
+          icon={ShieldAlert}
         columns={[
           {
             key: 'created_at',
@@ -595,6 +797,7 @@ export default function ReportsPage() {
           </button>
         }
       />
+      )}
     </div>
   );
 }

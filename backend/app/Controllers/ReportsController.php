@@ -23,26 +23,35 @@ class ReportsController extends Controller {
 
         // 4. Overall Totals
         $totalSessions = (int)$db->query("SELECT COUNT(*) FROM parking_sessions")->fetchColumn();
+        $activeParked = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED')")->fetchColumn();
+        $completedSessions = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NOT NULL OR status IN ('EXIT_COMPLETED', 'COMPLETED')")->fetchColumn();
         $totalRevenue = (float)$db->query("SELECT COALESCE(SUM(amount), 0) FROM payments")->fetchColumn();
         $totalValidated = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE status IN ('VALIDATED', 'EXIT_COMPLETED') AND validation_method != 'none'")->fetchColumn();
 
-        // 5. Recent Audit Logs (Enriched with vehicle plate, start time, end time, duration, and gate route)
+        // 5. Recent Audit Logs & Session Records (Enriched with vehicle plate, start time, end time, duration, and gate route)
         $startDate = $_GET['start_date'] ?? null;
         $endDate = $_GET['end_date'] ?? null;
 
         $whereClauses = [];
+        $sessWhereClauses = [];
         $queryParams = [];
+        $sessQueryParams = [];
 
         if (!empty($startDate)) {
             $whereClauses[] = "DATE(created_at) >= :start_date";
+            $sessWhereClauses[] = "DATE(entry_time) >= :start_date";
             $queryParams[':start_date'] = $startDate;
+            $sessQueryParams[':start_date'] = $startDate;
         }
         if (!empty($endDate)) {
             $whereClauses[] = "DATE(created_at) <= :end_date";
+            $sessWhereClauses[] = "DATE(entry_time) <= :end_date";
             $queryParams[':end_date'] = $endDate;
+            $sessQueryParams[':end_date'] = $endDate;
         }
 
         $whereSql = !empty($whereClauses) ? "WHERE " . implode(" AND ", $whereClauses) : "";
+        $sessWhereSql = !empty($sessWhereClauses) ? "WHERE " . implode(" AND ", $sessWhereClauses) : "";
 
         // Query raw audit logs cleanly without cross-table collation conflicts
         $stmtAudit = $db->prepare("SELECT * FROM audit_logs {$whereSql} ORDER BY id DESC LIMIT 300");
@@ -185,16 +194,54 @@ class ReportsController extends Controller {
             ];
         }
 
+        // Format all vehicle sessions for the sessions report tab
+        $stmtSessionsReport = $db->prepare("SELECT * FROM parking_sessions {$sessWhereSql} ORDER BY id DESC LIMIT 500");
+        $stmtSessionsReport->execute($sessQueryParams);
+        $rawSessionsReport = $stmtSessionsReport->fetchAll();
+
+        $sessionsReport = [];
+        foreach ($rawSessionsReport as $s) {
+            $eTs = strtotime($s['entry_time'] ?? '');
+            $xTs = !empty($s['exit_time']) ? strtotime($s['exit_time']) : null;
+            $isInside = (empty($s['exit_time']) && !in_array($s['status'] ?? '', ['EXIT_COMPLETED', 'COMPLETED', 'CANCELLED'], true));
+            $dur = !empty($s['total_duration_minutes']) 
+                ? (int)$s['total_duration_minutes'] 
+                : ($eTs && $xTs ? max(1, (int)round(($xTs - $eTs) / 60)) : ($isInside && $eTs ? max(0, (int)round((time() - $eTs) / 60)) : null));
+
+            $sessionsReport[] = [
+                'id'                      => (int)$s['id'],
+                'session_code'            => $s['session_code'],
+                'plate_number'            => $s['plate_number'],
+                'entry_time'              => $s['entry_time'],
+                'exit_time'               => $s['exit_time'],
+                'entry_gate_id'           => $s['entry_gate_id'],
+                'exit_gate_id'            => $s['exit_gate_id'],
+                'status'                  => $s['status'],
+                'is_currently_inside'     => $isInside ? 1 : 0,
+                'total_duration_minutes'  => $dur,
+                'total_amount'            => (float)($s['total_amount'] ?? 0),
+                'net_amount'              => (float)($s['net_amount'] ?? 0),
+                'paid_amount'             => (float)($s['paid_amount'] ?? 0),
+                'payment_status'          => $s['payment_status'] ?? 'unpaid',
+                'validation_method'       => $s['validation_method'] ?? 'none',
+                'manual_review_reason'    => $s['manual_review_reason'] ?? null,
+                'created_at'              => $s['created_at'] ?? $s['entry_time']
+            ];
+        }
+
         $this->success([
             'totals' => [
-                'total_sessions'  => $totalSessions,
-                'total_revenue'   => $totalRevenue,
-                'formatted_revenue' => CurrencyHelper::formatWithSymbol($totalRevenue),
-                'total_validated' => $totalValidated
+                'total_sessions'     => $totalSessions,
+                'active_parked'      => $activeParked,
+                'completed_sessions' => $completedSessions,
+                'total_revenue'      => $totalRevenue,
+                'formatted_revenue'  => CurrencyHelper::formatWithSymbol($totalRevenue),
+                'total_validated'    => $totalValidated
             ],
             'payment_methods'   => $methods,
             'validation_stats'  => $validationStats,
             'hourly_traffic'    => $hourlyTraffic,
+            'sessions_report'   => $sessionsReport,
             'audit_logs'        => $auditLogs
         ]);
     }
