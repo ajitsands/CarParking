@@ -10,8 +10,8 @@
   <style>
     :root {
       --bg-primary: #f8fafc;
-      --bg-card: #ffffff;
-      --bg-card-alt: #f1f5f9;
+      --bg-surface: #ffffff;
+      --bg-surface-alt: #f1f5f9;
       --text-main: #0f172a;
       --text-muted: #64748b;
       --border-color: #e2e8f0;
@@ -21,17 +21,19 @@
       --status-green: #10b981;
       --status-red: #ef4444;
       --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-      --shadow-lg: 0 16px 35px rgba(0,0,0,0.06);
+      --shadow-md: 0 10px 25px rgba(0,0,0,0.05);
+      --shadow-lg: 0 20px 45px rgba(2, 132, 199, 0.12);
     }
     [data-theme="dark"] {
-      --bg-primary: #090d16;
-      --bg-card: #151e2e;
-      --bg-card-alt: #0b1120;
+      --bg-primary: #070b14;
+      --bg-surface: #151e2e;
+      --bg-surface-alt: #0b1120;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --border-color: rgba(255, 255, 255, 0.08);
       --shadow-sm: 0 4px 12px rgba(0,0,0,0.4);
-      --shadow-lg: 0 20px 45px rgba(0,0,0,0.7);
+      --shadow-md: 0 10px 30px rgba(0,0,0,0.5);
+      --shadow-lg: 0 25px 60px rgba(0,0,0,0.7);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -41,16 +43,22 @@
       line-height: 1.5;
       overflow-x: hidden;
       transition: background-color 0.3s ease, color 0.3s ease;
-      width: 100%;
     }
-    .full-width { width: 100%; }
+    .layout-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 clamp(20px, 4vw, 48px);
+    }
     .header-bar {
       position: sticky; top: 0; z-index: 1000;
-      background: var(--bg-card);
+      background: var(--bg-surface);
       border-bottom: 1px solid var(--border-color);
-      padding: 12px 32px;
-      display: flex; align-items: center; justify-content: space-between;
-      backdrop-filter: blur(12px);
+      padding: 12px clamp(20px, 4vw, 48px);
+      backdrop-filter: blur(14px);
+    }
+    .header-inner {
+      max-width: 1440px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
     }
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -65,42 +73,25 @@
     .btn-outline {
       background: transparent; border: 1px solid var(--border-color); color: var(--text-main);
     }
-    .btn-outline:hover { background: var(--bg-card-alt); }
-    .hero-section {
-      padding: 50px 32px 60px;
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
-      gap: 40px; align-items: center; border-bottom: 1px solid var(--border-color);
+    .btn-outline:hover { background: var(--bg-surface-alt); }
+    .section-wrap {
+      padding: 70px 0; border-top: 1px solid var(--border-color);
     }
-    .gallery-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-      gap: 30px; margin-top: 30px;
+    .card-box {
+      background: var(--bg-surface); border: 1px solid var(--border-color);
+      border-radius: 18px; box-shadow: var(--shadow-md); overflow: hidden;
     }
-    .gallery-card {
-      background: var(--bg-card); border: 1px solid var(--border-color);
-      border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-sm);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .gallery-card:hover {
-      transform: translateY(-4px); box-shadow: var(--shadow-lg);
-    }
-    .gallery-img-wrap {
-      height: 280px; position: relative; overflow: hidden; cursor: pointer;
-    }
-    .gallery-img-wrap img {
-      width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;
-    }
-    .gallery-img-wrap:hover img { transform: scale(1.03); }
-    .section-pad { padding: 70px 32px; border-bottom: 1px solid var(--border-color); }
-    .industry-tab-btn {
-      padding: 9px 18px; border-radius: 30px; font-weight: 800; font-size: 0.82rem;
-      border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-muted);
+    .nav-tab-btn {
+      padding: 9px 20px; border-radius: 30px; font-weight: 800; font-size: 0.82rem;
+      border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-muted);
       cursor: pointer; transition: all 0.2s ease;
     }
-    .industry-tab-btn.active {
-      background: var(--brand-primary); color: #fff; border-color: var(--brand-primary);
-      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+    .nav-tab-btn.active {
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+      color: #fff; border-color: var(--brand-primary);
+      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
     }
-    /* Lightbox Modal */
+    /* Lightbox */
     .lightbox-modal {
       display: none; position: fixed; inset: 0; z-index: 99999;
       background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);
@@ -114,223 +105,231 @@
 </head>
 <body>
 
-  <!-- 1. Header (100% Full Width) -->
+  <!-- 1. Header with margins -->
   <header class="header-bar">
-    <div style="display: flex; align-items: center; gap: 16px;">
-      <a href="/" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
-        <div style="width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, #0284c7, #6366f1); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem;">
-          🚗
-        </div>
-        <div>
-          <div style="font-size: 1.05rem; font-weight: 900; line-height: 1.1;">Smart Parking Solution</div>
-          <div style="font-size: 0.68rem; font-weight: 800; color: #0284c7; text-transform: uppercase;">Multi-Industry Facility OS</div>
-        </div>
-      </a>
+    <div class="header-inner">
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <a href="/" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+          <div style="width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, #0284c7, #6366f1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+            🚗
+          </div>
+          <div>
+            <div style="font-size: 1.05rem; font-weight: 900; line-height: 1.1;">Smart Parking Solution</div>
+            <div style="font-size: 0.66rem; font-weight: 800; color: #0284c7; text-transform: uppercase;">Facility Automation OS</div>
+          </div>
+        </a>
 
-      <!-- SaNDS Lab Badge -->
-      <div onclick="openSandsModal()" style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 20px; background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.3); cursor: pointer;">
-        <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS" style="height: 15px;" onerror="this.style.display='none'" />
-        <span style="font-size: 0.72rem; font-weight: 800; color: #ec4899;">POWERED BY SaNDS LAB</span>
+        <!-- SaNDS Lab Badge -->
+        <div onclick="openSandsModal()" style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 20px; background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.3); cursor: pointer;">
+          <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS" style="height: 15px;" onerror="this.style.display='none'" />
+          <span style="font-size: 0.72rem; font-weight: 800; color: #ec4899;">POWERED BY SaNDS LAB</span>
+        </div>
       </div>
-    </div>
 
-    <!-- Actions -->
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <button class="btn btn-outline" onclick="toggleTheme()" id="theme-btn">🌙 Dark Mode</button>
-      <a href="/ANPR_Configuration_Procedure_Guide.html" class="btn btn-outline" target="_blank">📖 Guide</a>
-      <a href="/" class="btn btn-primary">🚀 Enter Control Room</a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button class="btn btn-outline" onclick="toggleTheme()" id="theme-btn">🌙 Dark Mode</button>
+        <a href="/ANPR_Configuration_Procedure_Guide.html" class="btn btn-outline" target="_blank">📖 Guide</a>
+        <a href="/" class="btn btn-primary">🚀 Enter Control Room</a>
+      </div>
     </div>
   </header>
 
-  <!-- 2. Hero Section (100% Full Width) -->
-  <section class="hero-section full-width">
-    <div>
-      <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(2,132,199,0.1); border: 1px solid rgba(2,132,199,0.3); color: #0284c7; font-size: 0.75rem; font-weight: 800; margin-bottom: 16px;">
-        ✨ NEXT-GEN SMART PARKING & ANPR SUITE 2026
-      </div>
-      <h1 style="font-size: clamp(2.2rem, 3.5vw, 3.2rem); font-weight: 900; line-height: 1.15; margin-bottom: 18px;">
-        Intelligent Multi-Industry Parking & Visitor Validation OS
-      </h1>
-      <p style="font-size: 1.02rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;">
-        Turnkey automation for <strong style="color: var(--brand-primary)">Hospitals, Supermarkets, Commercial Tech Parks, Hotels, Municipal Lots, and Arenas</strong>. Featuring 99.8% ANPR recognition, sub-second barrier actuation, and seamless bilateral ERP/HIS integration.
-      </p>
+  <!-- 2. Hero Section (Balanced Margins) -->
+  <section style="padding: 50px 0 60px;">
+    <div class="layout-container">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 40px; align-items: center;">
+        <div>
+          <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(2,132,199,0.1); border: 1px solid rgba(2,132,199,0.3); color: #0284c7; font-size: 0.75rem; font-weight: 800; margin-bottom: 16px;">
+            ✨ ENTERPRISE SMART PARKING & ANPR SUITE 2026
+          </div>
+          <h1 style="font-size: clamp(2.2rem, 3.5vw, 3.2rem); font-weight: 900; line-height: 1.15; margin-bottom: 18px;">
+            Intelligent Multi-Industry Parking & Facility Management
+          </h1>
+          <p style="font-size: 1.02rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;">
+            Turnkey automation for <strong style="color: var(--brand-primary)">Hospitals, Supermarkets, Commercial Tech Towers, Hotels, Transit Hubs, and Arenas</strong>. Featuring 99.8% ANPR recognition, sub-second barrier actuation, and seamless bilateral ERP/HIS integration.
+          </p>
 
-      <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 30px;">
-        <a href="/" class="btn btn-primary" style="padding: 12px 26px; font-size: 0.92rem;">Launch Live Control Room →</a>
-        <a href="#demo-sec" class="btn btn-outline" style="padding: 12px 22px; font-size: 0.9rem;">▶ Try Interactive Simulator</a>
-      </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 30px;">
+            <a href="/" class="btn btn-primary" style="padding: 12px 26px; font-size: 0.92rem;">Launch Live Control Room →</a>
+            <a href="#simulator-sec" class="btn btn-outline" style="padding: 12px 22px; font-size: 0.9rem;">▶ Test Live Interactive Lab</a>
+          </div>
 
-      <!-- Quick KPI Strip -->
-      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px; border-radius: 12px; background: var(--bg-card-alt); border: 1px solid var(--border-color);">
-        <div><div style="font-size: 1.3rem; font-weight: 900; color: #0284c7;">99.8%</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">ANPR Rate</div></div>
-        <div><div style="font-size: 1.3rem; font-weight: 900; color: #10b981;">&lt;0.4s</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">Barrier Open</div></div>
-        <div><div style="font-size: 1.3rem; font-weight: 900; color: #f59e0b;">6+</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">Industries</div></div>
-        <div><div style="font-size: 1.3rem; font-weight: 900; color: #ec4899;">100%</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">Edge Uptime</div></div>
-      </div>
-    </div>
-
-    <!-- Right Hero Image: Boom Barrier Photo -->
-    <div class="gallery-card" style="cursor: pointer;" onclick="openLightbox('/images/boom_barrier_gate.jpg')">
-      <div class="gallery-img-wrap" style="height: 360px;">
-        <img src="/images/boom_barrier_gate.jpg" alt="Boom Barrier ANPR Lane" />
-        <div style="position: absolute; top: 14px; left: 14px; padding: 5px 12px; border-radius: 20px; background: rgba(15,23,42,0.85); color: #10b981; font-size: 0.72rem; font-weight: 800; border: 1px solid rgba(16,185,129,0.4);">
-          ● LIVE GATE 01: ARMED · ANPR ACTIVE
+          <!-- KPI Strip -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px; border-radius: 12px; background: var(--bg-surface-alt); border: 1px solid var(--border-color);">
+            <div><div style="font-size: 1.3rem; font-weight: 900; color: #0284c7;">99.8%</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">ANPR Rate</div></div>
+            <div><div style="font-size: 1.3rem; font-weight: 900; color: #10b981;">&lt;0.4s</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">Barrier Open</div></div>
+            <div><div style="font-size: 1.3rem; font-weight: 900; color: #f59e0b;">6+</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">Industries</div></div>
+            <div><div style="font-size: 1.3rem; font-weight: 900; color: #ec4899;">100%</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">Edge Uptime</div></div>
+          </div>
         </div>
-        <div style="position: absolute; bottom: 10px; right: 10px; padding: 4px 10px; border-radius: 6px; background: rgba(0,0,0,0.7); color: #fff; font-size: 0.7rem; font-weight: 700;">
-          🔍 Click to Zoom
+
+        <!-- Right Hero Boom Barrier Image Card -->
+        <div class="card-box" style="cursor: pointer; position: relative;" onclick="openLightbox('/images/boom_barrier_gate.jpg')">
+          <div style="height: 360px; overflow: hidden; position: relative;">
+            <img src="/images/boom_barrier_gate.jpg" alt="Boom Barrier ANPR Lane" style="width: 100%; height: 100%; object-fit: cover;" />
+            <div style="position: absolute; top: 14px; left: 14px; padding: 5px 12px; border-radius: 20px; background: rgba(15,23,42,0.85); color: #10b981; font-size: 0.72rem; font-weight: 800; border: 1px solid rgba(16,185,129,0.4);">
+              ● LIVE GATE 01: ARMED · ANPR ACTIVE
+            </div>
+            <div style="position: absolute; bottom: 10px; right: 10px; padding: 4px 10px; border-radius: 6px; background: rgba(0,0,0,0.7); color: #fff; font-size: 0.7rem; font-weight: 700;">
+              🔍 Click to Zoom
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 3. Hardware Showcase Gallery (100% Full Width) -->
-  <section class="section-pad full-width" style="background: var(--bg-card-alt);">
-    <div style="text-align: center; max-width: 800px; margin: 0 auto 30px;">
-      <div style="font-size: 0.75rem; font-weight: 800; color: #6366f1; text-transform: uppercase; margin-bottom: 8px;">PHYSICAL INFRASTRUCTURE</div>
-      <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Boom Barriers, LED Totems & Command Walls</h2>
-      <p style="color: var(--text-muted); font-size: 0.94rem;">Fully integrated physical hardware suite designed for high durability and sub-second execution.</p>
-    </div>
-
-    <div class="gallery-grid full-width">
-      <!-- Card 1: Boom Barrier -->
-      <div class="gallery-card">
-        <div class="gallery-img-wrap" onclick="openLightbox('/images/boom_barrier_gate.jpg')">
-          <img src="/images/boom_barrier_gate.jpg" alt="Boom Barrier" />
-          <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #38bdf8; font-size: 0.72rem; font-weight: 800;">High-Speed Barrier</div>
-        </div>
-        <div style="padding: 20px;">
-          <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Automated Boom Barrier & ANPR System</h3>
-          <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Sub-second 0.4s barrier arm actuation with IP67 deep-learning ANPR camera, dual loop detectors, and night LED guidance.</p>
-        </div>
+  <!-- 3. Hardware & Infrastructure Suite (Balanced Margins) -->
+  <section class="section-wrap" style="background: var(--bg-surface-alt);">
+    <div class="layout-container">
+      <div style="text-align: center; max-width: 800px; margin: 0 auto 36px;">
+        <div style="font-size: 0.75rem; font-weight: 800; color: #6366f1; text-transform: uppercase; margin-bottom: 8px;">PHYSICAL HARDWARE & CONTROL INFRASTRUCTURE</div>
+        <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Boom Barriers, LED Totems & Command Centers</h2>
+        <p style="color: var(--text-muted); font-size: 0.94rem;">Fully integrated physical hardware suite designed for high durability and sub-second execution.</p>
       </div>
 
-      <!-- Card 2: LED Display Board -->
-      <div class="gallery-card">
-        <div class="gallery-img-wrap" onclick="openLightbox('/images/led_display_board.jpg')">
-          <img src="/images/led_display_board.jpg" alt="LED Display Board" />
-          <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #10b981; font-size: 0.72rem; font-weight: 800;">Real-Time LED Guidance</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 26px;">
+        <!-- Card 1: Boom Barrier -->
+        <div class="card-box">
+          <div style="height: 260px; overflow: hidden; position: relative; cursor: pointer;" onclick="openLightbox('/images/boom_barrier_gate.jpg')">
+            <img src="/images/boom_barrier_gate.jpg" alt="Boom Barrier" style="width: 100%; height: 100%; object-fit: cover;" />
+            <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #38bdf8; font-size: 0.72rem; font-weight: 800;">0.4s Fast Actuation</div>
+          </div>
+          <div style="padding: 24px;">
+            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Automated Boom Barrier & ANPR System</h3>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Sub-second 0.4s barrier arm actuation with IP67 deep-learning ANPR camera, dual loop detectors, and night LED guidance.</p>
+          </div>
         </div>
-        <div style="padding: 20px;">
-          <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Multi-Deck LED Parking Guidance Display</h3>
-          <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Ultra-bright digital outdoor totem displaying floor-by-floor vacant slots (P1, P2, P3) synced with our Android TV APK.</p>
-        </div>
-      </div>
 
-      <!-- Card 3: Control Room -->
-      <div class="gallery-card">
-        <div class="gallery-img-wrap" onclick="openLightbox('/images/control_room_dashboard.jpg')">
-          <img src="/images/control_room_dashboard.jpg" alt="Control Room Video Wall" />
-          <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #f59e0b; font-size: 0.72rem; font-weight: 800;">Master Control Room</div>
+        <!-- Card 2: LED Display Board -->
+        <div class="card-box">
+          <div style="height: 260px; overflow: hidden; position: relative; cursor: pointer;" onclick="openLightbox('/images/led_display_board.jpg')">
+            <img src="/images/led_display_board.jpg" alt="LED Display Board" style="width: 100%; height: 100%; object-fit: cover;" />
+            <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #10b981; font-size: 0.72rem; font-weight: 800;">Real-Time LED Guidance</div>
+          </div>
+          <div style="padding: 24px;">
+            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Multi-Deck LED Parking Guidance Display</h3>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Ultra-bright digital outdoor totem displaying floor-by-floor vacant slots (P1, P2, P3) synced with our Android TV APK.</p>
+          </div>
         </div>
-        <div style="padding: 20px;">
-          <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Central Command Center & Video Wall</h3>
-          <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Multi-lane RTSP live video feeds, 3D floor occupancy heatmaps, cashier collection audits, and one-click manual barrier overrides.</p>
-        </div>
-      </div>
 
-      <!-- Card 4: QR Kiosk -->
-      <div class="gallery-card">
-        <div class="gallery-img-wrap" onclick="openLightbox('/images/qr_payment_kiosk.jpg')">
-          <img src="/images/qr_payment_kiosk.jpg" alt="QR Pay Station" />
-          <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #ec4899; font-size: 0.72rem; font-weight: 800;">Self-Service Pay Station</div>
+        <!-- Card 3: Control Room -->
+        <div class="card-box">
+          <div style="height: 260px; overflow: hidden; position: relative; cursor: pointer;" onclick="openLightbox('/images/control_room_dashboard.jpg')">
+            <img src="/images/control_room_dashboard.jpg" alt="Control Room Video Wall" style="width: 100%; height: 100%; object-fit: cover;" />
+            <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #f59e0b; font-size: 0.72rem; font-weight: 800;">Master Control Room</div>
+          </div>
+          <div style="padding: 24px;">
+            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Central Command Center & Video Wall</h3>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Multi-lane RTSP live video feeds, 3D floor occupancy heatmaps, cashier collection audits, and one-click manual barrier overrides.</p>
+          </div>
         </div>
-        <div style="padding: 20px;">
-          <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Self-Service QR Barcode Pay Station & Kiosk</h3>
-          <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Weatherproof outdoor totem for ISO/IEC 18004 thermal receipt scanning, NFC contactless card payments, and visitor validation.</p>
+
+        <!-- Card 4: QR Kiosk -->
+        <div class="card-box">
+          <div style="height: 260px; overflow: hidden; position: relative; cursor: pointer;" onclick="openLightbox('/images/qr_payment_kiosk.jpg')">
+            <img src="/images/qr_payment_kiosk.jpg" alt="QR Pay Station" style="width: 100%; height: 100%; object-fit: cover;" />
+            <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #ec4899; font-size: 0.72rem; font-weight: 800;">Self-Service Pay Station</div>
+          </div>
+          <div style="padding: 24px;">
+            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Self-Service QR Barcode Pay Station & Kiosk</h3>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Weatherproof outdoor totem for ISO/IEC 18004 thermal receipt scanning, NFC contactless card payments, and visitor validation.</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 4. Interactive Simulator Lab (100% Full Width) -->
-  <section id="demo-sec" class="section-pad full-width">
-    <div style="text-align: center; max-width: 800px; margin: 0 auto 30px;">
-      <div style="font-size: 0.75rem; font-weight: 800; color: #10b981; text-transform: uppercase; margin-bottom: 8px;">LIVE INTERACTIVE SIMULATION LAB</div>
-      <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Test the Boom Barrier & Display Panel</h2>
-      <p style="color: var(--text-muted); font-size: 0.94rem;">Trigger simulated ANPR gate entries and adjust floor occupancy sliders in real-time.</p>
-    </div>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 30px;" class="full-width">
-      <!-- Barrier Simulator Card -->
-      <div style="padding: 24px; border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
-        <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 14px;">Gate 01 Boom Barrier Simulator</h3>
-        
-        <div style="height: 160px; background: #0b1120; border-radius: 10px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 16px;">
-          <!-- Pillar -->
-          <div style="position: absolute; left: 40px; bottom: 20px; width: 28px; height: 70px; background: #f97316; border-radius: 3px;">
-            <div id="barrier-light" style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; margin: 5px auto; box-shadow: 0 0 8px #ef4444;"></div>
-          </div>
-          <!-- Arm -->
-          <div id="boom-arm" style="position: absolute; left: 66px; bottom: 70px; width: 220px; height: 8px; background: repeating-linear-gradient(90deg, #fff 0px, #fff 20px, #ef4444 20px, #ef4444 40px); transform-origin: left center; transform: rotate(0deg); transition: transform 0.5s ease; border-radius: 4px;"></div>
-          <!-- Plate -->
-          <div id="sim-plate" style="position: absolute; right: 40px; bottom: 25px; background: #fff; color: #000; font-family: monospace; font-weight: 900; padding: 4px 10px; border: 2px solid #000; border-radius: 4px;">
-            BH-84920
-          </div>
-        </div>
-
-        <div id="sim-log" style="padding: 8px 12px; border-radius: 6px; background: var(--bg-card-alt); font-family: monospace; font-size: 0.74rem; color: #0284c7; margin-bottom: 14px;">
-          > Gate 01 [Entry]: ARMED & READY.
-        </div>
-
-        <button class="btn btn-primary" onclick="triggerSimulatedEntry()" style="width: 100%;">
-          ▶ Simulate Vehicle Approach & Trigger Gate Open
-        </button>
+  <!-- 4. Interactive Simulation Lab (Balanced Margins) -->
+  <section id="simulator-sec" class="section-wrap">
+    <div class="layout-container">
+      <div style="text-align: center; max-width: 800px; margin: 0 auto 36px;">
+        <div style="font-size: 0.75rem; font-weight: 800; color: #10b981; text-transform: uppercase; margin-bottom: 8px;">LIVE INTERACTIVE SIMULATION LAB</div>
+        <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Test the Boom Barrier & Display Panel</h2>
+        <p style="color: var(--text-muted); font-size: 0.94rem;">Trigger simulated ANPR gate entries and adjust floor occupancy sliders in real-time.</p>
       </div>
 
-      <!-- LED Display Board Card -->
-      <div style="padding: 24px; border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
-        <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 14px;">Multi-Floor LED Guidance Totem</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 26px;">
+        <!-- Barrier Simulator Card -->
+        <div class="card-box" style="padding: 24px;">
+          <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 14px;">Gate 01 Boom Barrier Simulator</h3>
+          
+          <div style="height: 160px; background: #0b1120; border-radius: 10px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 16px;">
+            <div style="position: absolute; left: 40px; bottom: 20px; width: 28px; height: 70px; background: #f97316; border-radius: 3px;">
+              <div id="barrier-light" style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; margin: 5px auto; box-shadow: 0 0 8px #ef4444;"></div>
+            </div>
+            <div id="boom-arm" style="position: absolute; left: 66px; bottom: 70px; width: 220px; height: 8px; background: repeating-linear-gradient(90deg, #fff 0px, #fff 20px, #ef4444 20px, #ef4444 40px); transform-origin: left center; transform: rotate(0deg); transition: transform 0.5s ease; border-radius: 4px;"></div>
+            <div id="sim-plate" style="position: absolute; right: 40px; bottom: 25px; background: #fff; color: #000; font-family: monospace; font-weight: 900; padding: 4px 10px; border: 2px solid #000; border-radius: 4px;">
+              BH-84920
+            </div>
+          </div>
 
-        <div style="background: #040812; padding: 18px; border-radius: 10px; border: 2px solid #1e293b; margin-bottom: 16px;">
-          <div style="text-align: center; font-size: 0.7rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.1em; margin-bottom: 10px;">● PARKING ENTRANCE GUIDANCE</div>
+          <div id="sim-log" style="padding: 8px 12px; border-radius: 6px; background: var(--bg-surface-alt); font-family: monospace; font-size: 0.74rem; color: #0284c7; margin-bottom: 14px;">
+            > Gate 01 [Entry]: ARMED & READY.
+          </div>
+
+          <button class="btn btn-primary" onclick="triggerSimulatedEntry()" style="width: 100%;">
+            ▶ Simulate Vehicle Approach & Trigger Gate Open
+          </button>
+        </div>
+
+        <!-- LED Display Board Card -->
+        <div class="card-box" style="padding: 24px;">
+          <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 14px;">Multi-Floor LED Guidance Totem</h3>
+
+          <div style="background: #040812; padding: 18px; border-radius: 10px; border: 2px solid #1e293b; margin-bottom: 16px;">
+            <div style="text-align: center; font-size: 0.7rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.1em; margin-bottom: 10px;">● PARKING ENTRANCE GUIDANCE</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; font-family: monospace; font-weight: 900; font-size: 1.05rem;">
+                <span style="color: #fff;">P1 LEVEL :</span>
+                <span id="p1-val" style="color: #10b981;">42 VACANT</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-family: monospace; font-weight: 900; font-size: 1.05rem;">
+                <span style="color: #fff;">P2 LEVEL :</span>
+                <span id="p2-val" style="color: #10b981;">18 VACANT</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-family: monospace; font-weight: 900; font-size: 1.05rem;">
+                <span style="color: #fff;">P3 LEVEL :</span>
+                <span id="p3-val" style="color: #ef4444;">FULL</span>
+              </div>
+            </div>
+          </div>
+
           <div style="display: flex; flex-direction: column; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; font-family: monospace; font-weight: 900; font-size: 1.05rem;">
-              <span style="color: #fff;">P1 LEVEL :</span>
-              <span id="p1-val" style="color: #10b981;">42 VACANT</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label style="font-size: 0.76rem; font-weight: 700; width: 60px;">P1 Slots:</label>
+              <input type="range" min="0" max="60" value="42" oninput="updateFloor(1, this.value)" style="flex: 1; accent-color: #10b981;" />
             </div>
-            <div style="display: flex; justify-content: space-between; font-family: monospace; font-weight: 900; font-size: 1.05rem;">
-              <span style="color: #fff;">P2 LEVEL :</span>
-              <span id="p2-val" style="color: #10b981;">18 VACANT</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label style="font-size: 0.76rem; font-weight: 700; width: 60px;">P2 Slots:</label>
+              <input type="range" min="0" max="40" value="18" oninput="updateFloor(2, this.value)" style="flex: 1; accent-color: #10b981;" />
             </div>
-            <div style="display: flex; justify-content: space-between; font-family: monospace; font-weight: 900; font-size: 1.05rem;">
-              <span style="color: #fff;">P3 LEVEL :</span>
-              <span id="p3-val" style="color: #ef4444;">FULL</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label style="font-size: 0.76rem; font-weight: 700; width: 60px;">P3 Slots:</label>
+              <input type="range" min="0" max="30" value="0" oninput="updateFloor(3, this.value)" style="flex: 1; accent-color: #ef4444;" />
             </div>
-          </div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <label style="font-size: 0.76rem; font-weight: 700; width: 60px;">P1 Slots:</label>
-            <input type="range" min="0" max="60" value="42" oninput="updateFloor(1, this.value)" style="flex: 1; accent-color: #10b981;" />
-          </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <label style="font-size: 0.76rem; font-weight: 700; width: 60px;">P2 Slots:</label>
-            <input type="range" min="0" max="40" value="18" oninput="updateFloor(2, this.value)" style="flex: 1; accent-color: #10b981;" />
-          </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <label style="font-size: 0.76rem; font-weight: 700; width: 60px;">P3 Slots:</label>
-            <input type="range" min="0" max="30" value="0" oninput="updateFloor(3, this.value)" style="flex: 1; accent-color: #ef4444;" />
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 5. Footer (100% Full Width) -->
-  <footer class="full-width" style="background: #0f172a; color: #fff; padding: 40px 32px 30px;">
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-      <div>
-        <div style="font-size: 1.1rem; font-weight: 900;">Smart Parking Solution</div>
-        <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 4px;">Next-Generation Multi-Industry Facility Automation System</div>
+  <!-- 5. Footer with Margins -->
+  <footer style="background: #0f172a; color: #fff; padding: 40px 0 30px;">
+    <div class="layout-container">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <div>
+          <div style="font-size: 1.1rem; font-weight: 900;">Smart Parking Solution OS</div>
+          <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 4px;">Next-Generation Multi-Industry Facility Automation System</div>
+        </div>
+        <div style="display: flex; gap: 16px; align-items: center;">
+          <a href="https://sandslab.com" target="_blank" style="color: #cbd5e1; text-decoration: none; font-size: 0.82rem; font-weight: 600;">SaNDS Lab Official ↗</a>
+          <a href="https://wa.me/97335078079" target="_blank" style="color: #25D366; text-decoration: none; font-size: 0.82rem; font-weight: 700;">WhatsApp Support (+973 35078079)</a>
+        </div>
       </div>
-      <div style="display: flex; gap: 16px; align-items: center;">
-        <a href="https://sandslab.com" target="_blank" style="color: #cbd5e1; text-decoration: none; font-size: 0.82rem; font-weight: 600;">SaNDS Lab Official ↗</a>
-        <a href="https://wa.me/97335078079" target="_blank" style="color: #25D366; text-decoration: none; font-size: 0.82rem; font-weight: 700;">WhatsApp Support (+973 35078079)</a>
+      <div style="padding-top: 20px; font-size: 0.72rem; color: #64748b; text-align: center;">
+        © 2026 Smart Parking Solution. Powered by SaNDS Lab Middle East W.L.L.
       </div>
-    </div>
-    <div style="padding-top: 20px; font-size: 0.72rem; color: #64748b; text-align: center;">
-      © 2026 Smart Parking Solution. Powered by SaNDS Lab Middle East W.L.L.
     </div>
   </footer>
 
@@ -340,7 +339,6 @@
   </div>
 
   <script>
-    // Theme Switcher
     function toggleTheme() {
       const cur = document.documentElement.getAttribute('data-theme') || 'light';
       const nxt = cur === 'light' ? 'dark' : 'light';
@@ -348,13 +346,11 @@
       localStorage.setItem('app-theme', nxt);
       document.getElementById('theme-btn').innerText = nxt === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode';
     }
-    // Set initial button text
     if (localStorage.getItem('app-theme') === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
       document.getElementById('theme-btn').innerText = '☀️ Light Mode';
     }
 
-    // Lightbox
     function openLightbox(src) {
       document.getElementById('lightbox-img').src = src;
       document.getElementById('lightbox').classList.add('active');
@@ -363,7 +359,6 @@
       document.getElementById('lightbox').classList.remove('active');
     }
 
-    // Barrier Simulation
     let isMoving = false;
     function triggerSimulatedEntry() {
       if (isMoving) return;
@@ -392,7 +387,6 @@
       }, 1000);
     }
 
-    // Floor Capacity Updater
     function updateFloor(lvl, val) {
       const el = document.getElementById('p' + lvl + '-val');
       const num = parseInt(val, 10);
