@@ -36,6 +36,35 @@ class AnprWebhookController extends Controller {
 
         // 2. ENTRY LANE WORKFLOW
         if ($direction === 'ENTRY') {
+            $cleanPlate = preg_replace('/[^A-Za-z0-9]/', '', $plate);
+
+            // Debounce / Duplicate Protection: Check if this vehicle entered in the last 30 seconds
+            $stmtRecent = $db->prepare("SELECT * FROM parking_sessions 
+                WHERE (plate_number = ? OR REPLACE(plate_number, ' ', '') = ?)
+                AND entry_gate_id = ?
+                AND entry_time >= DATE_SUB(NOW(), INTERVAL 30 SECOND)
+                AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED')
+                ORDER BY id DESC LIMIT 1");
+            $stmtRecent->execute([$plate, $cleanPlate, $gateId]);
+            $recentSession = $stmtRecent->fetch();
+
+            if ($recentSession) {
+                // Link raw event to existing session without generating a duplicate row
+                $db->prepare("UPDATE anpr_events SET session_id = ? WHERE id = ?")->execute([$recentSession['id'], $eventId]);
+
+                $this->success([
+                    'barrier_open'       => true,
+                    'barrier_signal'     => 'SIGNAL_ALREADY_SENT',
+                    'session_code'       => $recentSession['session_code'],
+                    'session_id'         => $recentSession['id'],
+                    'plate_number'       => $plate,
+                    'status'             => $recentSession['status'],
+                    'is_duplicate'       => true,
+                    'message'            => "Vehicle {$plate} is already registered inside (#{$recentSession['session_code']}). Duplicate trigger suppressed."
+                ], 'ANPR Entry already active (duplicate trigger suppressed)');
+                return;
+            }
+
             $decision = DecisionEngine::evaluateEntry($plate, $gateId);
 
             // If Blacklisted -> Deny & keep barrier closed

@@ -13,7 +13,11 @@ export default function AnprSimulatorModal({ isOpen, onClose, onSimulated }) {
   const [loading, setLoading] = useState(false);
   const [paying, setPaying] = useState(false);
   const [result, setResult] = useState(null);
+  const [lastSimulatedKey, setLastSimulatedKey] = useState(null);
   const [error, setError] = useState('');
+
+  const currentKey = `${plateNumber.trim().toUpperCase()}_${direction}_${gateId}`;
+  const isAlreadyGenerated = !!(result && lastSimulatedKey === currentKey);
 
   const quickPresets = [
     { label: 'Patient Visitor (Entry)', plate: 'BHR 43210', dir: 'ENTRY', gate: 'GATE-IN-01' },
@@ -24,15 +28,30 @@ export default function AnprSimulatorModal({ isOpen, onClose, onSimulated }) {
     { label: 'Doctor Vehicle (Exit)', plate: 'BHR 11223', dir: 'EXIT', gate: 'GATE-OUT-01' }
   ];
 
+  const handlePresetSelect = (p) => {
+    setPlateNumber(p.plate);
+    setDirection(p.dir);
+    setGateId(p.gate);
+    setResult(null);
+    setError('');
+  };
+
+  const handleReset = () => {
+    setResult(null);
+    setLastSimulatedKey(null);
+    setError('');
+  };
+
   const handleSimulate = async () => {
     if (!plateNumber.trim()) {
       setError('Please provide a plate number');
       return;
     }
 
+    if (loading || isAlreadyGenerated) return;
+
     setLoading(true);
     setError('');
-    setResult(null);
 
     try {
       const payload = {
@@ -69,6 +88,7 @@ export default function AnprSimulatorModal({ isOpen, onClose, onSimulated }) {
       }
 
       setResult(res);
+      setLastSimulatedKey(currentKey);
       window.dispatchEvent(new CustomEvent('anpr-event-simulated', { detail: res }));
       if (onSimulated) {
         onSimulated(res);
@@ -124,11 +144,7 @@ export default function AnprSimulatorModal({ isOpen, onClose, onSimulated }) {
                 key={idx}
                 type="button"
                 className="btn btn-outline btn-sm"
-                onClick={() => {
-                  setPlateNumber(p.plate);
-                  setDirection(p.dir);
-                  setGateId(p.gate);
-                }}
+                onClick={() => handlePresetSelect(p)}
               >
                 <Car size={12} />
                 {p.label}
@@ -144,7 +160,11 @@ export default function AnprSimulatorModal({ isOpen, onClose, onSimulated }) {
               type="text"
               className="form-input"
               value={plateNumber}
-              onChange={(e) => setPlateNumber(e.target.value)}
+              onChange={(e) => {
+                setPlateNumber(e.target.value);
+                setResult(null);
+                setError('');
+              }}
               placeholder="e.g. BHR 12345"
             />
           </div>
@@ -157,6 +177,8 @@ export default function AnprSimulatorModal({ isOpen, onClose, onSimulated }) {
               onChange={(e) => {
                 setDirection(e.target.value);
                 setGateId(e.target.value === 'EXIT' ? 'GATE-OUT-01' : 'GATE-IN-01');
+                setResult(null);
+                setError('');
               }}
             >
               <option value="ENTRY">ENTRY (Entry Lane)</option>
@@ -170,7 +192,11 @@ export default function AnprSimulatorModal({ isOpen, onClose, onSimulated }) {
               type="text"
               className="form-input"
               value={gateId}
-              onChange={(e) => setGateId(e.target.value)}
+              onChange={(e) => {
+                setGateId(e.target.value);
+                setResult(null);
+                setError('');
+              }}
             />
           </div>
 
@@ -213,17 +239,43 @@ export default function AnprSimulatorModal({ isOpen, onClose, onSimulated }) {
           </div>
         )}
 
-        <div style={{ marginTop: '8px' }}>
+        <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
           <button
             type="button"
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '10px' }}
+            className={`btn ${isAlreadyGenerated ? 'btn-outline' : 'btn-primary'}`}
+            style={{ flex: 1, padding: '10px' }}
             onClick={handleSimulate}
-            disabled={loading}
+            disabled={loading || isAlreadyGenerated}
           >
-            {loading ? <RefreshCw size={16} className="animate-spin" /> : <Play size={16} />}
-            {loading ? 'Transmitting Webhook to Server...' : 'Trigger ANPR Camera Webhook'}
+            {loading ? (
+              <>
+                <RefreshCw size={16} className="animate-spin" />
+                Transmitting Webhook to Server...
+              </>
+            ) : isAlreadyGenerated ? (
+              <>
+                <CheckCircle2 size={16} color="var(--status-green)" />
+                ✓ Event Generated & Transmitted
+              </>
+            ) : (
+              <>
+                <Play size={16} />
+                Trigger ANPR Camera Webhook
+              </>
+            )}
           </button>
+
+          {isAlreadyGenerated && (
+            <button
+              type="button"
+              className="btn btn-outline"
+              style={{ padding: '10px 14px', fontSize: '0.78rem' }}
+              onClick={handleReset}
+              title="Reset and test again"
+            >
+              <RefreshCw size={14} /> New Test
+            </button>
+          )}
         </div>
 
         {error && (
