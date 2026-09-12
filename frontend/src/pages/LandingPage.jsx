@@ -367,7 +367,7 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
             </div>
           </div>
 
-          {/* Middle: SaNDS Lab Logo (Only Logo Centered & Bigger) */}
+          {/* Middle: SaNDS Lab Logo (Only Logo Centered & Bigger - 60px) */}
           <div 
             onClick={() => setSandsModalOpen(true)}
             style={{
@@ -387,7 +387,7 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
             <img 
               src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" 
               alt="SaNDS Lab" 
-              style={{ height: '30px', width: 'auto', display: 'block', objectFit: 'contain' }}
+              style={{ height: '60px', width: 'auto', display: 'block', objectFit: 'contain' }}
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           </div>
