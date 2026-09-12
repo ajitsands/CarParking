@@ -109,7 +109,11 @@ class DashboardController extends Controller {
         }
 
         // Gates list
-        $gates = $db->query("SELECT * FROM gates ORDER BY gate_code ASC")->fetchAll() ?: [];
+        try {
+            $gates = $db->query("SELECT * FROM gates_and_cameras ORDER BY gate_code ASC")->fetchAll() ?: [];
+        } catch (\Throwable $e) {
+            $gates = [];
+        }
 
         $license = LicenseManager::getStatus();
         $currency = CurrencyHelper::getConfig();
