@@ -981,12 +981,14 @@ export default function SettingsPage() {
 
                       <div style={{ position: 'relative' }}>
                         <pre style={{
-                          background: 'rgba(0,0,0,0.5)',
+                          background: '#0f172a',
+                          border: '1px solid #1e293b',
                           padding: '12px',
                           borderRadius: '6px',
-                          fontFamily: 'var(--font-mono)',
+                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
                           fontSize: '0.75rem',
-                          color: '#a7f3d0',
+                          lineHeight: 1.45,
+                          color: '#34d399',
                           overflowX: 'auto',
                           margin: 0
                         }}>{`{
@@ -1836,20 +1838,37 @@ export default function SettingsPage() {
                       marginTop: '10px',
                       padding: '12px 14px',
                       borderRadius: '8px',
-                      background: 'rgba(2, 132, 199, 0.08)',
+                      background: 'rgba(2, 132, 199, 0.06)',
                       border: '1px solid #0284c7',
                       fontSize: '0.75rem'
                     }}>
-                      <div style={{ fontWeight: 800, color: '#0284c7', marginBottom: '4px' }}>
-                        ✓ Live Parking Status Response (GET /api/v1/his/parking-status):
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <div style={{ fontWeight: 800, color: '#0284c7', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Check size={14} color="#0284c7" />
+                          <span>Live Parking Status Response (GET /api/v1/his/parking-status):</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={() => copyToClipboard(JSON.stringify(himsStatusTestResult.data, null, 2), 'hims_status_res')}
+                          style={{ fontSize: '0.68rem', padding: '2px 8px', height: 'auto' }}
+                        >
+                          {copiedKey === 'hims_status_res' ? <Check size={11} /> : <Copy size={11} />}
+                          {copiedKey === 'hims_status_res' ? 'Copied' : 'Copy JSON'}
+                        </button>
                       </div>
                       <pre style={{
-                        margin: '6px 0 0',
-                        padding: '8px',
-                        background: 'rgba(0,0,0,0.3)',
-                        borderRadius: '4px',
-                        fontSize: '0.72rem',
-                        color: '#38bdf8'
+                        margin: 0,
+                        padding: '12px 14px',
+                        background: '#0f172a',
+                        border: '1px solid #1e293b',
+                        borderRadius: '6px',
+                        fontSize: '0.74rem',
+                        lineHeight: 1.45,
+                        color: '#38bdf8',
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                        overflowX: 'auto',
+                        maxHeight: '260px'
                       }}>
                         {JSON.stringify(himsStatusTestResult.data, null, 2)}
                       </pre>
