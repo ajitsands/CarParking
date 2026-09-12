@@ -2141,6 +2141,31 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
                 </a>
 
                 <a
+                  href="https://sandslab.com/products/"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    background: isDark ? 'rgba(236,72,153,0.1)' : 'rgba(236,72,153,0.06)',
+                    border: '1px solid rgba(236,72,153,0.3)',
+                    color: '#ec4899',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.84rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <ShoppingBag size={16} color="#ec4899" />
+                    <span>Explore Latest SaNDS Products</span>
+                  </div>
+                  <ExternalLink size={14} color="#ec4899" />
+                </a>
+
+                <a
                   href="https://wa.me/97335078079?text=Hello%20SaNDS%20Lab%20Team%2C%20I%20would%20like%20to%20inquire%20about%20the%20Smart%20Parking%20System."
                   target="_blank"
                   rel="noreferrer"
@@ -2166,22 +2191,43 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
                 </a>
               </div>
 
-              <div style={{ marginTop: '20px', textAlign: 'center' }}>
+              <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
+                <a
+                  href="https://sandslab.com/products/"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    flex: 1,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '10px 18px',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '0.82rem',
+                    textDecoration: 'none'
+                  }}
+                >
+                  <span>🛍️ Latest Products ↗</span>
+                </a>
                 <button
                   type="button"
                   onClick={() => setSandsModalOpen(false)}
                   style={{
-                    padding: '10px 24px',
+                    padding: '10px 20px',
                     borderRadius: '8px',
-                    background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+                    background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
                     border: 'none',
-                    color: '#ffffff',
+                    color: isDark ? '#ffffff' : '#0f172a',
                     fontWeight: 800,
                     fontSize: '0.82rem',
                     cursor: 'pointer'
                   }}
                 >
-                  Close Window
+                  Close
                 </button>
               </div>
             </div>
