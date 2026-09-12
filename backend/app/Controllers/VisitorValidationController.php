@@ -82,15 +82,47 @@ class VisitorValidationController extends Controller {
             return;
         }
 
-        // 3. Mark session VALIDATED
+        // 3. Mark session VALIDATED with custom Free Hours / Days
         $currentUser = $this->getCurrentUser();
         $userId = $currentUser ? (int)$currentUser['id'] : null;
 
-        $db->prepare("UPDATE parking_sessions SET status = 'VALIDATED', validation_method = 'appointment_qr', validation_ref = ?, validated_by = ?, validated_at = NOW() WHERE id = ?")
-           ->execute([$token, $userId, $session['id']]);
+        $freeMinutes = (int)($input['free_minutes'] ?? 0);
+        $freeHours = (float)($input['free_hours'] ?? 0);
+        $freeDays = (int)($input['free_days'] ?? 0);
+
+        if ($freeDays > 0) {
+            $freeMinutes = $freeDays * 1440;
+        } elseif ($freeHours > 0) {
+            $freeMinutes = (int)($freeHours * 60);
+        }
+
+        if ($freeMinutes <= 0) {
+            $freeMinutes = 180; // default 3 hours
+        }
+
+        if ($freeMinutes >= 1440) {
+            $days = round($freeMinutes / 1440, 1);
+            $durationLabel = ($days == 1 ? "1 Day (24 Hours)" : "{$days} Days") . " (Hospital Admission)";
+        } elseif ($freeMinutes >= 60) {
+            $hrs = round($freeMinutes / 60, 1);
+            $durationLabel = "{$hrs} Hours";
+        } else {
+            $durationLabel = "{$freeMinutes} Minutes";
+        }
+
+        $db->prepare("UPDATE parking_sessions SET 
+            status = 'VALIDATED', 
+            validation_method = 'appointment_qr', 
+            validation_ref = ?, 
+            validated_by = ?, 
+            validated_at = NOW(),
+            validation_deadline = DATE_ADD(entry_time, INTERVAL ? MINUTE),
+            grace_period_minutes = ?
+            WHERE id = ?")
+           ->execute([$token, $userId, $freeMinutes, $freeMinutes, $session['id']]);
 
         // Insert record in visitor_validations
-        $stmtVal = $db->prepare("INSERT INTO visitor_validations (session_id, patient_mrn, appointment_id, visitor_name, qr_token, validation_type, validated_by_user_id, free_minutes_granted, notes) VALUES (?, ?, ?, ?, ?, 'appointment_qr', ?, 180, ?)");
+        $stmtVal = $db->prepare("INSERT INTO visitor_validations (session_id, patient_mrn, appointment_id, visitor_name, qr_token, validation_type, validated_by_user_id, free_minutes_granted, notes) VALUES (?, ?, ?, ?, ?, 'appointment_qr', ?, ?, ?)");
         $stmtVal->execute([
             $session['id'],
             $mrn,
@@ -98,7 +130,8 @@ class VisitorValidationController extends Controller {
             $patientName,
             $token,
             $userId,
-            'Validated via Appointment QR Code'
+            $freeMinutes,
+            'Validated via Appointment QR Code [Granted ' . $durationLabel . ' Free Access]'
         ]);
 
         if ($appointment) {
@@ -107,13 +140,15 @@ class VisitorValidationController extends Controller {
         }
 
         $this->success([
-            'session_code' => $session['session_code'],
-            'plate_number' => $session['plate_number'],
-            'status'       => 'VALIDATED',
-            'patient_name' => $patientName,
-            'patient_mrn'  => $mrn,
-            'appointment_code' => $appointment['appointment_code'] ?? ($extractedCode ?: 'APT-QR-DIRECT'),
-            'message'      => "Appointment QR verified! Vehicle {$session['plate_number']} (Session: {$session['session_code']}) is now authorized for 3 hours of free parking."
+            'session_code'        => $session['session_code'],
+            'plate_number'        => $session['plate_number'],
+            'status'              => 'VALIDATED',
+            'patient_name'        => $patientName,
+            'patient_mrn'         => $mrn,
+            'free_minutes'        => $freeMinutes,
+            'duration_label'      => $durationLabel,
+            'appointment_code'    => $appointment['appointment_code'] ?? ($extractedCode ?: 'APT-QR-DIRECT'),
+            'message'             => "Appointment verified! Vehicle {$session['plate_number']} (Session: {$session['session_code']}) is authorized for {$durationLabel} of free parking."
         ], 'Validation successful via QR Code');
     }
 
@@ -126,6 +161,30 @@ class VisitorValidationController extends Controller {
         $patientMrn = trim($input['patient_mrn'] ?? '');
         $visitorName = trim($input['visitor_name'] ?? 'Hospital Patient');
         $notes = trim($input['notes'] ?? 'Validated at Reception Counter');
+
+        $freeMinutes = (int)($input['free_minutes'] ?? 0);
+        $freeHours = (float)($input['free_hours'] ?? 0);
+        $freeDays = (int)($input['free_days'] ?? 0);
+
+        if ($freeDays > 0) {
+            $freeMinutes = $freeDays * 1440;
+        } elseif ($freeHours > 0) {
+            $freeMinutes = (int)($freeHours * 60);
+        }
+
+        if ($freeMinutes <= 0) {
+            $freeMinutes = 180; // default 3 hours
+        }
+
+        if ($freeMinutes >= 1440) {
+            $days = round($freeMinutes / 1440, 1);
+            $durationLabel = ($days == 1 ? "1 Day (24 Hours)" : "{$days} Days") . " (Hospital Admission)";
+        } elseif ($freeMinutes >= 60) {
+            $hrs = round($freeMinutes / 60, 1);
+            $durationLabel = "{$hrs} Hours";
+        } else {
+            $durationLabel = "{$freeMinutes} Minutes";
+        }
 
         $db = Database::getInstance();
         $cleanPlate = preg_replace('/[^A-Za-z0-9]/', '', $plate);
@@ -152,24 +211,35 @@ class VisitorValidationController extends Controller {
 
         // If an active session is currently inside the parking area -> validate it immediately!
         if ($session) {
-            $db->prepare("UPDATE parking_sessions SET status = 'VALIDATED', validation_method = 'reception', validation_ref = ?, validated_by = ?, validated_at = NOW() WHERE id = ?")
-               ->execute([$patientMrn ?: 'RECEPTION-VALIDATION', $userId, $session['id']]);
+            $db->prepare("UPDATE parking_sessions SET 
+                status = 'VALIDATED', 
+                validation_method = 'reception', 
+                validation_ref = ?, 
+                validated_by = ?, 
+                validated_at = NOW(),
+                validation_deadline = DATE_ADD(entry_time, INTERVAL ? MINUTE),
+                grace_period_minutes = ?
+                WHERE id = ?")
+               ->execute([$patientMrn ?: 'RECEPTION-VALIDATION', $userId, $freeMinutes, $freeMinutes, $session['id']]);
 
-            $stmtVal = $db->prepare("INSERT INTO visitor_validations (session_id, patient_mrn, visitor_name, validation_type, validated_by_user_id, free_minutes_granted, notes) VALUES (?, ?, ?, 'reception_manual', ?, 180, ?)");
+            $stmtVal = $db->prepare("INSERT INTO visitor_validations (session_id, patient_mrn, visitor_name, validation_type, validated_by_user_id, free_minutes_granted, notes) VALUES (?, ?, ?, 'reception_manual', ?, ?, ?)");
             $stmtVal->execute([
                 $session['id'],
                 $patientMrn ?: 'MRN-RECEPTION',
                 $visitorName,
                 $userId,
-                $notes
+                $freeMinutes,
+                $notes . " [Granted {$durationLabel} Free Access]"
             ]);
 
             $this->success([
-                'type'         => 'ACTIVE_SESSION_VALIDATED',
-                'session_code' => $session['session_code'],
-                'plate_number' => $session['plate_number'],
-                'status'       => 'VALIDATED',
-                'message'      => "Active parking session {$session['session_code']} ({$session['plate_number']}) validated successfully! 3 hours free parking granted."
+                'type'           => 'ACTIVE_SESSION_VALIDATED',
+                'session_code'   => $session['session_code'],
+                'plate_number'   => $session['plate_number'],
+                'status'         => 'VALIDATED',
+                'free_minutes'   => $freeMinutes,
+                'duration_label' => $durationLabel,
+                'message'        => "Active parking session {$session['session_code']} ({$session['plate_number']}) validated successfully! {$durationLabel} free parking granted."
             ], 'Reception validation complete');
             return;
         }

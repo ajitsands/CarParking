@@ -22,6 +22,10 @@ export default function VisualVehiclePickerModal({
   const [error, setError] = useState('');
   const [successResult, setSuccessResult] = useState(null);
 
+  const [freeDurationType, setFreeDurationType] = useState('3h');
+  const [customDays, setCustomDays] = useState(3);
+  const [admissionNote, setAdmissionNote] = useState('');
+
   const timeFilterOptions = [
     { id: 'all', label: 'All Parked Cars', icon: '🚗' },
     { id: '5min', label: '≤ 5 mins', icon: '⚡' },
@@ -32,6 +36,29 @@ export default function VisualVehiclePickerModal({
     { id: '2hr', label: '≤ 2 hours', icon: '🕒' },
     { id: '3hr_plus', label: '3+ hours', icon: '⏳' },
   ];
+
+  const durationPresets = [
+    { id: '3h', label: '3 Hours', sub: 'Standard OPD', hours: 3 },
+    { id: '5h', label: '5 Hours', sub: 'Extended', hours: 5 },
+    { id: '10h', label: '10 Hours', sub: 'Day Care', hours: 10 },
+    { id: '12h', label: '12 Hours', sub: 'Observation', hours: 12 },
+    { id: '24h', label: '24 Hours', sub: '1 Day Stay', hours: 24, days: 1 },
+    { id: '48h', label: '48 Hours', sub: '2 Days Stay', hours: 48, days: 2 },
+    { id: 'custom_days', label: '🏥 Patient Admission', sub: 'Specify Days', isCustom: true }
+  ];
+
+  const getDurationPayload = () => {
+    if (freeDurationType === 'custom_days') {
+      const days = Math.max(1, parseInt(customDays) || 1);
+      return { free_days: days, free_minutes: days * 1440, label: `${days} Days (Inpatient Admission)` };
+    }
+    const found = durationPresets.find(d => d.id === freeDurationType);
+    if (found) {
+      if (found.days) return { free_days: found.days, free_hours: found.hours, free_minutes: found.days * 1440, label: found.label };
+      return { free_hours: found.hours, free_minutes: found.hours * 60, label: found.label };
+    }
+    return { free_hours: 3, free_minutes: 180, label: '3 Hours' };
+  };
 
   const loadCandidates = async () => {
     setLoading(true);
@@ -65,13 +92,19 @@ export default function VisualVehiclePickerModal({
     setError('');
     setSuccessResult(null);
 
+    const durPayload = getDurationPayload();
+
     try {
       let res;
       if (qrToken) {
         res = await api.validateByQr({
           session_id: candidate.id,
           qr_token: qrToken,
-          plate_number: candidate.plate_number
+          plate_number: candidate.plate_number,
+          free_minutes: durPayload.free_minutes,
+          free_hours: durPayload.free_hours,
+          free_days: durPayload.free_days,
+          notes: admissionNote ? `Admission: ${admissionNote}` : undefined
         });
       } else {
         res = await api.validateByReception({
@@ -79,7 +112,12 @@ export default function VisualVehiclePickerModal({
           plate_number: candidate.plate_number,
           patient_mrn: patientMrn,
           visitor_name: visitorName || 'Hospital Patient',
-          notes: 'Visual photo verification at reception counter'
+          free_minutes: durPayload.free_minutes,
+          free_hours: durPayload.free_hours,
+          free_days: durPayload.free_days,
+          notes: admissionNote 
+            ? `Hospital Admission (${durPayload.label}) · Note: ${admissionNote}` 
+            : `Reception Desk Visual Validation (${durPayload.label})`
         });
       }
 
@@ -87,7 +125,8 @@ export default function VisualVehiclePickerModal({
         setSuccessResult({
           candidate,
           data: res.data,
-          message: res.data?.message || `Vehicle ${candidate.plate_number} successfully validated!`
+          durationLabel: durPayload.label,
+          message: res.data?.message || `Vehicle ${candidate.plate_number} successfully validated for ${durPayload.label}!`
         });
 
         if (onValidationSuccess) {
@@ -146,6 +185,143 @@ export default function VisualVehiclePickerModal({
           </div>
         )}
 
+        {/* Free Duration Selector Card (Hours / 1-2 Days / Admission Days) */}
+        <div style={{
+          background: 'var(--bg-surface)',
+          padding: '12px 14px',
+          borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--border-color)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock size={15} color="var(--primary-color)" /> Free Parking Duration to Grant:
+            </span>
+            <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--status-green)', background: 'var(--status-green-bg)', padding: '2px 8px', borderRadius: '12px' }}>
+              Active: {getDurationPayload().label} Free
+            </span>
+          </div>
+
+          {/* Duration Preset Buttons */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {durationPresets.map((dp) => (
+              <button
+                key={dp.id}
+                type="button"
+                onClick={() => setFreeDurationType(dp.id)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  background: freeDurationType === dp.id ? 'var(--primary-color)' : 'var(--bg-surface-alt)',
+                  color: freeDurationType === dp.id ? '#ffffff' : 'var(--text-main)',
+                  border: freeDurationType === dp.id ? '1px solid var(--primary-color)' : '1px solid var(--border-color)',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <span style={{ fontSize: '0.76rem', fontWeight: 800 }}>{dp.label}</span>
+                <span style={{ fontSize: '0.62rem', opacity: freeDurationType === dp.id ? 0.9 : 0.6 }}>{dp.sub}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Inpatient Admission Custom Days Input */}
+          {freeDurationType === 'custom_days' && (
+            <div style={{
+              padding: '10px 12px',
+              borderRadius: '8px',
+              background: 'rgba(99, 102, 241, 0.08)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                  Specify Admission Days:
+                </span>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    style={{ padding: '2px 8px', fontSize: '0.8rem' }}
+                    onClick={() => setCustomDays(Math.max(1, customDays - 1))}
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="90"
+                    value={customDays}
+                    onChange={(e) => setCustomDays(Math.max(1, parseInt(e.target.value) || 1))}
+                    style={{
+                      width: '60px',
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--border-color)',
+                      textAlign: 'center',
+                      fontWeight: 800,
+                      fontSize: '0.85rem'
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    style={{ padding: '2px 8px', fontSize: '0.8rem' }}
+                    onClick={() => setCustomDays(customDays + 1)}
+                  >
+                    +
+                  </button>
+                  <span style={{ fontSize: '0.76rem', fontWeight: 800, color: '#6366f1' }}>
+                    Days ({customDays * 24} Hours Free)
+                  </span>
+                </div>
+
+                {/* Quick day pills */}
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {[3, 5, 7, 10, 14, 30].map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setCustomDays(d)}
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        background: customDays === d ? '#6366f1' : 'var(--bg-surface)',
+                        color: customDays === d ? '#ffffff' : 'var(--text-secondary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {d}d
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  className="form-input"
+                  style={{ fontSize: '0.74rem', padding: '6px 10px' }}
+                  placeholder="Optional admission note (e.g. Ward 3B / Surgery Stay / ICU Patient)..."
+                  value={admissionNote}
+                  onChange={(e) => setAdmissionNote(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Success Banner */}
         {successResult && (
           <div style={{
@@ -164,7 +340,7 @@ export default function VisualVehiclePickerModal({
               <div>
                 <strong style={{ fontSize: '0.9rem' }}>Validation Successful!</strong>
                 <p style={{ fontSize: '0.76rem', margin: '2px 0 0 0', color: 'var(--text-main)' }}>
-                  Vehicle <strong>{successResult.candidate.plate_number}</strong> (Session: {successResult.candidate.session_code}) is now authorized for <strong>3 Hours Free Parking</strong>.
+                  Vehicle <strong>{successResult.candidate.plate_number}</strong> (Session: {successResult.candidate.session_code}) is now authorized for <strong>{successResult.durationLabel} of Free Parking</strong>.
                 </p>
               </div>
             </div>
@@ -495,7 +671,7 @@ export default function VisualVehiclePickerModal({
                       ) : (
                         <>
                           <CheckCircle2 size={14} />
-                          <span>Select &amp; Validate (3h Free)</span>
+                          <span>Select &amp; Validate ({getDurationPayload().label} Free)</span>
                         </>
                       )}
                     </button>

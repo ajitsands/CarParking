@@ -31,6 +31,33 @@ export default function VisitorValidationPage() {
     loadAppointments();
   }, [searchQuery]);
 
+  const [freeDurationType, setFreeDurationType] = useState('3h');
+  const [customDays, setCustomDays] = useState(3);
+  const [admissionNote, setAdmissionNote] = useState('');
+
+  const durationPresets = [
+    { id: '3h', label: '3 Hours', sub: 'OPD', hours: 3 },
+    { id: '5h', label: '5 Hours', sub: 'Extended', hours: 5 },
+    { id: '10h', label: '10 Hours', sub: 'Day Care', hours: 10 },
+    { id: '12h', label: '12 Hours', sub: 'Observation', hours: 12 },
+    { id: '24h', label: '24h (1 Day)', sub: 'Overnight', hours: 24, days: 1 },
+    { id: '48h', label: '48h (2 Days)', sub: 'Inpatient', hours: 48, days: 2 },
+    { id: 'custom_days', label: '🏥 Admission', sub: 'Specify Days', isCustom: true }
+  ];
+
+  const getDurationPayload = () => {
+    if (freeDurationType === 'custom_days') {
+      const days = Math.max(1, parseInt(customDays) || 1);
+      return { free_days: days, free_minutes: days * 1440, label: `${days} Days (Inpatient Admission)` };
+    }
+    const found = durationPresets.find(d => d.id === freeDurationType);
+    if (found) {
+      if (found.days) return { free_days: found.days, free_hours: found.hours, free_minutes: found.days * 1440, label: found.label };
+      return { free_hours: found.hours, free_minutes: found.hours * 60, label: found.label };
+    }
+    return { free_hours: 3, free_minutes: 180, label: '3 Hours' };
+  };
+
   const handleReceptionValidate = async (e) => {
     e.preventDefault();
     if (!receptionPlate.trim()) {
@@ -42,19 +69,27 @@ export default function VisitorValidationPage() {
     setError('');
     setValidationSuccessMsg('');
 
+    const dur = getDurationPayload();
+
     try {
       const res = await api.validateByReception({
         plate_number: receptionPlate.trim(),
         patient_mrn: patientMrn.trim(),
         visitor_name: visitorName.trim() || 'Hospital Patient',
-        notes: 'Reception desk validation confirmed'
+        free_minutes: dur.free_minutes,
+        free_hours: dur.free_hours,
+        free_days: dur.free_days,
+        notes: admissionNote 
+          ? `Hospital Admission (${dur.label}) · ${admissionNote}` 
+          : `Reception Desk Validation (${dur.label})`
       });
 
       if (res.success) {
-        setValidationSuccessMsg(res.data?.message || 'Visit successfully validated!');
+        setValidationSuccessMsg(res.data?.message || `Visit validated successfully for ${dur.label}!`);
         setReceptionPlate('');
         setPatientMrn('');
         setVisitorName('');
+        setAdmissionNote('');
         loadAppointments();
       }
     } catch (err) {
@@ -192,6 +227,89 @@ export default function VisitorValidationPage() {
                 />
               </div>
 
+              {/* Free Duration Selector */}
+              <div style={{
+                padding: '10px 12px',
+                borderRadius: '8px',
+                background: 'var(--bg-surface-alt)',
+                border: '1px solid var(--border-color)',
+                marginBottom: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <label className="form-label" style={{ margin: 0, fontSize: '0.74rem', fontWeight: 800 }}>
+                    <Clock size={13} style={{ display: 'inline', marginRight: '4px' }} /> Free Parking Duration:
+                  </label>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--status-green)' }}>
+                    {getDurationPayload().label}
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
+                  {durationPresets.map((dp) => (
+                    <button
+                      key={dp.id}
+                      type="button"
+                      onClick={() => setFreeDurationType(dp.id)}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        fontSize: '0.7rem',
+                        fontWeight: freeDurationType === dp.id ? 800 : 600,
+                        background: freeDurationType === dp.id ? 'var(--primary-color)' : 'var(--bg-surface)',
+                        color: freeDurationType === dp.id ? '#ffffff' : 'var(--text-main)',
+                        border: freeDurationType === dp.id ? '1px solid var(--primary-color)' : '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {dp.label}
+                    </button>
+                  ))}
+                </div>
+
+                {freeDurationType === 'custom_days' && (
+                  <div style={{
+                    padding: '8px',
+                    borderRadius: '6px',
+                    background: 'rgba(99, 102, 241, 0.08)',
+                    border: '1px solid rgba(99, 102, 241, 0.25)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>Admission Days:</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="90"
+                        value={customDays}
+                        onChange={(e) => setCustomDays(Math.max(1, parseInt(e.target.value) || 1))}
+                        style={{
+                          width: '50px',
+                          padding: '3px 6px',
+                          borderRadius: '4px',
+                          border: '1px solid var(--border-color)',
+                          textAlign: 'center',
+                          fontWeight: 800,
+                          fontSize: '0.78rem'
+                        }}
+                      />
+                      <span style={{ fontSize: '0.72rem', color: '#6366f1', fontWeight: 700 }}>
+                        Days ({customDays * 24}h Free)
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      className="form-input"
+                      style={{ fontSize: '0.72rem', padding: '4px 8px' }}
+                      placeholder="Admission details (e.g. Ward 4 ICU stay)..."
+                      value={admissionNote}
+                      onChange={(e) => setAdmissionNote(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+
               <button
                 type="submit"
                 className="btn btn-success"
@@ -199,7 +317,7 @@ export default function VisitorValidationPage() {
                 disabled={loading}
               >
                 <CheckCircle2 size={16} />
-                {loading ? 'Validating Session...' : 'Confirm Visitor Validation'}
+                {loading ? 'Validating Session...' : `Confirm Validation (${getDurationPayload().label})`}
               </button>
             </form>
           </div>
