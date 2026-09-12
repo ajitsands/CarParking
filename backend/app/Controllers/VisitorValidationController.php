@@ -116,49 +116,119 @@ class VisitorValidationController extends Controller {
         $plate = strtoupper(trim($input['plate_number'] ?? ''));
         $sessionId = (int)($input['session_id'] ?? 0);
         $patientMrn = trim($input['patient_mrn'] ?? '');
-        $visitorName = trim($input['visitor_name'] ?? 'Hospital Patient/Visitor');
+        $visitorName = trim($input['visitor_name'] ?? 'Hospital Patient');
         $notes = trim($input['notes'] ?? 'Validated at Reception Counter');
 
         $db = Database::getInstance();
+        $cleanPlate = preg_replace('/[^A-Za-z0-9]/', '', $plate);
 
+        $session = null;
         if ($sessionId > 0) {
             $stmt = $db->prepare("SELECT * FROM parking_sessions WHERE id = ? LIMIT 1");
             $stmt->execute([$sessionId]);
             $session = $stmt->fetch();
         } elseif ($plate) {
-            $stmt = $db->prepare("SELECT * FROM parking_sessions WHERE plate_number = ? AND exit_time IS NULL AND status IN ('VALIDATION_PENDING', 'CHARGING') ORDER BY id DESC LIMIT 1");
-            $stmt->execute([$plate]);
+            $stmt = $db->prepare("SELECT * FROM parking_sessions 
+                WHERE (plate_number = ? OR REPLACE(plate_number, ' ', '') = ? OR REPLACE(plate_number, ' ', '') LIKE ?) 
+                AND exit_time IS NULL 
+                AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED') 
+                ORDER BY id DESC LIMIT 1");
+            $stmt->execute([$plate, $cleanPlate, "%{$cleanPlate}%"]);
             $session = $stmt->fetch();
         } else {
             $this->error('Plate number or session ID required for reception validation', 400);
             return;
         }
 
-        if (!$session) {
-            $this->error('No active parking session found for validation', 404);
+        $userId = $currentUser ? (int)$currentUser['id'] : null;
+
+        // If an active session is currently inside the parking area -> validate it immediately!
+        if ($session) {
+            $db->prepare("UPDATE parking_sessions SET status = 'VALIDATED', validation_method = 'reception', validation_ref = ?, validated_by = ?, validated_at = NOW() WHERE id = ?")
+               ->execute([$patientMrn ?: 'RECEPTION-VALIDATION', $userId, $session['id']]);
+
+            $stmtVal = $db->prepare("INSERT INTO visitor_validations (session_id, patient_mrn, visitor_name, validation_type, validated_by_user_id, free_minutes_granted, notes) VALUES (?, ?, ?, 'reception_manual', ?, 180, ?)");
+            $stmtVal->execute([
+                $session['id'],
+                $patientMrn ?: 'MRN-RECEPTION',
+                $visitorName,
+                $userId,
+                $notes
+            ]);
+
+            $this->success([
+                'type'         => 'ACTIVE_SESSION_VALIDATED',
+                'session_code' => $session['session_code'],
+                'plate_number' => $session['plate_number'],
+                'status'       => 'VALIDATED',
+                'message'      => "Active parking session {$session['session_code']} ({$session['plate_number']}) validated successfully! 3 hours free parking granted."
+            ], 'Reception validation complete');
             return;
         }
 
-        $userId = $currentUser ? (int)$currentUser['id'] : null;
+        // If NO active entry session exists yet -> Pre-register patient & generate validation QR token!
+        $mrn = $patientMrn ?: ('MRN-' . strtoupper(substr(uniqid(), -5)));
+        $code = 'APT-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+        $cleanSuffix = $cleanPlate ?: strtoupper(substr(uniqid(), -4));
+        $token = "QR-KIMS-{$mrn}-{$cleanSuffix}-" . strtoupper(substr(md5($code . time()), 0, 4));
+        $now = \App\Helpers\TimezoneHelper::now();
 
-        $db->prepare("UPDATE parking_sessions SET status = 'VALIDATED', validation_method = 'reception', validation_ref = ?, validated_by = ?, validated_at = NOW() WHERE id = ?")
-           ->execute([$patientMrn ?: 'RECEPTION-VALIDATION', $userId, $session['id']]);
-
-        $stmtVal = $db->prepare("INSERT INTO visitor_validations (session_id, patient_mrn, visitor_name, validation_type, validated_by_user_id, free_minutes_granted, notes) VALUES (?, ?, ?, 'reception_manual', ?, 180, ?)");
-        $stmtVal->execute([
-            $session['id'],
-            $patientMrn,
-            $visitorName,
-            $userId,
-            $notes
+        $stmtAppt = $db->prepare("INSERT INTO his_appointments (
+            appointment_code, patient_mrn, patient_name, doctor_name, department,
+            appointment_datetime, registered_plate_number, qr_token, status, is_validated
+        ) VALUES (?, ?, ?, 'OPD / General Consultation', 'Hospital Outpatient', ?, ?, ?, 'scheduled', 0)");
+        $stmtAppt->execute([
+            $code, $mrn, $visitorName, $now, $plate, $token
         ]);
 
         $this->success([
-            'session_code' => $session['session_code'],
-            'plate_number' => $session['plate_number'],
-            'status'       => 'VALIDATED',
-            'message'      => "Session {$session['session_code']} ({$session['plate_number']}) validated successfully by Reception."
-        ], 'Reception validation complete');
+            'type'             => 'TOKEN_GENERATED',
+            'appointment_code' => $code,
+            'patient_name'     => $visitorName,
+            'patient_mrn'      => $mrn,
+            'plate_number'     => $plate,
+            'qr_token'         => $token,
+            'message'          => "Patient validation token created for {$visitorName} (Plate: {$plate}). When this vehicle enters, it will automatically receive Free Validated Parking."
+        ], 'Patient validation token created successfully');
+    }
+
+    public function createToken(): void {
+        $input = $this->getJsonInput();
+        $plate = strtoupper(trim($input['plate_number'] ?? ''));
+        $patientMrn = trim($input['patient_mrn'] ?? '');
+        $visitorName = trim($input['patient_name'] ?? $input['visitor_name'] ?? 'Hospital Patient');
+        $doctorName = trim($input['doctor_name'] ?? 'General Consultation / OPD');
+        $department = trim($input['department'] ?? 'Outpatient Clinic');
+
+        if (!$plate && !$patientMrn) {
+            $this->error('Vehicle plate number or patient MRN is required', 400);
+            return;
+        }
+
+        $db = Database::getInstance();
+        $cleanPlate = preg_replace('/[^A-Za-z0-9]/', '', $plate);
+        $mrn = $patientMrn ?: ('MRN-' . strtoupper(substr(uniqid(), -5)));
+        $code = 'APT-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+        $cleanSuffix = $cleanPlate ?: strtoupper(substr(uniqid(), -4));
+        $token = "QR-KIMS-{$mrn}-{$cleanSuffix}-" . strtoupper(substr(md5($code . time()), 0, 4));
+        $now = \App\Helpers\TimezoneHelper::now();
+
+        $stmtAppt = $db->prepare("INSERT INTO his_appointments (
+            appointment_code, patient_mrn, patient_name, doctor_name, department,
+            appointment_datetime, registered_plate_number, qr_token, status, is_validated
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scheduled', 0)");
+        $stmtAppt->execute([
+            $code, $mrn, $visitorName, $doctorName, $department, $now, $plate, $token
+        ]);
+
+        $this->success([
+            'appointment_code' => $code,
+            'patient_name'     => $visitorName,
+            'patient_mrn'      => $mrn,
+            'plate_number'     => $plate,
+            'qr_token'         => $token,
+            'message'          => "Token generated for {$visitorName} ({$plate}). Validated access registered."
+        ], 'Token created successfully');
     }
 
     public function searchAppointments(): void {
@@ -166,10 +236,10 @@ class VisitorValidationController extends Controller {
         $q = trim($this->getQueryParams()['q'] ?? '');
 
         if ($q) {
-            $stmt = $db->prepare("SELECT * FROM his_appointments WHERE (patient_name LIKE ? OR patient_mrn LIKE ? OR registered_plate_number LIKE ? OR appointment_code LIKE ?) ORDER BY id DESC LIMIT 25");
+            $stmt = $db->prepare("SELECT * FROM his_appointments WHERE (patient_name LIKE ? OR patient_mrn LIKE ? OR registered_plate_number LIKE ? OR appointment_code LIKE ?) ORDER BY id DESC LIMIT 50");
             $stmt->execute(["%{$q}%", "%{$q}%", "%{$q}%", "%{$q}%"]);
         } else {
-            $stmt = $db->query("SELECT * FROM his_appointments ORDER BY id DESC LIMIT 25");
+            $stmt = $db->query("SELECT * FROM his_appointments ORDER BY id DESC LIMIT 50");
         }
 
         $appointments = $stmt->fetchAll();

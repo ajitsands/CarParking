@@ -220,6 +220,7 @@ function MainApp() {
       {/* Global Validation Modal */}
       <QrScannerModal
         isOpen={!!validationSession}
+        session={validationSession}
         onClose={() => setValidationSession(null)}
         onValidationSuccess={() => setValidationSession(null)}
       />

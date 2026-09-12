@@ -88,6 +88,7 @@ export const api = {
   // Visitor Validation
   validateByQr: (payload) => request('/validation/qr', { method: 'POST', body: payload }),
   validateByReception: (payload) => request('/validation/reception', { method: 'POST', body: payload }),
+  createValidationToken: (payload) => request('/validation/token', { method: 'POST', body: payload }),
   searchAppointments: (q = '') => request(`/validation/appointments?q=${encodeURIComponent(q)}`),
 
   // Payments & Cashier

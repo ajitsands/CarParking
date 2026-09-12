@@ -157,6 +157,7 @@ $router->post('/api/v1/sessions/{id}/manual-review', [ParkingSessionController::
 // ── Visitor Validation ─────────────────────────────────────────
 $router->post('/api/v1/validation/qr', [VisitorValidationController::class, 'validateByQr'], [AuthMiddleware::class]);
 $router->post('/api/v1/validation/reception', [VisitorValidationController::class, 'validateByReception'], [AuthMiddleware::class]);
+$router->post('/api/v1/validation/token', [VisitorValidationController::class, 'createToken'], [AuthMiddleware::class]);
 $router->get('/api/v1/validation/appointments', [VisitorValidationController::class, 'searchAppointments'], [AuthMiddleware::class]);
 
 // ── Payment Processing ─────────────────────────────────────────
