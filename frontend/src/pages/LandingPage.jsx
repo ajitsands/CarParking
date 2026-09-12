@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, 
   Car, 
@@ -31,7 +31,12 @@ import {
   ChevronRight,
   MessageCircle,
   Clock,
-  PhoneCall
+  PhoneCall,
+  Play,
+  RotateCcw,
+  Check,
+  Eye,
+  Sliders
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -45,6 +50,96 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
 
   const [activeIndustry, setActiveIndustry] = useState('hospital');
   const [sandsModalOpen, setSandsModalOpen] = useState(false);
+
+  // Interactive Barrier Demo State
+  const [barrierState, setBarrierState] = useState('closed'); // 'closed', 'opening', 'open', 'closing'
+  const [demoPlate, setDemoPlate] = useState('BH-84920');
+  const [demoLog, setDemoLog] = useState('Gate 01 [Entry]: Waiting for vehicle approach...');
+
+  // Interactive Display Board Demo State
+  const [p1Slots, setP1Slots] = useState(42);
+  const [p2Slots, setP2Slots] = useState(18);
+  const [p3Slots, setP3Slots] = useState(0);
+
+  // Lightbox / Image Zoom State
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const triggerBarrierDemo = () => {
+    if (barrierState !== 'closed') return;
+    setBarrierState('opening');
+    setDemoLog(`ANPR Capture: Plate "${demoPlate}" recognized (Confidence 99.8%) -> Triggering Relay Gate 01...`);
+    
+    setTimeout(() => {
+      setBarrierState('open');
+      setDemoLog(`Barrier Arm Raised (0.35s). Vehicle entry granted. Session started #${Math.floor(100000 + Math.random() * 900000)}`);
+      
+      setTimeout(() => {
+        setBarrierState('closing');
+        setDemoLog('Vehicle cleared safety loop detector -> Lowering barrier arm...');
+        
+        setTimeout(() => {
+          setBarrierState('closed');
+          setDemoLog('Gate 01 [Entry]: ARMED & READY for next vehicle.');
+        }, 1200);
+      }, 2500);
+    }, 600);
+  };
+
+  // Hardware & Software Showcase items
+  const hardwareGallery = [
+    {
+      id: 'barrier',
+      title: 'Automated Boom Barrier & ANPR System',
+      badge: 'High-Speed Physical Access',
+      image: '/images/boom_barrier_gate.jpg',
+      tagline: 'Sub-second 0.4s barrier arm actuation with IP67 deep-learning ANPR camera.',
+      specs: [
+        '99.8% License plate recognition rate under all lighting conditions',
+        'Direct RS485 / TCP-IP barrier relay trigger board integration',
+        'Dual safety infrared photo-beams & ground magnetic loop detector',
+        'Multi-color red/green LED illuminated boom arm for night guidance'
+      ]
+    },
+    {
+      id: 'display',
+      title: 'Multi-Deck LED Parking Guidance Display',
+      badge: 'Real-Time Occupancy Signage',
+      image: '/images/led_display_board.jpg',
+      tagline: 'Ultra-bright digital outdoor totem & Android TV display board APK integration.',
+      specs: [
+        'Live floor-by-floor vacancy counts (P1, P2, P3, P4)',
+        'Automatic green "VACANT" / red "FULL" status switching',
+        'Native Android TV APK / Commercial HDMI digital signage support',
+        'Customizable enterprise logos, welcome messages & tariff notices'
+      ]
+    },
+    {
+      id: 'control-room',
+      title: 'Central Command Center & Video Wall',
+      badge: 'Multi-Lane Master Operations',
+      image: '/images/control_room_dashboard.jpg',
+      tagline: '24/7 unified control room monitoring all gate lanes, sessions, and financial audits.',
+      specs: [
+        'Live RTSP camera feeds with real-time bounding box recognition',
+        '3D interactive floor occupancy heatmaps and dwell-time alerts',
+        'Live cashier reconciliation, collection audits and POS logs',
+        'Emergency one-click manual barrier override for security teams'
+      ]
+    },
+    {
+      id: 'kiosk',
+      title: 'Self-Service QR Barcode Pay Station & Kiosk',
+      badge: 'Cashless & Contactless POS',
+      image: '/images/qr_payment_kiosk.jpg',
+      tagline: 'Weatherproof outdoor totem for ISO/IEC 18004 thermal receipts and tap payments.',
+      specs: [
+        'High-density 2D QR barcode scanner for tickets and phone screens',
+        'Integrated Contactless NFC / Credit Card / BenefitPay reader',
+        'Heavy-duty industrial thermal receipt printer with paper-low alerts',
+        'Voice intercom and video assistance for remote operator support'
+      ]
+    }
+  ];
 
   // Industry solutions data
   const industries = [
@@ -100,38 +195,38 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
       stats: '5-Star Guest Arrival Experience'
     },
     {
-      id: 'techpark',
-      title: 'Corporate Parks & Business Towers',
+      id: 'corporate',
+      title: 'Corporate Tech Parks & Towers',
       icon: Layers,
-      badge: 'Enterprise & Tech Parks',
+      badge: 'Enterprise Business',
       color: '#6366f1',
-      tagline: 'Multi-Tenant Allocation & Employee Access Control',
-      description: 'Designed for high-density business hubs. Manages tenant slot allocations, employee monthly permits, contractor temporary passes, and visitor pre-registration with automated financial chargeback ledgers.',
+      tagline: 'Multi-Tenant Company Allocations & Contractor Passes',
+      description: 'Manage complex multi-company commercial towers with quota-based slot allocations per tenant company, visitor pre-registration links, automated contractor QR passes, and consolidated monthly tenant parking invoices.',
       highlights: [
-        'Multi-tenant slot quotas with over-capacity alerts',
-        'Employee monthly & yearly prepaid ANPR subscriptions',
-        'Self-service visitor invitation links with QR passes',
-        'Departmental & company financial billing ledger reports',
-        'Integration with corporate Active Directory & HRMS'
+        'Tenant company slot quota enforcement and billing',
+        'Pre-registered visitor invitations with QR wallet passes',
+        'Tailgating detection & anti-passback security protocols',
+        'Integration with building turnstiles and elevator access',
+        'Real-time executive dashboard for facility directors'
       ],
-      stats: 'Zero Manual Gate Paperwork'
+      stats: 'Zero Unauthorized Parking Violations'
     },
     {
       id: 'airport',
-      title: 'Airports & Multi-Storey Municipal Lots',
+      title: 'Airports & Transit Municipal Terminals',
       icon: Plane,
-      badge: 'Municipal & Transit',
+      badge: 'Aviation & Transit',
       color: '#ec4899',
-      tagline: 'Dynamic Tariff Engines & Multi-Floor Display Boards',
-      description: 'High-capacity infrastructure for long-term and short-term airport terminals. Features tiered progressive pricing, Android LED display boards, lost ticket resolution, and multi-currency billing.',
+      tagline: 'High-Volume Multi-Tariff Engine & Ride-Share Staging',
+      description: 'Heavy-duty municipal architecture designed for 24/7 unhindered throughput. Features multi-tier tariffs (Drop-off 15min grace, Short-Term, Long-Term multi-day), taxi dispatch queue management, and automated license plate audits.',
       highlights: [
-        'Progressive hourly & multi-day long-term tariff engines',
-        'Free downloadable Android Parking Display Board APK',
-        'Real-time floor-by-floor capacity & zone guidance',
-        'Centralized cloud management across multiple city locations',
-        'Comprehensive financial audit trail & cashier shift settlements'
+        'Multi-tier dynamic tariff calculator (Hourly, Daily, Grace)',
+        'Automated Taxi & Uber/Ride-share geo-fence staging zones',
+        'License plate blacklist & security hotlist alarm alerts',
+        'Offline edge resilience: 100% operational during WAN outages',
+        'Automated audit reports for municipal audit compliance'
       ],
-      stats: '24/7 Heavy Transit Resilience'
+      stats: '99.99% Enterprise Uptime SLA'
     },
     {
       id: 'stadium',
@@ -139,912 +234,1583 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
       icon: Ticket,
       badge: 'Events & Entertainment',
       color: '#8b5cf6',
-      tagline: 'Surge-Rate Tariffs & Mass Throughput Automation',
-      description: 'Handles tens of thousands of vehicles during concerts, matches, and trade expos. Includes rapid event barrier open modes, surge pricing rules, and cashless mobile scan-to-exit gates.',
+      tagline: 'Mass Surge Clearance & Prepaid Ticket Gate Scanners',
+      description: 'Handle 50,000+ attendee surges with lightning-fast gate clearance. Attendees scan their event entry barcode or prepaid digital parking ticket directly at entrance kiosks for instant barrier opening.',
       highlights: [
-        'High-speed batch entry mode during peak match hours',
-        'Pre-booked digital event QR passes on mobile phones',
-        'Cashless exit terminals with instant BenefitPay QR payments',
-        'Offline edge resilience — gates operate without internet',
-        'VIP & press media dedicated access lanes'
+        'Prepaid event parking barcodes integrated with Ticketing platforms',
+        'Dynamic lane reversal (Convert all lanes to Exit during dispersal)',
+        'Bus and coach dedicated parking bay allocations',
+        'VIP & press media license plate priority lanes',
+        'Live digital directional boards guiding drivers to open bays'
       ],
-      stats: '15,000+ Vehicles Handled Per Event'
+      stats: '5,000+ Vehicles Cleared / Hour'
     }
   ];
 
-  const currentIndustry = industries.find(i => i.id === activeIndustry) || industries[0];
+  const currentInd = industries.find(i => i.id === activeIndustry) || industries[0];
 
-  // Core 8 Pillars
-  const features = [
+  // 8 Pillars Data
+  const platformPillars = [
     {
       icon: Video,
-      title: 'AI ANPR Camera Ingestion Engine',
-      color: '#2563eb',
-      desc: 'Native HTTP push listener compatible with Dahua, Hikvision, Uniview, Hanwha, and custom LPR edge cameras. Sub-second license plate recognition with 99.8% accuracy.'
+      title: 'Sub-Second ANPR Engine',
+      badge: 'Hardware Agnostic',
+      desc: 'Connects to Hikvision, Dahua, Uniview, Axis, and RTSP IP cameras. High-accuracy 99.8% capture with zero lag.'
     },
     {
       icon: Globe,
-      title: 'Universal 3rd-Party REST API',
-      color: '#0284c7',
-      desc: 'Bilateral REST endpoints for ANY software — HIMS, ERP, POS, CRM, Hotel PMS, or custom mobile apps. Real-time availability pushing and automated consultation waivers.'
+      title: 'Universal Integration REST API',
+      badge: 'Any HIS / ERP / POS',
+      desc: 'Full bi-directional REST endpoints to sync appointments, generate parking QR tokens, and validate visits in real-time.'
     },
     {
       icon: QrCode,
-      title: 'Instant QR Code Generator & Printing',
-      color: '#10b981',
-      desc: 'Built-in pure-PHP ISO/IEC 18004 compliant QR generator. Emits high-resolution Base64 PNGs and SVG slips for POS thermal receipt printers (ESC/POS & Zebra).'
+      title: 'ISO/IEC 18004 QR Generator',
+      badge: 'Zero External Libs',
+      desc: 'Native PHP ISO-standard QR engine creating sharp, scan-ready receipts for thermal printers and mobile screens.'
     },
     {
       icon: Layers,
-      title: 'Floor-Wise Capacity & Zone Manager',
-      color: '#6366f1',
-      desc: 'Configure total facility capacity and floor-by-floor slot quotas. Real-time occupancy KPI counters, progress meters, and dynamic available spot updates.'
+      title: 'Multi-Floor Capacity Manager',
+      badge: 'P1 · P2 · P3 · VIP',
+      desc: 'Live floor-by-floor slot accounting with vacancy thresholds, reserved bays, and dynamic digital LED board updates.'
     },
     {
       icon: CreditCard,
-      title: 'POS Cashier & Digital Payment Terminal',
-      color: '#f59e0b',
-      desc: 'Multi-currency cashier checkout supporting BenefitPay QR, credit cards, cash, and discount vouchers. Configurable tariffs with grace periods and anti-passback.'
+      title: 'Cashier & POS Terminal Desk',
+      badge: 'Split Payments',
+      desc: 'Dedicated point-of-sale interface supporting cash, debit/credit cards, BenefitPay, discount coupons, and lost ticket fees.'
     },
     {
       icon: Smartphone,
-      title: 'Android Parking Display Board App',
-      color: '#ec4899',
-      desc: 'Free downloadable native Android APK for outdoor LED display totems and tablets. Shows real-time floor availability, welcome messages, and rate cards.'
+      title: 'Android Display Board APK',
+      badge: 'Smart TV & LED Wall',
+      desc: 'Standalone Android APK and browser dashboard designed for full-screen LED gate totems and waiting area TV screens.'
+    },
+    {
+      icon: Zap,
+      title: 'Relay Barrier Controllers',
+      badge: 'TCP/IP & RS485',
+      desc: 'Instant physical gate actuation via IP relay boards and serial controllers with auto-close safety loop protection.'
     },
     {
       icon: ShieldCheck,
-      title: 'Hardware Relay & Boom Barrier Control',
-      color: '#14b8a6',
-      desc: 'Direct IP relay, serial COM, and GPIO integration for instant boom barrier trigger. Configurable open pulses with safety loop sensor interlocking.'
-    },
-    {
-      icon: BarChart3,
-      title: 'Financial Ledger & Audit Analytics',
-      color: '#8b5cf6',
-      desc: 'Complete vehicle access history, shift settlement logs, revenue breakdown, and exportable PDF/Excel reports with role-based access security.'
+      title: 'Audits & Anti-Passback',
+      badge: 'Tamper Proof',
+      desc: 'Comprehensive shift-wise financial reconciliation, plate blacklist hotlists, and unauthorized passback enforcement.'
     }
   ];
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: isDark ? '#090d16' : '#f8fafc',
-      color: isDark ? '#f1f5f9' : '#0f172a',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      transition: 'background 0.3s ease, color 0.3s ease'
-    }}>
-
-      {/* ── Top Navigation Bar ────────────────────────────────────────── */}
-      <nav style={{
+    <div 
+      className="landing-page-root"
+      style={{
+        width: '100%',
+        minHeight: '100vh',
+        background: isDark ? '#090d16' : '#f8fafc',
+        color: isDark ? '#e2e8f0' : '#0f172a',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        transition: 'background-color 0.3s ease, color 0.3s ease',
+        overflowX: 'hidden'
+      }}
+    >
+      {/* 1. TOP ANNOUNCEMENT & BRANDING HEADER (100% Full Width) */}
+      <header style={{
+        width: '100%',
+        background: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)',
+        borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+        backdropFilter: 'blur(16px)',
         position: 'sticky',
         top: 0,
-        zIndex: 100,
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        background: isDark ? 'rgba(9, 13, 22, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-        borderBottom: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
-        padding: '12px 24px'
+        zIndex: 1000,
+        boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.4)' : '0 2px 10px rgba(0,0,0,0.04)'
       }}>
         <div style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
+          width: '100%',
+          padding: '12px 32px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          flexWrap: 'wrap',
           gap: '16px'
         }}>
-          {/* Brand Logo & Title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          {/* Left: Brand & SaNDS Lab Badge */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{
-              background: '#ffffff',
-              padding: '4px 10px',
-              borderRadius: '8px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
               display: 'flex',
-              alignItems: 'center'
-            }}>
-              <img
-                src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
-                alt="SaNDS Lab Logo"
-                style={{ height: '32px', width: 'auto', display: 'block' }}
-              />
+              alignItems: 'center',
+              gap: '10px',
+              textDecoration: 'none',
+              cursor: 'pointer'
+            }} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <div style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)'
+              }}>
+                <Car size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, letterSpacing: '-0.02em', lineHeight: 1.1, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                  Smart Parking Solution
+                </div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                  Next-Gen Multi-Industry Facility OS
+                </div>
+              </div>
             </div>
-            <div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 800, letterSpacing: '-0.3px', color: isDark ? '#fff' : '#0f172a' }}>
-                SaNDS Smart Parking OS
-              </div>
-              <div style={{ fontSize: '0.7rem', color: '#0284c7', fontWeight: 600 }}>
-                Universal Multi-Industry Facility Management
-              </div>
+
+            {/* Official SaNDS Lab Tag */}
+            <div 
+              onClick={() => setSandsModalOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '4px 12px',
+                borderRadius: '20px',
+                background: isDark ? 'rgba(236, 72, 153, 0.12)' : 'rgba(236, 72, 153, 0.08)',
+                border: '1px solid rgba(236, 72, 153, 0.3)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              title="Click to view SaNDS Lab profile & direct contact"
+            >
+              <img 
+                src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" 
+                alt="SaNDS Lab" 
+                style={{ height: '16px', width: 'auto', display: 'block' }}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#ec4899', letterSpacing: '0.04em' }}>
+                POWERED BY SaNDS LAB
+              </span>
+              <ExternalLink size={11} color="#ec4899" />
             </div>
           </div>
 
-          {/* Quick Links & Actions */}
+          {/* Right: Actions (Theme Toggle + Launch Portal + Guide) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button
-              onClick={() => {
-                const el = document.getElementById('industries-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: isDark ? '#94a3b8' : '#475569',
-                fontSize: '0.82rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                padding: '6px 10px'
-              }}
-            >
-              Multi-Industry Suites
-            </button>
-
-            <button
-              onClick={() => {
-                const el = document.getElementById('features-section');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: isDark ? '#94a3b8' : '#475569',
-                fontSize: '0.82rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                padding: '6px 10px'
-              }}
-            >
-              Core Features
-            </button>
-
-            <a
-              href="/HIMS_API_Integration_Guide.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: '#0284c7',
-                fontSize: '0.82rem',
-                fontWeight: 600,
-                textDecoration: 'none',
-                padding: '6px 10px',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-            >
-              <FileText size={14} /> API Guide
-            </a>
+            {/* Quick Navigation Anchor Links */}
+            <nav style={{ display: 'flex', alignItems: 'center', gap: '8px' }} className="d-none d-md-flex">
+              <a href="#hardware-showcase" style={{ fontSize: '0.8rem', fontWeight: 600, color: isDark ? '#cbd5e1' : '#475569', textDecoration: 'none', padding: '6px 10px', borderRadius: '6px' }}>Hardware & Gates</a>
+              <a href="#industries" style={{ fontSize: '0.8rem', fontWeight: 600, color: isDark ? '#cbd5e1' : '#475569', textDecoration: 'none', padding: '6px 10px', borderRadius: '6px' }}>Industry Suites</a>
+              <a href="#live-demo" style={{ fontSize: '0.8rem', fontWeight: 600, color: isDark ? '#cbd5e1' : '#475569', textDecoration: 'none', padding: '6px 10px', borderRadius: '6px' }}>Live Interactive Demo</a>
+              <a href="#features" style={{ fontSize: '0.8rem', fontWeight: 600, color: isDark ? '#cbd5e1' : '#475569', textDecoration: 'none', padding: '6px 10px', borderRadius: '6px' }}>Architecture</a>
+            </nav>
 
             {/* Theme Toggle Button */}
             <button
+              type="button"
               onClick={toggleTheme}
-              title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
               style={{
-                background: isDark ? '#1e293b' : '#f1f5f9',
-                border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
-                color: isDark ? '#f59e0b' : '#0284c7',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                display: 'inline-flex',
+                display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                fontSize: '0.8rem',
+                padding: '7px 12px',
+                borderRadius: '8px',
+                background: isDark ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid #cbd5e1',
+                color: isDark ? '#f8fafc' : '#0f172a',
+                fontSize: '0.78rem',
                 fontWeight: 700,
+                cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
+              title={`Switch to ${isDark ? 'Light' : 'Dark'} Mode`}
             >
-              {isDark ? <Sun size={15} /> : <Moon size={15} />}
-              <span>{isDark ? 'Light' : 'Dark'}</span>
+              {isDark ? <Sun size={15} color="#f59e0b" /> : <Moon size={15} color="#6366f1" />}
+              <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
             </button>
 
-            {/* Launch Portal CTA */}
+            {/* ANPR Guide Link */}
+            {onOpenGuide && (
+              <button
+                type="button"
+                onClick={onOpenGuide}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '7px 12px',
+                  borderRadius: '8px',
+                  background: 'transparent',
+                  border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid #cbd5e1',
+                  color: isDark ? '#93c5fd' : '#0284c7',
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                <FileText size={15} />
+                <span>Integration Guide</span>
+              </button>
+            )}
+
+            {/* Launch Control Room Portal Button */}
             <button
+              type="button"
               onClick={onLaunchPortal}
               style={{
-                background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
-                color: '#ffffff',
-                border: 'none',
-                padding: '8px 18px',
-                borderRadius: '8px',
-                fontWeight: 700,
-                fontSize: '0.84rem',
-                cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px',
-                boxShadow: '0 4px 14px rgba(2, 132, 199, 0.35)',
+                gap: '8px',
+                padding: '8px 18px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+                border: 'none',
+                color: '#ffffff',
+                fontSize: '0.82rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(2, 132, 199, 0.4)',
                 transition: 'transform 0.15s ease'
               }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <span>{user ? 'Open Dashboard' : 'Launch Portal'}</span>
-              <ArrowRight size={14} />
+              <span>{user ? 'Open Control Room' : 'Sign In to Portal'}</span>
+              <ArrowRight size={15} />
             </button>
           </div>
         </div>
-      </nav>
+      </header>
 
-      {/* ── Hero Section ─────────────────────────────────────────────── */}
+      {/* 2. HERO SECTION (100% Full Width Split Grid with High-Res Boom Barrier Visual) */}
       <section style={{
-        padding: '60px 24px 40px',
-        maxWidth: '1280px',
-        margin: '0 auto',
-        textAlign: 'center'
+        width: '100%',
+        padding: '50px 32px 60px',
+        background: isDark 
+          ? 'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(2, 132, 199, 0.25), transparent), #090d16'
+          : 'radial-gradient(ellipse 80% 60% at 50% -20%, rgba(2, 132, 199, 0.15), transparent), #ffffff',
+        borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0'
       }}>
-        {/* Powered By Badge */}
         <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          background: isDark ? 'rgba(56, 189, 248, 0.12)' : '#e0f2fe',
-          border: `1px solid ${isDark ? 'rgba(56, 189, 248, 0.3)' : '#bae6fd'}`,
-          padding: '6px 16px',
-          borderRadius: '30px',
-          marginBottom: '20px'
-        }}>
-          <Sparkles size={14} color="#0284c7" />
-          <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0284c7', letterSpacing: '0.5px' }}>
-            POWERED BY SaNDS LAB &bull; ENTERPRISE SMART PARKING
-          </span>
-        </div>
-
-        {/* Hero Title */}
-        <h1 style={{
-          fontSize: 'clamp(2rem, 4vw, 3.2rem)',
-          fontWeight: 900,
-          lineHeight: 1.15,
-          letterSpacing: '-0.8px',
-          margin: '0 auto 18px',
-          maxWidth: '900px',
-          background: isDark 
-            ? 'linear-gradient(135deg, #ffffff 0%, #cbd5e1 60%, #38bdf8 100%)' 
-            : 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0284c7 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
-        }}>
-          Next-Gen AI ANPR &amp; Barrier Automation for Any Multi-Facility Industry
-        </h1>
-
-        {/* Hero Subtitle */}
-        <p style={{
-          fontSize: '1.05rem',
-          lineHeight: 1.6,
-          color: isDark ? '#94a3b8' : '#475569',
-          maxWidth: '780px',
-          margin: '0 auto 30px'
-        }}>
-          A unified, high-speed parking OS engineered with bilateral REST APIs, sub-second barrier automation, pure-PHP ISO QR slip issuance, POS cashier terminals, and real-time floor occupancy intelligence.
-        </p>
-
-        {/* CTA Buttons */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-          gap: '14px',
-          marginBottom: '50px'
-        }}>
-          <button
-            onClick={onLaunchPortal}
-            style={{
-              background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
-              color: '#fff',
-              border: 'none',
-              padding: '14px 28px',
-              borderRadius: '10px',
-              fontSize: '0.95rem',
-              fontWeight: 800,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 6px 20px rgba(2, 132, 199, 0.4)',
-              transition: 'transform 0.15s ease'
-            }}
-          >
-            <span>{user ? 'Enter Management Dashboard' : 'Launch Parking System'}</span>
-            <ArrowRight size={16} />
-          </button>
-
-          <a
-            href="/ParkingDisplayBoard_v1.0.apk"
-            download
-            style={{
-              background: isDark ? '#1e293b' : '#ffffff',
-              color: isDark ? '#f1f5f9' : '#0f172a',
-              border: `1.5px solid ${isDark ? '#334155' : '#cbd5e1'}`,
-              padding: '14px 24px',
-              borderRadius: '10px',
-              fontSize: '0.92rem',
-              fontWeight: 700,
-              textDecoration: 'none',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-              transition: 'transform 0.15s ease'
-            }}
-          >
-            <Download size={16} color="#10b981" />
-            <span>Download Android Display App</span>
-          </a>
-
-          <button
-            onClick={() => setSandsModalOpen(true)}
-            style={{
-              background: 'transparent',
-              color: isDark ? '#cbd5e1' : '#475569',
-              border: `1.5px solid ${isDark ? '#334155' : '#cbd5e1'}`,
-              padding: '14px 20px',
-              borderRadius: '10px',
-              fontSize: '0.92rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}
-          >
-            <MessageCircle size={16} color="#ec4899" />
-            <span>Contact SaNDS Lab</span>
-          </button>
-        </div>
-
-        {/* Live Metric Highlights Strip */}
-        <div style={{
+          width: '100%',
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))',
-          gap: '16px',
-          background: isDark ? '#0f172a' : '#ffffff',
-          border: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
-          borderRadius: '14px',
-          padding: '24px 20px',
-          boxShadow: isDark ? '0 8px 30px rgba(0,0,0,0.4)' : '0 4px 20px rgba(0,0,0,0.04)'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))',
+          gap: '40px',
+          alignItems: 'center'
         }}>
+          {/* Left Column: Hero Text & Value Proposition */}
           <div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0284c7' }}>99.8%</div>
-            <div style={{ fontSize: '0.78rem', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, marginTop: '2px' }}>
-              ANPR OCR Recognition
+            {/* Pill Badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 14px',
+              borderRadius: '24px',
+              background: isDark ? 'rgba(2, 132, 199, 0.18)' : 'rgba(2, 132, 199, 0.1)',
+              border: '1px solid rgba(2, 132, 199, 0.4)',
+              color: '#0284c7',
+              fontSize: '0.78rem',
+              fontWeight: 800,
+              letterSpacing: '0.04em',
+              marginBottom: '20px'
+            }}>
+              <Sparkles size={14} color="#0284c7" />
+              <span>ENTERPRISE SMART PARKING PLATFORM 2026</span>
+            </div>
+
+            {/* Main Headline */}
+            <h1 style={{
+              fontSize: 'clamp(2.2rem, 3.8vw, 3.4rem)',
+              fontWeight: 900,
+              lineHeight: 1.12,
+              letterSpacing: '-0.03em',
+              color: isDark ? '#ffffff' : '#0f172a',
+              marginBottom: '20px'
+            }}>
+              Intelligent Multi-Industry Parking & Visitor Validation OS
+            </h1>
+
+            {/* Sub-Headline */}
+            <p style={{
+              fontSize: '1.05rem',
+              lineHeight: 1.6,
+              color: isDark ? '#94a3b8' : '#475569',
+              marginBottom: '28px'
+            }}>
+              A turnkey automated parking management suite built for <strong style={{ color: isDark ? '#38bdf8' : '#0284c7' }}>Hospitals, Supermarkets, Commercial Tech Parks, Hotels, Transit Hubs, and Arenas</strong>. Featuring 99.8% accurate ANPR recognition, sub-second boom barrier control, multi-floor LED guidance, and seamless bilateral ERP/HIS integration.
+            </p>
+
+            {/* Primary Action Buttons */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginBottom: '32px' }}>
+              <button
+                type="button"
+                onClick={onLaunchPortal}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '13px 28px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+                  border: 'none',
+                  color: '#ffffff',
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 8px 24px rgba(2, 132, 199, 0.4)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <span>Launch Live Control Room</span>
+                <ArrowRight size={17} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const demoSec = document.getElementById('live-demo');
+                  if (demoSec) demoSec.scrollIntoView({ behavior: 'smooth' });
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '13px 24px',
+                  borderRadius: '10px',
+                  background: isDark ? 'rgba(255, 255, 255, 0.06)' : '#ffffff',
+                  border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid #cbd5e1',
+                  color: isDark ? '#f8fafc' : '#0f172a',
+                  fontSize: '0.92rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                }}
+              >
+                <Play size={16} color="#10b981" />
+                <span>Interactive Hardware Simulator</span>
+              </button>
+            </div>
+
+            {/* Live Key Stats Strip */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              gap: '12px',
+              padding: '16px',
+              borderRadius: '12px',
+              background: isDark ? 'rgba(15, 23, 42, 0.7)' : 'rgba(241, 245, 249, 0.85)',
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0'
+            }}>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0284c7', lineHeight: 1 }}>99.8%</div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b', marginTop: '4px' }}>ANPR Accuracy</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#10b981', lineHeight: 1 }}>&lt;0.4s</div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b', marginTop: '4px' }}>Barrier Response</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#f59e0b', lineHeight: 1 }}>6+</div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b', marginTop: '4px' }}>Industry Suites</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#ec4899', lineHeight: 1 }}>100%</div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b', marginTop: '4px' }}>Offline Edge Uptime</div>
+              </div>
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#10b981' }}>&lt; 0.4s</div>
-            <div style={{ fontSize: '0.78rem', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, marginTop: '2px' }}>
-              Boom Barrier Response
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#f59e0b' }}>100%</div>
-            <div style={{ fontSize: '0.78rem', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, marginTop: '2px' }}>
-              Offline Edge Resilience
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#ec4899' }}>6+ Suites</div>
-            <div style={{ fontSize: '0.78rem', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, marginTop: '2px' }}>
-              Multi-Industry Solutions
-            </div>
-          </div>
-          <div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#6366f1' }}>Live IoT</div>
-            <div style={{ fontSize: '0.78rem', color: isDark ? '#94a3b8' : '#64748b', fontWeight: 600, marginTop: '2px' }}>
-              Floor &amp; Zone Capacity
+
+          {/* Right Column: Hero Real Hardware Visual Card (Boom Barrier & ANPR) */}
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              borderRadius: '16px',
+              overflow: 'hidden',
+              boxShadow: isDark 
+                ? '0 20px 50px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1)'
+                : '0 20px 50px -10px rgba(2, 132, 199, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08)',
+              background: isDark ? '#1e293b' : '#ffffff',
+              position: 'relative',
+              cursor: 'pointer'
+            }}
+            onClick={() => setSelectedImage('/images/boom_barrier_gate.jpg')}
+            title="Click to view full image"
+            >
+              <img 
+                src="/images/boom_barrier_gate.jpg" 
+                alt="Automated Boom Barrier with ANPR Recognition Camera" 
+                style={{
+                  width: '100%',
+                  height: '380px',
+                  objectFit: 'cover',
+                  display: 'block'
+                }}
+              />
+
+              {/* Floating Live Overlay Tag on Image */}
+              <div style={{
+                position: 'absolute',
+                top: '16px',
+                left: '16px',
+                padding: '6px 14px',
+                borderRadius: '20px',
+                background: 'rgba(15, 23, 42, 0.85)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(16, 185, 129, 0.4)',
+                color: '#10b981',
+                fontSize: '0.75rem',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.5)'
+              }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
+                <span>LIVE GATE 01: ARMED · ANPR ACTIVE</span>
+              </div>
+
+              {/* Floating Bottom Spec Strip */}
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: '16px 20px',
+                background: 'linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.6) 70%, transparent 100%)',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 800 }}>Automated Barrier & ANPR Telemetry</div>
+                  <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '2px' }}>Sub-second license plate optical capture & relay barrier open</div>
+                </div>
+                <div style={{
+                  padding: '5px 10px',
+                  borderRadius: '6px',
+                  background: 'rgba(255,255,255,0.15)',
+                  fontSize: '0.7rem',
+                  fontWeight: 700
+                }}>
+                  Click to Zoom 🔍
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Multi-Industry Interactive Solutions Section ────────────── */}
-      <section id="industries-section" style={{
-        padding: '60px 24px',
-        maxWidth: '1280px',
-        margin: '0 auto'
+      {/* 3. HARDWARE & INFRASTRUCTURE VISUAL GALLERY (100% Full Width) */}
+      <section id="hardware-showcase" style={{
+        width: '100%',
+        padding: '70px 32px',
+        background: isDark ? '#0b1120' : '#f1f5f9',
+        borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0'
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <div style={{
-            fontSize: '0.78rem',
-            fontWeight: 800,
-            color: '#0284c7',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            marginBottom: '8px'
-          }}>
-            Tailored Industry Architecture
+        <div style={{ width: '100%' }}>
+          {/* Section Header */}
+          <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 50px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              background: isDark ? 'rgba(99, 102, 241, 0.18)' : 'rgba(99, 102, 241, 0.1)',
+              color: '#6366f1',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '12px'
+            }}>
+              <Video size={13} />
+              <span>PHYSICAL HARDWARE & CONTROL INFRASTRUCTURE</span>
+            </div>
+            <h2 style={{
+              fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
+              fontWeight: 900,
+              letterSpacing: '-0.02em',
+              color: isDark ? '#ffffff' : '#0f172a',
+              lineHeight: 1.2,
+              marginBottom: '14px'
+            }}>
+              Engineered for Real-World Gates, LED Totems & Control Rooms
+            </h2>
+            <p style={{ fontSize: '0.98rem', color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.5 }}>
+              Seamlessly integrates with professional barriers, high-brightness multi-level display panels, outdoor QR payment terminals, and centralized operator command video walls.
+            </p>
           </div>
-          <h2 style={{
-            fontSize: 'clamp(1.6rem, 3vw, 2.3rem)',
-            fontWeight: 800,
-            margin: '0 0 10px'
-          }}>
-            Engineered for Multi-Facility Operations
-          </h2>
-          <p style={{ fontSize: '0.95rem', color: isDark ? '#94a3b8' : '#64748b', maxWidth: '650px', margin: '0 auto' }}>
-            Whether managing a hospital healthcare network, busy supermarket retail plaza, luxury resort valet, or commercial tower, SaNDS Smart Parking delivers tailored operational workflows.
-          </p>
-        </div>
 
-        {/* Industry Selection Tabs */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '10px',
-          justifyContent: 'center',
-          marginBottom: '28px'
-        }}>
-          {industries.map(ind => {
-            const Icon = ind.icon;
-            const isSelected = activeIndustry === ind.id;
-            return (
-              <button
-                key={ind.id}
-                onClick={() => setActiveIndustry(ind.id)}
+          {/* 4 Large Photo Showcase Cards Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(520px, 1fr))',
+            gap: '30px',
+            width: '100%'
+          }}>
+            {hardwareGallery.map((item) => (
+              <div 
+                key={item.id}
                 style={{
-                  background: isSelected 
-                    ? (isDark ? '#1e293b' : '#ffffff') 
-                    : (isDark ? 'rgba(15, 23, 42, 0.5)' : '#f1f5f9'),
-                  color: isSelected ? ind.color : (isDark ? '#94a3b8' : '#64748b'),
-                  border: isSelected ? `2px solid ${ind.color}` : `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-                  padding: '10px 18px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontWeight: 700,
-                  fontSize: '0.84rem',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: isSelected ? '0 4px 14px rgba(0,0,0,0.08)' : 'none',
-                  transition: 'all 0.2s ease'
+                  borderRadius: '16px',
+                  background: isDark ? '#151e2e' : '#ffffff',
+                  border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
+                  boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.5)' : '0 10px 25px rgba(0,0,0,0.05)',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px)';
+                  e.currentTarget.style.boxShadow = isDark ? '0 16px 40px rgba(0,0,0,0.7)' : '0 16px 35px rgba(2, 132, 199, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = isDark ? '0 10px 30px rgba(0,0,0,0.5)' : '0 10px 25px rgba(0,0,0,0.05)';
                 }}
               >
-                <Icon size={16} color={isSelected ? ind.color : (isDark ? '#64748b' : '#94a3b8')} />
-                <span>{ind.title.split('&')[0].trim()}</span>
-              </button>
-            );
-          })}
-        </div>
+                {/* Photo with Overlay */}
+                <div 
+                  style={{ position: 'relative', height: '280px', overflow: 'hidden', cursor: 'pointer' }}
+                  onClick={() => setSelectedImage(item.image)}
+                  title="Click to zoom image"
+                >
+                  <img 
+                    src={item.image} 
+                    alt={item.title} 
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      transition: 'transform 0.4s ease'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.04)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  />
 
-        {/* Active Industry Showcase Card */}
+                  {/* Top Badge */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '14px',
+                    left: '14px',
+                    padding: '5px 12px',
+                    borderRadius: '20px',
+                    background: 'rgba(15, 23, 42, 0.85)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    color: '#38bdf8',
+                    fontSize: '0.72rem',
+                    fontWeight: 800
+                  }}>
+                    {item.badge}
+                  </div>
+
+                  {/* Zoom hint */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '12px',
+                    right: '12px',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    background: 'rgba(0,0,0,0.75)',
+                    color: '#fff',
+                    fontSize: '0.68rem',
+                    fontWeight: 700
+                  }}>
+                    🔍 Zoom
+                  </div>
+                </div>
+
+                {/* Card Content Body */}
+                <div style={{ padding: '24px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: isDark ? '#ffffff' : '#0f172a', marginBottom: '8px' }}>
+                      {item.title}
+                    </h3>
+                    <p style={{ fontSize: '0.86rem', color: isDark ? '#94a3b8' : '#64748b', lineHeight: 1.5, marginBottom: '18px' }}>
+                      {item.tagline}
+                    </p>
+
+                    {/* Bullet Specs */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {item.specs.map((spec, sIdx) => (
+                        <div key={sIdx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                          <CheckCircle2 size={15} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
+                          <span style={{ fontSize: '0.8rem', color: isDark ? '#cbd5e1' : '#334155', lineHeight: 1.4 }}>
+                            {spec}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. LIVE INTERACTIVE HARDWARE SIMULATION LAB (100% Full Width) */}
+      <section id="live-demo" style={{
+        width: '100%',
+        padding: '70px 32px',
+        background: isDark ? '#090d16' : '#ffffff',
+        borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0'
+      }}>
+        <div style={{ width: '100%' }}>
+          <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 40px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              background: isDark ? 'rgba(16, 185, 129, 0.18)' : 'rgba(16, 185, 129, 0.1)',
+              color: '#10b981',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '12px'
+            }}>
+              <Play size={13} />
+              <span>LIVE INTERACTIVE SIMULATION LAB</span>
+            </div>
+            <h2 style={{
+              fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
+              fontWeight: 900,
+              letterSpacing: '-0.02em',
+              color: isDark ? '#ffffff' : '#0f172a',
+              lineHeight: 1.2,
+              marginBottom: '12px'
+            }}>
+              Test the Boom Barrier & Multi-Floor LED Display in Real-Time
+            </h2>
+            <p style={{ fontSize: '0.96rem', color: isDark ? '#94a3b8' : '#64748b' }}>
+              Interact with our live digital twin models to see how ANPR triggers the barrier relay and how floor capacity adjusts instantly on the LED board.
+            </p>
+          </div>
+
+          {/* 2-Column Interactive Simulator Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))',
+            gap: '30px',
+            width: '100%'
+          }}>
+            {/* Interactive Model 1: Boom Barrier & ANPR Trigger */}
+            <div style={{
+              padding: '28px',
+              borderRadius: '16px',
+              background: isDark ? '#151e2e' : '#f8fafc',
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.06)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#0284c7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Zap size={18} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: isDark ? '#ffffff' : '#0f172a', margin: 0 }}>
+                      Gate 01 Boom Barrier Simulation
+                    </h3>
+                    <div style={{ fontSize: '0.72rem', color: isDark ? '#94a3b8' : '#64748b' }}>Sub-second relay barrier actuation</div>
+                  </div>
+                </div>
+
+                {/* Status Indicator */}
+                <div style={{
+                  padding: '4px 10px',
+                  borderRadius: '20px',
+                  background: barrierState === 'open' ? '#10b981' : barrierState === 'closed' ? '#ef4444' : '#f59e0b',
+                  color: '#ffffff',
+                  fontSize: '0.72rem',
+                  fontWeight: 800,
+                  textTransform: 'uppercase'
+                }}>
+                  {barrierState === 'open' ? '● BARRIER RAISED' : barrierState === 'closed' ? '● BARRIER LOWERED' : '● MOVING...'}
+                </div>
+              </div>
+
+              {/* Graphic Representation of Barrier */}
+              <div style={{
+                height: '180px',
+                borderRadius: '12px',
+                background: isDark ? '#0b1120' : '#0f172a',
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                marginBottom: '20px',
+                border: '1px solid rgba(255,255,255,0.1)'
+              }}>
+                {/* Road Lane Lines */}
+                <div style={{ position: 'absolute', bottom: '20px', left: 0, right: 0, height: '4px', background: 'repeating-linear-gradient(90deg, #f8fafc 0px, #f8fafc 30px, transparent 30px, transparent 60px)' }} />
+                
+                {/* Barrier Pillar */}
+                <div style={{
+                  position: 'absolute',
+                  left: '60px',
+                  bottom: '20px',
+                  width: '32px',
+                  height: '80px',
+                  background: '#f97316',
+                  borderRadius: '4px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  paddingTop: '6px'
+                }}>
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: barrierState === 'open' ? '#10b981' : '#ef4444', boxShadow: `0 0 10px ${barrierState === 'open' ? '#10b981' : '#ef4444'}` }} />
+                </div>
+
+                {/* Animated Boom Arm */}
+                <div style={{
+                  position: 'absolute',
+                  left: '88px',
+                  bottom: '80px',
+                  width: '260px',
+                  height: '10px',
+                  background: 'repeating-linear-gradient(90deg, #ffffff 0px, #ffffff 20px, #ef4444 20px, #ef4444 40px)',
+                  borderRadius: '5px',
+                  transformOrigin: 'left center',
+                  transform: barrierState === 'open' ? 'rotate(-65deg)' : barrierState === 'opening' ? 'rotate(-40deg)' : barrierState === 'closing' ? 'rotate(-25deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: barrierState === 'open' ? '0 0 12px #10b981' : '0 0 12px #ef4444'
+                }} />
+
+                {/* ANPR Camera Mount */}
+                <div style={{
+                  position: 'absolute',
+                  right: '50px',
+                  top: '25px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center'
+                }}>
+                  <div style={{
+                    padding: '4px 8px',
+                    borderRadius: '4px',
+                    background: '#0284c7',
+                    color: '#fff',
+                    fontSize: '0.62rem',
+                    fontWeight: 800,
+                    marginBottom: '4px'
+                  }}>
+                    ANPR CAM
+                  </div>
+                  <div style={{ width: '28px', height: '14px', background: '#38bdf8', borderRadius: '3px' }} />
+                  <div style={{ width: '4px', height: '50px', background: '#64748b' }} />
+                </div>
+
+                {/* Vehicle Simulation Plate Badge */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '30px',
+                  right: '110px',
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  background: '#ffffff',
+                  color: '#000000',
+                  fontFamily: 'monospace',
+                  fontWeight: 900,
+                  fontSize: '0.9rem',
+                  border: '2px solid #000000',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.5)'
+                }}>
+                  {demoPlate}
+                </div>
+              </div>
+
+              {/* Console Log Output */}
+              <div style={{
+                padding: '10px 14px',
+                borderRadius: '8px',
+                background: isDark ? '#0b1120' : '#1e293b',
+                color: '#38bdf8',
+                fontFamily: 'monospace',
+                fontSize: '0.74rem',
+                lineHeight: 1.4,
+                marginBottom: '16px',
+                border: '1px solid rgba(255,255,255,0.08)',
+                minHeight: '42px',
+                display: 'flex',
+                alignItems: 'center'
+              }}>
+                &gt; {demoLog}
+              </div>
+
+              {/* Controls */}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={triggerBarrierDemo}
+                  disabled={barrierState !== 'closed'}
+                  style={{
+                    flex: 1,
+                    padding: '10px 16px',
+                    borderRadius: '8px',
+                    background: barrierState === 'closed' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : '#64748b',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '0.85rem',
+                    fontWeight: 800,
+                    cursor: barrierState === 'closed' ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    boxShadow: barrierState === 'closed' ? '0 4px 12px rgba(16, 185, 129, 0.4)' : 'none'
+                  }}
+                >
+                  <Play size={15} />
+                  <span>Simulate Vehicle Approach & Open Gate</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const plates = ['BH-84920', 'KW-19402', 'SA-59201', 'DXB-92018', 'OM-38291'];
+                    const rand = plates[Math.floor(Math.random() * plates.length)];
+                    setDemoPlate(rand);
+                    setDemoLog(`Plate changed to: ${rand}`);
+                  }}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0',
+                    border: 'none',
+                    color: isDark ? '#f8fafc' : '#0f172a',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                  title="Generate Random License Plate"
+                >
+                  <RotateCcw size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Interactive Model 2: Multi-Floor LED Display Board Totem */}
+            <div style={{
+              padding: '28px',
+              borderRadius: '16px',
+              background: isDark ? '#151e2e' : '#f8fafc',
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.06)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#6366f1', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Sliders size={18} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: isDark ? '#ffffff' : '#0f172a', margin: 0 }}>
+                      Multi-Floor LED Display Board Totem
+                    </h3>
+                    <div style={{ fontSize: '0.72rem', color: isDark ? '#94a3b8' : '#64748b' }}>Live LED dot-matrix vacancy guidance</div>
+                  </div>
+                </div>
+
+                <div style={{
+                  padding: '4px 10px',
+                  borderRadius: '20px',
+                  background: 'rgba(99, 102, 241, 0.15)',
+                  color: '#6366f1',
+                  fontSize: '0.72rem',
+                  fontWeight: 800
+                }}>
+                  ANDROID TV APK SYNC
+                </div>
+              </div>
+
+              {/* Digital LED Screen Render */}
+              <div style={{
+                borderRadius: '12px',
+                background: '#040812',
+                padding: '20px',
+                border: '3px solid #1e293b',
+                boxShadow: 'inset 0 0 20px rgba(0,0,0,0.9), 0 8px 20px rgba(0,0,0,0.4)',
+                marginBottom: '20px'
+              }}>
+                <div style={{ textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px', marginBottom: '14px' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 900, color: '#38bdf8', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                    ● PARKING ENTRANCE GUIDANCE
+                  </div>
+                </div>
+
+                {/* Floor Rows */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {/* P1 */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderRadius: '6px', background: 'rgba(255,255,255,0.03)' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#ffffff', fontFamily: 'monospace' }}>P1 LEVEL :</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: p1Slots > 0 ? '#10b981' : '#ef4444', fontFamily: 'monospace', textShadow: p1Slots > 0 ? '0 0 8px #10b981' : '0 0 8px #ef4444' }}>
+                      {p1Slots > 0 ? `${p1Slots} VACANT` : 'FULL'}
+                    </span>
+                  </div>
+
+                  {/* P2 */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderRadius: '6px', background: 'rgba(255,255,255,0.03)' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#ffffff', fontFamily: 'monospace' }}>P2 LEVEL :</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: p2Slots > 0 ? '#10b981' : '#ef4444', fontFamily: 'monospace', textShadow: p2Slots > 0 ? '0 0 8px #10b981' : '0 0 8px #ef4444' }}>
+                      {p2Slots > 0 ? `${p2Slots} VACANT` : 'FULL'}
+                    </span>
+                  </div>
+
+                  {/* P3 */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderRadius: '6px', background: 'rgba(255,255,255,0.03)' }}>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#ffffff', fontFamily: 'monospace' }}>P3 LEVEL :</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 900, color: p3Slots > 0 ? '#10b981' : '#ef4444', fontFamily: 'monospace', textShadow: p3Slots > 0 ? '0 0 8px #10b981' : '0 0 8px #ef4444' }}>
+                      {p3Slots > 0 ? `${p3Slots} VACANT` : 'FULL'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Real-time Sliders to test capacity changing */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ fontSize: '0.76rem', fontWeight: 700, width: '70px', color: isDark ? '#cbd5e1' : '#334155' }}>P1 Capacity:</label>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="60" 
+                    value={p1Slots} 
+                    onChange={(e) => setP1Slots(parseInt(e.target.value, 10))}
+                    style={{ flex: 1, accentColor: '#10b981', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, width: '30px', textAlign: 'right' }}>{p1Slots}</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ fontSize: '0.76rem', fontWeight: 700, width: '70px', color: isDark ? '#cbd5e1' : '#334155' }}>P2 Capacity:</label>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="40" 
+                    value={p2Slots} 
+                    onChange={(e) => setP2Slots(parseInt(e.target.value, 10))}
+                    style={{ flex: 1, accentColor: '#10b981', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, width: '30px', textAlign: 'right' }}>{p2Slots}</span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <label style={{ fontSize: '0.76rem', fontWeight: 700, width: '70px', color: isDark ? '#cbd5e1' : '#334155' }}>P3 Capacity:</label>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="30" 
+                    value={p3Slots} 
+                    onChange={(e) => setP3Slots(parseInt(e.target.value, 10))}
+                    style={{ flex: 1, accentColor: '#ef4444', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.78rem', fontWeight: 800, width: '30px', textAlign: 'right' }}>{p3Slots}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. MULTI-INDUSTRY TURNKEY SUITES (100% Full Width) */}
+      <section id="industries" style={{
+        width: '100%',
+        padding: '70px 32px',
+        background: isDark ? '#0b1120' : '#f8fafc',
+        borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0'
+      }}>
+        <div style={{ width: '100%' }}>
+          {/* Section Heading */}
+          <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 40px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              background: isDark ? 'rgba(2, 132, 199, 0.18)' : 'rgba(2, 132, 199, 0.1)',
+              color: '#0284c7',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '12px'
+            }}>
+              <Building2 size={13} />
+              <span>SPECIALIZED MULTI-INDUSTRY ARCHITECTURES</span>
+            </div>
+            <h2 style={{
+              fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
+              fontWeight: 900,
+              letterSpacing: '-0.02em',
+              color: isDark ? '#ffffff' : '#0f172a',
+              lineHeight: 1.2,
+              marginBottom: '12px'
+            }}>
+              Tailored for High-Throughput Facilities
+            </h2>
+            <p style={{ fontSize: '0.96rem', color: isDark ? '#94a3b8' : '#64748b' }}>
+              Select any industry below to explore bespoke workflows, validation schemes, and integration protocols.
+            </p>
+          </div>
+
+          {/* Industry Filter Buttons Strip */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            gap: '10px',
+            marginBottom: '36px'
+          }}>
+            {industries.map((ind) => {
+              const Icon = ind.icon;
+              const isActive = activeIndustry === ind.id;
+              return (
+                <button
+                  key={ind.id}
+                  type="button"
+                  onClick={() => setActiveIndustry(ind.id)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 18px',
+                    borderRadius: '30px',
+                    background: isActive 
+                      ? ind.color 
+                      : isDark ? 'rgba(255, 255, 255, 0.06)' : '#ffffff',
+                    border: isActive 
+                      ? `1px solid ${ind.color}` 
+                      : isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
+                    color: isActive ? '#ffffff' : isDark ? '#cbd5e1' : '#334155',
+                    fontSize: '0.84rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    boxShadow: isActive ? `0 6px 18px ${ind.color}45` : '0 2px 6px rgba(0,0,0,0.04)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Icon size={16} />
+                  <span>{ind.title}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Industry Deep-Dive Card */}
+          <div style={{
+            width: '100%',
+            borderRadius: '20px',
+            background: isDark ? '#151e2e' : '#ffffff',
+            border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
+            boxShadow: isDark ? '0 16px 40px rgba(0,0,0,0.5)' : '0 16px 35px rgba(0,0,0,0.06)',
+            padding: '40px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+            gap: '40px',
+            alignItems: 'center'
+          }}>
+            {/* Left Column: Details */}
+            <div>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 12px',
+                borderRadius: '16px',
+                background: `${currentInd.color}20`,
+                color: currentInd.color,
+                fontSize: '0.74rem',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                marginBottom: '14px'
+              }}>
+                {currentInd.badge}
+              </div>
+
+              <h3 style={{
+                fontSize: '1.75rem',
+                fontWeight: 900,
+                color: isDark ? '#ffffff' : '#0f172a',
+                lineHeight: 1.2,
+                marginBottom: '10px'
+              }}>
+                {currentInd.title}
+              </h3>
+
+              <div style={{
+                fontSize: '0.98rem',
+                fontWeight: 700,
+                color: currentInd.color,
+                marginBottom: '16px'
+              }}>
+                {currentInd.tagline}
+              </div>
+
+              <p style={{
+                fontSize: '0.92rem',
+                lineHeight: 1.6,
+                color: isDark ? '#94a3b8' : '#475569',
+                marginBottom: '24px'
+              }}>
+                {currentInd.description}
+              </p>
+
+              {/* Highlights List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {currentInd.highlights.map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      background: `${currentInd.color}20`,
+                      color: currentInd.color,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                    <span style={{ fontSize: '0.86rem', fontWeight: 600, color: isDark ? '#e2e8f0' : '#1e293b' }}>
+                      {item}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Right Column: Workflow Diagram / KPI Visual */}
+            <div style={{
+              borderRadius: '16px',
+              padding: '30px',
+              background: isDark ? '#0b1120' : '#f1f5f9',
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '20px'
+            }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: currentInd.color }}>
+                ● Real-Time Operational Flow
+              </div>
+
+              {/* Workflow Steps */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: currentInd.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.8rem', flexShrink: 0 }}>1</div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: isDark ? '#ffffff' : '#0f172a' }}>Vehicle Approach & Optical Scan</div>
+                    <div style={{ fontSize: '0.74rem', color: isDark ? '#94a3b8' : '#64748b' }}>ANPR camera captures plate within 0.1s & queries local whitelist cache.</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: currentInd.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.8rem', flexShrink: 0 }}>2</div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: isDark ? '#ffffff' : '#0f172a' }}>Third-Party Token or QR Matching</div>
+                    <div style={{ fontSize: '0.74rem', color: isDark ? '#94a3b8' : '#64748b' }}>Bilateral REST API syncs with HIMS appointment, hotel PMS room, or POS receipt.</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: currentInd.color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.8rem', flexShrink: 0 }}>3</div>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: isDark ? '#ffffff' : '#0f172a' }}>Sub-Second Barrier Actuation & Guidance</div>
+                    <div style={{ fontSize: '0.74rem', color: isDark ? '#94a3b8' : '#64748b' }}>Boom barrier raises automatically; outdoor LED panel directs driver to nearest open floor.</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI Banner */}
+              <div style={{
+                padding: '14px 18px',
+                borderRadius: '10px',
+                background: `${currentInd.color}15`,
+                border: `1px solid ${currentInd.color}35`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: currentInd.color }}>
+                  Verified Benchmark Result:
+                </span>
+                <span style={{ fontSize: '0.82rem', fontWeight: 900, color: isDark ? '#ffffff' : '#0f172a' }}>
+                  {currentInd.stats}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. 8 CORE PLATFORM PILLARS (100% Full Width) */}
+      <section id="features" style={{
+        width: '100%',
+        padding: '70px 32px',
+        background: isDark ? '#090d16' : '#ffffff',
+        borderBottom: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0'
+      }}>
+        <div style={{ width: '100%' }}>
+          <div style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 50px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '4px 12px',
+              borderRadius: '20px',
+              background: isDark ? 'rgba(236, 72, 153, 0.18)' : 'rgba(236, 72, 153, 0.1)',
+              color: '#ec4899',
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '12px'
+            }}>
+              <Cpu size={13} />
+              <span>CORE ARCHITECTURAL PILLARS</span>
+            </div>
+            <h2 style={{
+              fontSize: 'clamp(1.8rem, 3vw, 2.5rem)',
+              fontWeight: 900,
+              letterSpacing: '-0.02em',
+              color: isDark ? '#ffffff' : '#0f172a',
+              lineHeight: 1.2,
+              marginBottom: '14px'
+            }}>
+              Everything Needed to Run Mission-Critical Parking
+            </h2>
+            <p style={{ fontSize: '0.98rem', color: isDark ? '#94a3b8' : '#64748b' }}>
+              Engineered with zero third-party dependencies, enterprise resilience, and modern web standards.
+            </p>
+          </div>
+
+          {/* 8-Grid Cards */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: '24px',
+            width: '100%'
+          }}>
+            {platformPillars.map((pillar, pIdx) => {
+              const Icon = pillar.icon;
+              return (
+                <div 
+                  key={pIdx}
+                  style={{
+                    padding: '24px',
+                    borderRadius: '14px',
+                    background: isDark ? '#151e2e' : '#f8fafc',
+                    border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                    e.currentTarget.style.borderColor = '#0284c7';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.borderColor = isDark ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)',
+                      color: '#0284c7',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Icon size={20} />
+                    </div>
+                    <span style={{
+                      fontSize: '0.66rem',
+                      fontWeight: 800,
+                      padding: '3px 8px',
+                      borderRadius: '12px',
+                      background: isDark ? 'rgba(255, 255, 255, 0.06)' : '#e2e8f0',
+                      color: isDark ? '#94a3b8' : '#475569'
+                    }}>
+                      {pillar.badge}
+                    </span>
+                  </div>
+
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: isDark ? '#ffffff' : '#0f172a', marginBottom: '8px' }}>
+                    {pillar.title}
+                  </h3>
+
+                  <p style={{ fontSize: '0.82rem', lineHeight: 1.5, color: isDark ? '#94a3b8' : '#64748b', margin: 0 }}>
+                    {pillar.desc}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 7. ANDROID DISPLAY BOARD & DOWNLOAD BANNER (100% Full Width) */}
+      <section style={{
+        width: '100%',
+        padding: '60px 32px',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+        color: '#ffffff',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
         <div style={{
-          background: isDark ? '#0f172a' : '#ffffff',
-          border: `1.5px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
-          borderRadius: '16px',
-          padding: '36px',
-          boxShadow: isDark ? '0 10px 35px rgba(0,0,0,0.3)' : '0 6px 25px rgba(0,0,0,0.04)',
+          width: '100%',
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          gap: '30px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+          gap: '40px',
           alignItems: 'center'
         }}>
           <div>
             <div style={{
-              display: 'inline-block',
-              background: `${currentIndustry.color}15`,
-              color: currentIndustry.color,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
               padding: '4px 12px',
               borderRadius: '20px',
-              fontSize: '0.75rem',
-              fontWeight: 800,
-              marginBottom: '12px'
-            }}>
-              {currentIndustry.badge}
-            </div>
-
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 6px', color: isDark ? '#fff' : '#0f172a' }}>
-              {currentIndustry.title}
-            </h3>
-            
-            <div style={{ fontSize: '0.9rem', fontWeight: 700, color: currentIndustry.color, marginBottom: '14px' }}>
-              {currentIndustry.tagline}
-            </div>
-
-            <p style={{ fontSize: '0.92rem', lineHeight: 1.6, color: isDark ? '#94a3b8' : '#475569', marginBottom: '20px' }}>
-              {currentIndustry.description}
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {currentIndustry.highlights.map((h, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '0.86rem' }}>
-                  <CheckCircle2 size={16} color={currentIndustry.color} style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <span style={{ color: isDark ? '#cbd5e1' : '#334155' }}>{h}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Solution Interactive Graphic / Widget */}
-          <div style={{
-            background: isDark ? '#020617' : '#f8fafc',
-            border: `1px solid ${isDark ? '#1e293b' : '#cbd5e1'}`,
-            borderRadius: '12px',
-            padding: '24px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: currentIndustry.color, letterSpacing: '0.5px' }}>
-                ARCHITECTURE WORKFLOW
-              </span>
-              <span className="badge" style={{ background: `${currentIndustry.color}20`, color: currentIndustry.color, fontSize: '0.7rem' }}>
-                {currentIndustry.stats}
-              </span>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              fontFamily: 'ui-monospace, SFMono-Regular, monospace',
-              fontSize: '0.78rem'
-            }}>
-              <div style={{
-                background: isDark ? '#0f172a' : '#ffffff',
-                border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-                padding: '10px 14px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span style={{ color: currentIndustry.color, fontWeight: 800 }}>1.</span>
-                <span>Vehicle Approaches Gate &bull; ANPR OCR Scans Plate</span>
-              </div>
-
-              <div style={{
-                background: isDark ? '#0f172a' : '#ffffff',
-                border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-                padding: '10px 14px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span style={{ color: currentIndustry.color, fontWeight: 800 }}>2.</span>
-                <span>Bilateral API Sync &bull; Dynamic QR Slip / Voucher</span>
-              </div>
-
-              <div style={{
-                background: isDark ? '#0f172a' : '#ffffff',
-                border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-                padding: '10px 14px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span style={{ color: currentIndustry.color, fontWeight: 800 }}>3.</span>
-                <span>Desk / Kiosk Validation &bull; Free Parking Waiver Applied</span>
-              </div>
-
-              <div style={{
-                background: isDark ? '#0f172a' : '#ffffff',
-                border: `1px solid ${isDark ? '#334155' : '#e2e8f0'}`,
-                padding: '10px 14px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span style={{ color: currentIndustry.color, fontWeight: 800 }}>4.</span>
-                <span>Exit ANPR Verification &bull; Boom Barrier Auto-Opens</span>
-              </div>
-            </div>
-
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button
-                onClick={onLaunchPortal}
-                style={{
-                  flex: 1,
-                  background: currentIndustry.color,
-                  color: '#fff',
-                  border: 'none',
-                  padding: '10px 16px',
-                  borderRadius: '8px',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px'
-                }}
-              >
-                <span>Launch {currentIndustry.title.split('&')[0]} Module</span>
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 8 Core Feature Pillars ──────────────────────────────────── */}
-      <section id="features-section" style={{
-        padding: '60px 24px',
-        maxWidth: '1280px',
-        margin: '0 auto',
-        background: isDark ? 'rgba(15, 23, 42, 0.4)' : '#ffffff',
-        borderRadius: '24px',
-        border: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{
-            fontSize: '0.78rem',
-            fontWeight: 800,
-            color: '#0284c7',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            marginBottom: '8px'
-          }}>
-            Complete Feature Ecosystem
-          </div>
-          <h2 style={{
-            fontSize: 'clamp(1.6rem, 3vw, 2.2rem)',
-            fontWeight: 800,
-            margin: '0 0 10px'
-          }}>
-            8 Core Pillars of the SaNDS Parking Platform
-          </h2>
-          <p style={{ fontSize: '0.95rem', color: isDark ? '#94a3b8' : '#64748b', maxWidth: '650px', margin: '0 auto' }}>
-            Built with zero unnecessary dependencies, ultra-fast SQLite/MySQL database engine, native pure-PHP QR generators, and instant GPIO/IP relay triggering.
-          </p>
-        </div>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '20px'
-        }}>
-          {features.map((feat, idx) => {
-            const Icon = feat.icon;
-            return (
-              <div
-                key={idx}
-                style={{
-                  background: isDark ? '#0f172a' : '#f8fafc',
-                  border: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
-                  borderRadius: '12px',
-                  padding: '22px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'transform 0.2s ease, border-color 0.2s ease',
-                  cursor: 'default'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-3px)';
-                  e.currentTarget.style.borderColor = feat.color;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.borderColor = isDark ? '#1e293b' : '#e2e8f0';
-                }}
-              >
-                <div style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '10px',
-                  background: `${feat.color}15`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginBottom: '14px'
-                }}>
-                  <Icon size={20} color={feat.color} />
-                </div>
-
-                <h4 style={{ fontSize: '1.02rem', fontWeight: 800, margin: '0 0 8px', color: isDark ? '#fff' : '#0f172a' }}>
-                  {feat.title}
-                </h4>
-
-                <p style={{ fontSize: '0.84rem', lineHeight: 1.5, color: isDark ? '#94a3b8' : '#64748b', margin: 0, flexGrow: 1 }}>
-                  {feat.desc}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* ── Downloadable Display App & Integration CTA Strip ────────── */}
-      <section style={{
-        padding: '60px 24px',
-        maxWidth: '1280px',
-        margin: '0 auto'
-      }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #0f172a 0%, #0c4a6e 50%, #1e1b4b 100%)',
-          borderRadius: '20px',
-          padding: '40px 32px',
-          color: '#ffffff',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '30px',
-          alignItems: 'center',
-          boxShadow: '0 15px 40px rgba(0,0,0,0.2)'
-        }}>
-          <div>
-            <div style={{
-              display: 'inline-block',
-              background: 'rgba(56, 189, 248, 0.2)',
-              color: '#38bdf8',
-              padding: '4px 12px',
-              borderRadius: '20px',
+              background: 'rgba(236, 72, 153, 0.2)',
+              border: '1px solid rgba(236, 72, 153, 0.4)',
+              color: '#f472b6',
               fontSize: '0.74rem',
               fontWeight: 800,
-              marginBottom: '12px'
+              marginBottom: '16px'
             }}>
-              FREE COMPANION APP
+              <Smartphone size={13} />
+              <span>HARDWARE ACCESSORY APPS</span>
             </div>
-            <h3 style={{ fontSize: '1.7rem', fontWeight: 900, margin: '0 0 10px', color: '#fff' }}>
-              Android Parking Display Board APK
-            </h3>
-            <p style={{ fontSize: '0.92rem', lineHeight: 1.6, color: '#94a3b8', margin: '0 0 20px' }}>
-              Deploy real-time parking spot counters on outdoor digital LED boards, Android TV totems, and reception tablets. Automatically synchronizes available slots per floor over LAN or Wi-Fi.
-            </p>
-            <a
-              href="/ParkingDisplayBoard_v1.0.apk"
-              download
-              style={{
-                background: '#10b981',
-                color: '#fff',
-                padding: '12px 24px',
-                borderRadius: '8px',
-                textDecoration: 'none',
-                fontWeight: 800,
-                fontSize: '0.88rem',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)'
-              }}
-            >
-              <Download size={16} />
-              <span>Download APK (v1.0 &bull; 81 MB)</span>
-            </a>
-          </div>
 
-          <div style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.12)',
-            borderRadius: '14px',
-            padding: '24px'
-          }}>
-            <h4 style={{ margin: '0 0 10px', fontSize: '1.1rem', fontWeight: 800, color: '#38bdf8' }}>
-              Ready to Connect with Your Software?
-            </h4>
-            <p style={{ fontSize: '0.86rem', color: '#cbd5e1', lineHeight: 1.5, margin: '0 0 16px' }}>
-              Our engineering team at SaNDS Lab provides turnkey integration support for Hospital Information Systems, ERPs, POS hardware, and access control barriers.
+            <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', fontWeight: 900, lineHeight: 1.2, marginBottom: '14px' }}>
+              Android LED Display Board APK & Thermal Kiosks
+            </h2>
+
+            <p style={{ fontSize: '0.94rem', color: '#cbd5e1', lineHeight: 1.6, marginBottom: '24px' }}>
+              Download our standalone Android TV / Tablet application to transform any HDMI TV or LED outdoor totem into a real-time smart parking guidance display with zero PC hardware required.
             </p>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button
-                onClick={() => setSandsModalOpen(true)}
-                style={{
-                  background: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '10px 18px',
-                  borderRadius: '8px',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}
-              >
-                <PhoneCall size={14} /> WhatsApp Support
-              </button>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px' }}>
               <a
-                href="/HIMS_API_Integration_Guide.html"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/apks/DisplayBoard.apk"
+                download
                 style={{
-                  background: 'rgba(255,255,255,0.15)',
-                  color: '#fff',
-                  padding: '10px 16px',
-                  borderRadius: '8px',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  textDecoration: 'none',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '6px'
+                  gap: '8px',
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #ec4899 0%, #7c3aed 100%)',
+                  color: '#ffffff',
+                  fontSize: '0.88rem',
+                  fontWeight: 800,
+                  textDecoration: 'none',
+                  boxShadow: '0 6px 20px rgba(236, 72, 153, 0.4)'
                 }}
               >
-                <FileText size={14} /> Integration Manual
+                <Download size={16} />
+                <span>Download Display Board APK</span>
+              </a>
+
+              <a
+                href="https://wa.me/97335078079?text=Hi%20SaNDS%20Lab%20Team%2C%20I%20need%20information%20about%20the%20Smart%20Parking%20System."
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '12px 24px',
+                  borderRadius: '10px',
+                  background: '#25D366',
+                  color: '#ffffff',
+                  fontSize: '0.88rem',
+                  fontWeight: 800,
+                  textDecoration: 'none',
+                  boxShadow: '0 6px 20px rgba(37, 211, 102, 0.35)'
+                }}
+              >
+                <MessageCircle size={16} />
+                <span>Chat with SaNDS Engineers</span>
               </a>
             </div>
           </div>
+
+          {/* Display Board Preview Graphic */}
+          <div style={{
+            borderRadius: '16px',
+            overflow: 'hidden',
+            border: '2px solid rgba(255,255,255,0.15)',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+            cursor: 'pointer'
+          }}
+          onClick={() => setSelectedImage('/images/led_display_board.jpg')}
+          title="Click to zoom image"
+          >
+            <img 
+              src="/images/led_display_board.jpg" 
+              alt="LED Guidance Totem" 
+              style={{ width: '100%', height: '300px', objectFit: 'cover', display: 'block' }}
+            />
+          </div>
         </div>
       </section>
 
-      {/* ── Footer ──────────────────────────────────────────────────── */}
+      {/* 8. FOOTER WITH SANDS LAB BRANDING & DIRECT CONTACT (100% Full Width) */}
       <footer style={{
-        background: isDark ? '#020617' : '#ffffff',
-        borderTop: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`,
-        padding: '30px 24px',
-        textAlign: 'center',
-        fontSize: '0.86rem',
-        color: isDark ? '#64748b' : '#64748b'
+        width: '100%',
+        padding: '40px 32px 30px',
+        background: isDark ? '#060911' : '#0f172a',
+        color: '#ffffff',
+        borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #1e293b'
       }}>
         <div style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
+          width: '100%',
           display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '12px'
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '24px',
+          paddingBottom: '30px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
         }}>
-          <span>&copy; 2026 All Rights Reserved &mdash; <strong>{settings.company_name || 'SaNDS Smart Parking OS'}</strong></span>
-          <span style={{ color: isDark ? '#334155' : '#cbd5e1' }}>|</span>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <span>Powered by</span>
+          {/* Brand Info */}
+          <div style={{ maxWidth: '420px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #0284c7, #6366f1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff'
+              }}>
+                <Car size={18} />
+              </div>
+              <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#ffffff' }}>Smart Parking OS</span>
+            </div>
+            <p style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.5, margin: 0 }}>
+              Enterprise turnkey software architecture designed and engineered by SaNDS Lab for global multi-parking operations.
+            </p>
+          </div>
+
+          {/* SaNDS Lab Hub Links */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center' }}>
             <button
+              type="button"
               onClick={() => setSandsModalOpen(true)}
               style={{
-                background: 'none',
-                border: 'none',
-                color: '#2563eb',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                background: 'rgba(236, 72, 153, 0.15)',
+                border: '1px solid rgba(236, 72, 153, 0.4)',
+                color: '#ec4899',
+                fontSize: '0.78rem',
                 fontWeight: 800,
-                cursor: 'pointer',
-                fontSize: '0.86rem',
-                textDecoration: 'underline'
+                cursor: 'pointer'
               }}
             >
-              SaNDS Lab
+              <Sparkles size={14} />
+              <span>SaNDS Lab Portal</span>
             </button>
+
+            <a
+              href="https://sandslab.com"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: '#cbd5e1', fontSize: '0.78rem', fontWeight: 600, textDecoration: 'none' }}
+            >
+              Official Website ↗
+            </a>
+
+            <a
+              href="https://wa.me/97335078079"
+              target="_blank"
+              rel="noreferrer"
+              style={{ color: '#25D366', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none' }}
+            >
+              WhatsApp: +973 35078079
+            </a>
           </div>
+        </div>
+
+        {/* Copyright */}
+        <div style={{
+          width: '100%',
+          paddingTop: '20px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          fontSize: '0.72rem',
+          color: '#64748b'
+        }}>
+          <div>© 2026 Smart Parking Solution. All Rights Reserved.</div>
+          <div>Powered by SaNDS Lab Middle East W.L.L · ISO/IEC 18004 Standard Compliant</div>
         </div>
       </footer>
 
-      {/* ── SaNDS Lab Light Background Modal Popup ──────────────────── */}
-      {sandsModalOpen && (
-        <div
-          onClick={() => setSandsModalOpen(false)}
+      {/* 9. LIGHTBOX IMAGE ZOOM MODAL */}
+      {selectedImage && (
+        <div 
+          onClick={() => setSelectedImage(null)}
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(15, 23, 42, 0.65)',
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
-            zIndex: 9999,
+            zIndex: 99999,
+            background: 'rgba(0, 0, 0, 0.88)',
+            backdropFilter: 'blur(10px)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            padding: '24px',
+            cursor: 'zoom-out'
           }}
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'relative',
-              background: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '20px',
-              padding: '36px 32px 28px',
-              width: '360px',
-              maxWidth: '92vw',
-              boxShadow: '0 20px 45px -10px rgba(0, 0, 0, 0.25)',
-              textAlign: 'center',
-              color: '#0f172a'
-            }}
-          >
+          <div style={{ maxWidth: '1100px', width: '100%', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+            <img 
+              src={selectedImage} 
+              alt="Hardware Preview" 
+              style={{
+                width: '100%',
+                maxHeight: '85vh',
+                objectFit: 'contain',
+                borderRadius: '12px',
+                boxShadow: '0 25px 60px rgba(0,0,0,0.8)'
+              }} 
+            />
             <button
-              onClick={() => setSandsModalOpen(false)}
+              type="button"
+              onClick={() => setSelectedImage(null)}
               style={{
                 position: 'absolute',
-                top: '14px',
-                right: '16px',
-                background: '#f1f5f9',
-                border: 'none',
-                color: '#64748b',
-                width: '30px',
-                height: '30px',
+                top: '12px',
+                right: '12px',
+                width: '36px',
+                height: '36px',
                 borderRadius: '50%',
+                background: 'rgba(0,0,0,0.7)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                color: '#fff',
+                fontSize: '1.2rem',
+                fontWeight: 800,
                 cursor: 'pointer',
-                fontSize: '0.85rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -1052,90 +1818,159 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
             >
               ✕
             </button>
-
-            <div style={{ margin: '0 auto 12px', width: 'fit-content' }}>
-              <img
-                src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
-                alt="SaNDS Lab Logo"
-                style={{ height: '54px', width: 'auto', display: 'block', margin: '0 auto' }}
-              />
-            </div>
-
-            <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 24px', fontWeight: 500 }}>
-              Innovative Solutions &amp; Digital Services
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <a
-                href="https://wa.me/97335078079"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  padding: '12px 18px',
-                  borderRadius: '10px',
-                  fontSize: '0.88rem',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  background: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)',
-                  color: '#fff'
-                }}
-              >
-                <MessageCircle size={18} />
-                <span>Connect on WhatsApp</span>
-              </a>
-
-              <a
-                href="https://www.sandslab.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  padding: '12px 18px',
-                  borderRadius: '10px',
-                  fontSize: '0.88rem',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                  color: '#fff'
-                }}
-              >
-                <Globe size={18} />
-                <span>Visit Website</span>
-              </a>
-
-              <a
-                href="https://products.sandslab.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '10px',
-                  padding: '12px 18px',
-                  borderRadius: '10px',
-                  fontSize: '0.88rem',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',
-                  color: '#fff'
-                }}
-              >
-                <Layers size={18} />
-                <span>Explore All Products</span>
-              </a>
-            </div>
           </div>
         </div>
       )}
 
+      {/* 10. SANDS LAB OFFICIAL MODAL POPUP */}
+      {sandsModalOpen && (
+        <div 
+          onClick={() => setSandsModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px'
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '520px',
+              borderRadius: '16px',
+              background: isDark ? '#151e2e' : '#ffffff',
+              color: isDark ? '#f8fafc' : '#0f172a',
+              border: isDark ? '1px solid rgba(236, 72, 153, 0.4)' : '1px solid #e2e8f0',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{
+              padding: '24px 24px 18px',
+              background: 'linear-gradient(135deg, #ec4899 0%, #7c3aed 50%, #2563eb 100%)',
+              color: '#ffffff',
+              textAlign: 'center',
+              position: 'relative'
+            }}>
+              <img 
+                src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" 
+                alt="SaNDS Lab" 
+                style={{ height: '34px', width: 'auto', margin: '0 auto 10px', display: 'block' }}
+              />
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, margin: 0 }}>SaNDS Lab Middle East W.L.L</h3>
+              <div style={{ fontSize: '0.78rem', opacity: 0.9, marginTop: '4px' }}>
+                Next-Generation Smart AI & Facility Automation Solutions
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSandsModalOpen(false)}
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  background: 'rgba(0,0,0,0.2)',
+                  border: 'none',
+                  color: '#fff',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  fontSize: '0.9rem'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '24px' }}>
+              <p style={{ fontSize: '0.86rem', lineHeight: 1.6, color: isDark ? '#cbd5e1' : '#475569', marginBottom: '20px' }}>
+                SaNDS Lab engineers enterprise software products for healthcare facilities, government bodies, commercial real-estate, and retail centers across the GCC & Middle East.
+              </p>
+
+              {/* Contact / Links Grid */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <a
+                  href="https://sandslab.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    background: isDark ? 'rgba(255,255,255,0.04)' : '#f8fafc',
+                    border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
+                    color: isDark ? '#ffffff' : '#0f172a',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.84rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Globe size={16} color="#0284c7" />
+                    <span>Official Corporate Website</span>
+                  </div>
+                  <ExternalLink size={14} color="#94a3b8" />
+                </a>
+
+                <a
+                  href="https://wa.me/97335078079?text=Hello%20SaNDS%20Lab%20Team%2C%20I%20would%20like%20to%20inquire%20about%20the%20Smart%20Parking%20System."
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 16px',
+                    borderRadius: '8px',
+                    background: 'rgba(37, 211, 102, 0.1)',
+                    border: '1px solid rgba(37, 211, 102, 0.3)',
+                    color: '#25D366',
+                    textDecoration: 'none',
+                    fontWeight: 700,
+                    fontSize: '0.84rem'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <MessageCircle size={16} />
+                    <span>WhatsApp Direct Support (+973 35078079)</span>
+                  </div>
+                  <ExternalLink size={14} />
+                </a>
+              </div>
+
+              <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => setSandsModalOpen(false)}
+                  style={{
+                    padding: '10px 24px',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Close Window
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
