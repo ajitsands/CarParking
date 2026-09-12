@@ -82,20 +82,28 @@
     .header-brand-wrap {
       display: flex; align-items: center; gap: 12px; flex-shrink: 0;
     }
-    .header-center-badge {
-      display: inline-flex; align-items: center; gap: 9px;
-      padding: 6px 18px; border-radius: 24px;
-      background: rgba(236,72,153,0.1);
-      border: 1px solid rgba(236,72,153,0.35);
-      box-shadow: 0 2px 10px rgba(236,72,153,0.15);
+    .header-center-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      padding: 4px 12px;
+      border-radius: 8px;
+      transition: transform 0.2s ease;
       flex-shrink: 0;
     }
-    .header-center-badge:hover {
-      background: rgba(236,72,153,0.16);
-      border-color: rgba(236,72,153,0.5);
-      transform: translateY(-1px);
+    .header-center-logo:hover {
+      transform: scale(1.05);
+    }
+    .header-center-logo img {
+      height: 30px;
+      width: auto;
+      display: block;
+      object-fit: contain;
+    }
+    [data-theme="dark"] .header-center-logo {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     .header-actions-wrap {
       display: flex; align-items: center; gap: 8px; flex-shrink: 0;
@@ -115,7 +123,7 @@
         justify-content: center;
         width: 100%;
       }
-      .header-center-badge {
+      .header-center-logo {
         margin: 2px 0;
       }
       .header-actions-wrap {
@@ -516,10 +524,9 @@
         </a>
       </div>
 
-      <!-- SaNDS Lab Credentials Badge (Centered & Bigger) -->
-      <div class="header-center-badge" onclick="openSandsModal()" title="Click for SaNDS Lab Credentials">
-        <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS Lab" style="height: 24px; width: auto; display: block;" onerror="this.style.display='none'" />
-        <span style="font-size: 0.78rem; font-weight: 800; color: #ec4899; letter-spacing: 0.03em;">SaNDS LAB</span>
+      <!-- Middle: SaNDS Lab Logo (Only Logo Centered & Bigger) -->
+      <div class="header-center-logo" onclick="openSandsModal()" title="Click to view SaNDS Lab profile & direct contact">
+        <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS Lab" onerror="this.style.display='none'" />
       </div>
 
       <div class="header-actions-wrap">

@@ -367,20 +367,19 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
             </div>
           </div>
 
-          {/* Middle: Official SaNDS Lab Header Badge (Centered & Bigger) */}
+          {/* Middle: SaNDS Lab Logo (Only Logo Centered & Bigger) */}
           <div 
             onClick={() => setSandsModalOpen(true)}
             style={{
-              display: 'inline-flex',
+              display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              padding: '6px 18px',
-              borderRadius: '24px',
-              background: isDark ? 'rgba(236, 72, 153, 0.16)' : 'rgba(236, 72, 153, 0.08)',
-              border: '1px solid rgba(236, 72, 153, 0.35)',
-              boxShadow: isDark ? '0 2px 10px rgba(236, 72, 153, 0.2)' : '0 2px 8px rgba(236, 72, 153, 0.12)',
+              justifyContent: 'center',
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
+              padding: '4px 12px',
+              borderRadius: '8px',
+              background: isDark ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
+              boxShadow: isDark ? '0 2px 8px rgba(0,0,0,0.3)' : 'none',
+              transition: 'transform 0.2s ease',
               flexShrink: 0
             }}
             title="Click to view SaNDS Lab profile & direct contact"
@@ -388,13 +387,9 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
             <img 
               src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" 
               alt="SaNDS Lab" 
-              style={{ height: '24px', width: 'auto', display: 'block', objectFit: 'contain' }}
+              style={{ height: '30px', width: 'auto', display: 'block', objectFit: 'contain' }}
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
-            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ec4899', letterSpacing: '0.04em' }}>
-              POWERED BY SaNDS LAB
-            </span>
-            <ExternalLink size={13} color="#ec4899" />
           </div>
 
           {/* Right Navigation & Controls */}
