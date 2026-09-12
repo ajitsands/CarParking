@@ -402,20 +402,22 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
             <Calendar size={14} /> Date Filter:
           </span>
 
-          <div style={{ display: 'inline-flex', background: 'var(--bg-body)', padding: '2px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <div style={{ display: 'inline-flex', background: 'var(--bg-input, #f1f5f9)', padding: '3px', borderRadius: '8px', border: '1px solid var(--border-color, #e2e8f0)', gap: '2px' }}>
             <button
               type="button"
               disabled={isInsideTab}
               onClick={() => handleDatePresetChange('all')}
               style={{
-                padding: '4px 10px',
+                padding: '5px 12px',
                 fontSize: '0.74rem',
-                fontWeight: 600,
+                fontWeight: 700,
                 border: 'none',
                 borderRadius: '6px',
                 cursor: isInsideTab ? 'not-allowed' : 'pointer',
-                background: datePreset === 'all' && !isInsideTab ? 'var(--brand-primary)' : 'transparent',
-                color: datePreset === 'all' && !isInsideTab ? '#fff' : 'var(--text-secondary)'
+                background: datePreset === 'all' && !isInsideTab ? '#2563eb' : 'transparent',
+                color: datePreset === 'all' && !isInsideTab ? '#ffffff' : 'var(--text-secondary, #475569)',
+                boxShadow: datePreset === 'all' && !isInsideTab ? '0 1px 3px rgba(37,99,235,0.35)' : 'none',
+                transition: 'all 0.15s ease'
               }}
             >
               All Time
@@ -425,14 +427,16 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
               disabled={isInsideTab}
               onClick={() => handleDatePresetChange('today')}
               style={{
-                padding: '4px 10px',
+                padding: '5px 12px',
                 fontSize: '0.74rem',
-                fontWeight: 600,
+                fontWeight: 700,
                 border: 'none',
                 borderRadius: '6px',
                 cursor: isInsideTab ? 'not-allowed' : 'pointer',
-                background: datePreset === 'today' && !isInsideTab ? 'var(--brand-primary)' : 'transparent',
-                color: datePreset === 'today' && !isInsideTab ? '#fff' : 'var(--text-secondary)'
+                background: datePreset === 'today' && !isInsideTab ? '#2563eb' : 'transparent',
+                color: datePreset === 'today' && !isInsideTab ? '#ffffff' : 'var(--text-secondary, #475569)',
+                boxShadow: datePreset === 'today' && !isInsideTab ? '0 1px 3px rgba(37,99,235,0.35)' : 'none',
+                transition: 'all 0.15s ease'
               }}
             >
               Today
@@ -442,14 +446,16 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
               disabled={isInsideTab}
               onClick={() => handleDatePresetChange('yesterday')}
               style={{
-                padding: '4px 10px',
+                padding: '5px 12px',
                 fontSize: '0.74rem',
-                fontWeight: 600,
+                fontWeight: 700,
                 border: 'none',
                 borderRadius: '6px',
                 cursor: isInsideTab ? 'not-allowed' : 'pointer',
-                background: datePreset === 'yesterday' && !isInsideTab ? 'var(--brand-primary)' : 'transparent',
-                color: datePreset === 'yesterday' && !isInsideTab ? '#fff' : 'var(--text-secondary)'
+                background: datePreset === 'yesterday' && !isInsideTab ? '#2563eb' : 'transparent',
+                color: datePreset === 'yesterday' && !isInsideTab ? '#ffffff' : 'var(--text-secondary, #475569)',
+                boxShadow: datePreset === 'yesterday' && !isInsideTab ? '0 1px 3px rgba(37,99,235,0.35)' : 'none',
+                transition: 'all 0.15s ease'
               }}
             >
               Yesterday
@@ -459,14 +465,16 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
               disabled={isInsideTab}
               onClick={() => handleDatePresetChange('custom')}
               style={{
-                padding: '4px 10px',
+                padding: '5px 12px',
                 fontSize: '0.74rem',
-                fontWeight: 600,
+                fontWeight: 700,
                 border: 'none',
                 borderRadius: '6px',
                 cursor: isInsideTab ? 'not-allowed' : 'pointer',
-                background: datePreset === 'custom' && !isInsideTab ? 'var(--brand-primary)' : 'transparent',
-                color: datePreset === 'custom' && !isInsideTab ? '#fff' : 'var(--text-secondary)'
+                background: datePreset === 'custom' && !isInsideTab ? '#2563eb' : 'transparent',
+                color: datePreset === 'custom' && !isInsideTab ? '#ffffff' : 'var(--text-secondary, #475569)',
+                boxShadow: datePreset === 'custom' && !isInsideTab ? '0 1px 3px rgba(37,99,235,0.35)' : 'none',
+                transition: 'all 0.15s ease'
               }}
             >
               Custom Date Range
