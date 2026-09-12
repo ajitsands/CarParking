@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Home,
   LayoutDashboard, 
   Video, 
   Car, 
@@ -42,7 +41,6 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
   }, []);
 
   const allNavItems = [
-    { id: 'home', label: 'Home / Overview', icon: Home },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'live-lanes', label: 'Live Gate Monitor', icon: Video },
     { id: 'sessions', label: 'Parking Sessions', icon: Car },
@@ -54,9 +52,9 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
     { id: 'display-board', label: 'Display Board', icon: Monitor }
   ];
 
-  // For Reception, show Home, Dashboard, Parking Sessions, and Visitor Validation
+  // For Reception, ONLY show Dashboard, Parking Sessions, and Visitor Validation
   const navItems = isReception
-    ? allNavItems.filter(item => ['home', 'dashboard', 'sessions', 'validation'].includes(item.id))
+    ? allNavItems.filter(item => ['dashboard', 'sessions', 'validation'].includes(item.id))
     : allNavItems;
 
   // Admin configurable menu colors (Default: Pink & Blue combination)

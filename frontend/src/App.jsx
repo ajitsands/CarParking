@@ -35,9 +35,10 @@ function MainApp() {
   const { license } = useSettings();
   const [showPublicLanding, setShowPublicLanding] = useState(false);
   // Restore last active tab from localStorage so refresh keeps the user on the same page
-  const [activeTab, setActiveTabState] = useState(
-    () => localStorage.getItem('parking_active_tab') || 'home'
-  );
+  const [activeTab, setActiveTabState] = useState(() => {
+    const saved = localStorage.getItem('parking_active_tab');
+    return (saved && saved !== 'home') ? saved : 'dashboard';
+  });
 
   const setActiveTab = (tab) => {
     localStorage.setItem('parking_active_tab', tab);

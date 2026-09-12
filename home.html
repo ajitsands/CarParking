@@ -81,17 +81,15 @@
       background: var(--bg-surface); border: 1px solid var(--border-color);
       border-radius: 18px; box-shadow: var(--shadow-md); overflow: hidden;
     }
-    .nav-tab-btn {
-      padding: 9px 20px; border-radius: 30px; font-weight: 800; font-size: 0.82rem;
+    .ind-tab-btn {
+      padding: 9px 18px; border-radius: 30px; font-weight: 800; font-size: 0.82rem;
       border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-muted);
       cursor: pointer; transition: all 0.2s ease;
     }
-    .nav-tab-btn.active {
-      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
-      color: #fff; border-color: var(--brand-primary);
-      box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+    .ind-tab-btn.active {
+      color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.15);
     }
-    /* Lightbox */
+    /* Lightbox Modal */
     .lightbox-modal {
       display: none; position: fixed; inset: 0; z-index: 99999;
       background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);
@@ -101,6 +99,13 @@
     .lightbox-modal img {
       max-width: 90vw; max-height: 85vh; border-radius: 10px; object-fit: contain;
     }
+    /* SaNDS Modal */
+    .sands-modal-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .sands-modal-backdrop.active { display: flex; }
   </style>
 </head>
 <body>
@@ -134,7 +139,7 @@
     </div>
   </header>
 
-  <!-- 2. Hero Section (Balanced Margins) -->
+  <!-- 2. Hero Section (Balanced Margins & Modular Blocks) -->
   <section style="padding: 50px 0 60px;">
     <div class="layout-container">
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 40px; align-items: center;">
@@ -359,7 +364,56 @@
     </div>
   </section>
 
-  <!-- 5. Footer with Margins -->
+  <!-- 5. Multi-Industry Turnkey Suites (Balanced Margins) -->
+  <section class="section-wrap" style="background: var(--bg-surface-alt);">
+    <div class="layout-container">
+      <div style="text-align: center; max-width: 800px; margin: 0 auto 36px;">
+        <div style="font-size: 0.75rem; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 8px;">SPECIALIZED INDUSTRY ARCHITECTURES</div>
+        <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Turnkey Workflows for Every Facility</h2>
+        <p style="color: var(--text-muted); font-size: 0.94rem;">Pre-configured integration schemes and validation logic tailored for diverse sectors.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px;">
+        <div class="card-box" style="padding: 24px;">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">🏥</div>
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: #0284c7; margin-bottom: 6px;">Hospitals & Medical Centers</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">Bilateral HIMS/HIS patient registration sync, printable consultation discount QR slips, and ambulance priority lanes.</p>
+        </div>
+
+        <div class="card-box" style="padding: 24px;">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">🛒</div>
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: #10b981; margin-bottom: 6px;">Supermarkets & Retail Malls</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">POS checkout receipt barcode scans for instant spend-based free parking waivers and outdoor LED guidance.</p>
+        </div>
+
+        <div class="card-box" style="padding: 24px;">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">🏨</div>
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: #f59e0b; margin-bottom: 6px;">Hotels, Resorts & Valet</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">PMS room booking synchronization for guest stay privileges and digital SMS valet retrieval tokens.</p>
+        </div>
+
+        <div class="card-box" style="padding: 24px;">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">🏢</div>
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: #6366f1; margin-bottom: 6px;">Corporate Tech Towers</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">Multi-tenant employee ANPR whitelist, contractor digital QR passes, and company quota enforcement.</p>
+        </div>
+
+        <div class="card-box" style="padding: 24px;">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">✈️</div>
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: #ec4899; margin-bottom: 6px;">Airports & Municipal Hubs</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">Dynamic tiered tariffs (Drop-off grace, Short-term, Multi-day), ride-share staging, and 100% offline edge uptime.</p>
+        </div>
+
+        <div class="card-box" style="padding: 24px;">
+          <div style="font-size: 1.5rem; margin-bottom: 8px;">🏟️</div>
+          <h3 style="font-size: 1.1rem; font-weight: 800; color: #8b5cf6; margin-bottom: 6px;">Stadiums & Arenas</h3>
+          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">Prepaid ticket barcode scanning at gate kiosks for lightning-fast 5,000+ cars/hour surge ingress rates.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Footer with Margins -->
   <footer style="background: #0f172a; color: #fff; padding: 40px 0 30px;">
     <div class="layout-container">
       <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1);">
@@ -383,6 +437,31 @@
     <img id="lightbox-img" src="" alt="Hardware Zoom" onclick="event.stopPropagation()" />
   </div>
 
+  <!-- SaNDS Modal Popup -->
+  <div id="sands-modal" class="sands-modal-backdrop" onclick="closeSandsModal()">
+    <div style="background: var(--bg-surface); color: var(--text-main); border-radius: 16px; max-width: 500px; width: 100%; overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);" onclick="event.stopPropagation()">
+      <div style="padding: 24px; background: linear-gradient(135deg, #ec4899, #7c3aed, #2563eb); color: #fff; text-align: center;">
+        <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS" style="height: 32px; margin-bottom: 8px;" />
+        <h3 style="font-size: 1.25rem; font-weight: 900;">SaNDS Lab Middle East W.L.L</h3>
+        <p style="font-size: 0.78rem; opacity: 0.9;">Enterprise AI & Smart Automation Systems</p>
+      </div>
+      <div style="padding: 24px;">
+        <p style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
+          Engineers turnkey software solutions for healthcare networks, commercial real-estate towers, and government bodies across the GCC.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <a href="https://sandslab.com" target="_blank" style="padding: 12px; border-radius: 8px; background: var(--bg-surface-alt); color: inherit; text-decoration: none; font-weight: 700; font-size: 0.84rem; display: flex; justify-content: space-between;">
+            <span>Official Corporate Website</span> <span>↗</span>
+          </a>
+          <a href="https://wa.me/97335078079" target="_blank" style="padding: 12px; border-radius: 8px; background: rgba(37,211,102,0.1); color: #25D366; text-decoration: none; font-weight: 700; font-size: 0.84rem; display: flex; justify-content: space-between;">
+            <span>WhatsApp Direct (+973 35078079)</span> <span>↗</span>
+          </a>
+        </div>
+        <button class="btn btn-primary" onclick="closeSandsModal()" style="width: 100%; margin-top: 20px;">Close Window</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     function toggleTheme() {
       const cur = document.documentElement.getAttribute('data-theme') || 'light';
@@ -402,6 +481,13 @@
     }
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('active');
+    }
+
+    function openSandsModal() {
+      document.getElementById('sands-modal').classList.add('active');
+    }
+    function closeSandsModal() {
+      document.getElementById('sands-modal').classList.remove('active');
     }
 
     let isMoving = false;

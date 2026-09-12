@@ -191,9 +191,8 @@ export default function LoginPage({ onExploreFeatures }) {
 
           {/* Explore Features & Landing Page Action */}
           <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
-            <button
-              type="button"
-              onClick={onExploreFeatures || (() => window.location.href = '/landing.html')}
+            <a
+              href="/home.html"
               style={{
                 width: '100%',
                 padding: '9px 12px',
@@ -208,12 +207,13 @@ export default function LoginPage({ onExploreFeatures }) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
+                textDecoration: 'none',
                 transition: 'all 0.2s ease'
               }}
             >
               <Building2 size={15} />
-              <span>Explore Multi-Industry Features (Home Page)</span>
-            </button>
+              <span>Explore Multi-Industry Features (Home Page) ↗</span>
+            </a>
           </div>
         </div>
 
