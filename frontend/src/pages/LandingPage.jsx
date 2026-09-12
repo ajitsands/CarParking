@@ -483,11 +483,11 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
         </div>
       </header>
 
-      {/* 2. HERO SECTION WITH BALANCED MARGINS & LIVE INTERACTIVE GATE WIDGET */}
+      {/* 2. HERO SECTION (MAIN PRESENTATION BLOCK) */}
       <section style={{
         maxWidth: '1440px',
         margin: '0 auto',
-        padding: '50px clamp(20px, 4vw, 48px) 60px'
+        padding: '45px clamp(20px, 4vw, 48px) 35px'
       }}>
         <div style={{
           display: 'grid',
@@ -520,15 +520,23 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
               lineHeight: 1.12,
               letterSpacing: '-0.03em',
               color: isDark ? '#ffffff' : '#0f172a',
-              marginBottom: '20px'
+              marginBottom: '18px'
             }}>
               Intelligent Multi-Industry Parking & Facility Management
             </h1>
 
-            {/* Distinct Block 1: Multi-Industry Quick Selection Chips */}
+            <p style={{
+              fontSize: '1rem',
+              color: isDark ? '#94a3b8' : '#64748b',
+              lineHeight: 1.6,
+              marginBottom: '22px'
+            }}>
+              Unified deep-learning automated number plate recognition (ANPR), barrier telemetry, multi-deck LED guidance totems, and bilateral cloud sync engineered for mission-critical facilities.
+            </p>
+
+            {/* Industry Scope Banner */}
             <div style={{
-              marginBottom: '20px',
-              padding: '14px 18px',
+              padding: '16px 20px',
               borderRadius: '14px',
               background: isDark ? '#111928' : '#ffffff',
               border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
@@ -540,7 +548,7 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
                 color: isDark ? '#94a3b8' : '#64748b',
                 textTransform: 'uppercase',
                 letterSpacing: '0.06em',
-                marginBottom: '10px',
+                marginBottom: '12px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px'
@@ -572,12 +580,12 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '6px',
-                        padding: '6px 12px',
+                        padding: '6px 14px',
                         borderRadius: '20px',
                         background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
                         border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #cbd5e1',
                         color: isDark ? '#e2e8f0' : '#1e293b',
-                        fontSize: '0.76rem',
+                        fontSize: '0.78rem',
                         fontWeight: 700,
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
@@ -598,173 +606,6 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
                     </button>
                   );
                 })}
-              </div>
-            </div>
-
-            {/* Distinct Block 2: Key Capabilities Value Bar */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: '10px',
-              marginBottom: '26px'
-            }}>
-              <div style={{
-                padding: '10px 14px',
-                borderRadius: '10px',
-                background: isDark ? 'rgba(2, 132, 199, 0.1)' : 'rgba(2, 132, 199, 0.06)',
-                border: '1px solid rgba(2, 132, 199, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <Video size={16} color="#0284c7" />
-                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isDark ? '#93c5fd' : '#0369a1' }}>
-                  99.8% ANPR Recognition
-                </span>
-              </div>
-
-              <div style={{
-                padding: '10px 14px',
-                borderRadius: '10px',
-                background: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.06)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <Zap size={16} color="#10b981" />
-                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isDark ? '#6ee7b7' : '#047857' }}>
-                  &lt;0.4s Fast Barrier Relay
-                </span>
-              </div>
-
-              <div style={{
-                padding: '10px 14px',
-                borderRadius: '10px',
-                background: isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.06)',
-                border: '1px solid rgba(99, 102, 241, 0.25)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <Globe size={16} color="#6366f1" />
-                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isDark ? '#c7d2fe' : '#4338ca' }}>
-                  Bilateral REST API
-                </span>
-              </div>
-            </div>
-
-            {/* Distinct Block 3: Action Buttons Block */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginBottom: '28px' }}>
-              <button
-                type="button"
-                onClick={onLaunchPortal}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '13px 28px',
-                  borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
-                  border: 'none',
-                  color: '#ffffff',
-                  fontSize: '0.94rem',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  boxShadow: '0 8px 24px rgba(2, 132, 199, 0.4)',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <span>Launch Live Control Room</span>
-                <ArrowRight size={17} />
-              </button>
-
-              <a
-                href="#simulator-section"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '13px 24px',
-                  borderRadius: '10px',
-                  background: isDark ? 'rgba(255, 255, 255, 0.06)' : '#ffffff',
-                  border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid #cbd5e1',
-                  color: isDark ? '#f8fafc' : '#0f172a',
-                  fontSize: '0.92rem',
-                  fontWeight: 700,
-                  textDecoration: 'none',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                }}
-              >
-                <Play size={16} color="#10b981" />
-                <span>Test Live Interactive Lab</span>
-              </a>
-            </div>
-
-            {/* Distinct Block 4: 4 Separate Floating Metric Cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-              gap: '12px'
-            }}>
-              {/* Stat Block 1 */}
-              <div style={{
-                padding: '14px 16px',
-                borderRadius: '12px',
-                background: isDark ? '#111928' : '#ffffff',
-                border: isDark ? '1px solid rgba(2, 132, 199, 0.3)' : '1px solid #e2e8f0',
-                borderTop: '3px solid #0284c7',
-                boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
-                transition: 'transform 0.2s ease'
-              }}>
-                <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0284c7', lineHeight: 1 }}>99.8%</div>
-                <div style={{ fontSize: '0.74rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '6px' }}>ANPR Rate</div>
-                <div style={{ fontSize: '0.64rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Optical AI OCR</div>
-              </div>
-
-              {/* Stat Block 2 */}
-              <div style={{
-                padding: '14px 16px',
-                borderRadius: '12px',
-                background: isDark ? '#111928' : '#ffffff',
-                border: isDark ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid #e2e8f0',
-                borderTop: '3px solid #10b981',
-                boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
-                transition: 'transform 0.2s ease'
-              }}>
-                <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#10b981', lineHeight: 1 }}>&lt;0.4s</div>
-                <div style={{ fontSize: '0.74rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '6px' }}>Barrier Open</div>
-                <div style={{ fontSize: '0.64rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Fast Relay Motor</div>
-              </div>
-
-              {/* Stat Block 3 */}
-              <div style={{
-                padding: '14px 16px',
-                borderRadius: '12px',
-                background: isDark ? '#111928' : '#ffffff',
-                border: isDark ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid #e2e8f0',
-                borderTop: '3px solid #f59e0b',
-                boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
-                transition: 'transform 0.2s ease'
-              }}>
-                <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#f59e0b', lineHeight: 1 }}>6+</div>
-                <div style={{ fontSize: '0.74rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '6px' }}>Industries</div>
-                <div style={{ fontSize: '0.64rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Turnkey Suites</div>
-              </div>
-
-              {/* Stat Block 4 */}
-              <div style={{
-                padding: '14px 16px',
-                borderRadius: '12px',
-                background: isDark ? '#111928' : '#ffffff',
-                border: isDark ? '1px solid rgba(236, 72, 153, 0.3)' : '1px solid #e2e8f0',
-                borderTop: '3px solid #ec4899',
-                boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
-                transition: 'transform 0.2s ease'
-              }}>
-                <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#ec4899', lineHeight: 1 }}>100%</div>
-                <div style={{ fontSize: '0.74rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '6px' }}>Edge Uptime</div>
-                <div style={{ fontSize: '0.64rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Offline Autonomy</div>
               </div>
             </div>
           </div>
@@ -819,35 +660,231 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
 
               {/* Bottom Telemetry Bar */}
               <div style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
                 padding: '16px 20px',
-                background: 'linear-gradient(to top, rgba(15, 23, 42, 0.96) 0%, rgba(15, 23, 42, 0.7) 70%, transparent 100%)',
-                color: '#ffffff',
+                background: isDark ? '#111827' : '#ffffff',
+                borderTop: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e2e8f0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between'
               }}>
                 <div>
-                  <div style={{ fontSize: '0.92rem', fontWeight: 800 }}>Automated Barrier & ANPR Telemetry</div>
-                  <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Sub-second license plate OCR capture & auto-barrier trigger</div>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a' }}>
+                    Gate 01 Main Entrance Lane
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: isDark ? '#94a3b8' : '#64748b' }}>
+                    Brushless DC Barrier + IP67 ANPR Sensor
+                  </div>
                 </div>
                 <div style={{
-                  padding: '5px 12px',
+                  padding: '4px 10px',
                   borderRadius: '6px',
-                  background: 'rgba(255,255,255,0.18)',
-                  fontSize: '0.72rem',
-                  fontWeight: 800,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
                 }}>
                   <Maximize2 size={12} />
                   <span>Zoom 🔍</span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2.5 NEW STANDALONE CAPABILITIES, ACTIONS & METRICS BLOCK */}
+      <section style={{
+        maxWidth: '1440px',
+        margin: '0 auto',
+        padding: '10px clamp(20px, 4vw, 48px) 45px'
+      }}>
+        <div style={{
+          background: isDark ? '#111827' : '#ffffff',
+          border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+          borderRadius: '20px',
+          padding: '28px 32px',
+          boxShadow: isDark ? '0 10px 30px rgba(0,0,0,0.4)' : '0 10px 25px rgba(0,0,0,0.05)'
+        }}>
+          {/* Row 1: Key Capabilities Value Bar */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '12px',
+            marginBottom: '22px'
+          }}>
+            <div style={{
+              padding: '10px 18px',
+              borderRadius: '12px',
+              background: isDark ? 'rgba(2, 132, 199, 0.1)' : 'rgba(2, 132, 199, 0.06)',
+              border: '1px solid rgba(2, 132, 199, 0.25)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <Video size={16} color="#0284c7" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: isDark ? '#93c5fd' : '#0369a1' }}>
+                99.8% ANPR Recognition
+              </span>
+            </div>
+
+            <div style={{
+              padding: '10px 18px',
+              borderRadius: '12px',
+              background: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.06)',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <Zap size={16} color="#10b981" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: isDark ? '#6ee7b7' : '#047857' }}>
+                &lt;0.4s Fast Barrier Relay
+              </span>
+            </div>
+
+            <div style={{
+              padding: '10px 18px',
+              borderRadius: '12px',
+              background: isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.06)',
+              border: '1px solid rgba(99, 102, 241, 0.25)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <Globe size={16} color="#6366f1" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 700, color: isDark ? '#c7d2fe' : '#4338ca' }}>
+                Bilateral REST API
+              </span>
+            </div>
+          </div>
+
+          {/* Row 2: Action Buttons */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginBottom: '28px' }}>
+            <button
+              type="button"
+              onClick={onLaunchPortal}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '13px 30px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+                border: 'none',
+                color: '#ffffff',
+                fontSize: '0.94rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 8px 24px rgba(2, 132, 199, 0.4)',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <span>Launch Live Control Room</span>
+              <ArrowRight size={17} />
+            </button>
+
+            <a
+              href="#simulator-section"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '13px 24px',
+                borderRadius: '10px',
+                background: isDark ? 'rgba(255, 255, 255, 0.06)' : '#ffffff',
+                border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid #cbd5e1',
+                color: isDark ? '#f8fafc' : '#0f172a',
+                fontSize: '0.92rem',
+                fontWeight: 700,
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+              }}
+            >
+              <Play size={16} color="#10b981" />
+              <span>Test Live Interactive Lab</span>
+            </a>
+
+            <button
+              type="button"
+              onClick={() => setSandsModalOpen(true)}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '13px 22px',
+                borderRadius: '10px',
+                background: isDark ? 'rgba(236, 72, 153, 0.12)' : 'rgba(236, 72, 153, 0.06)',
+                border: '1px solid rgba(236, 72, 153, 0.35)',
+                color: '#ec4899',
+                fontSize: '0.92rem',
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              <span>💎 SaNDS Credentials</span>
+            </button>
+          </div>
+
+          {/* Row 3: 4 Separate Floating Metric Cards in 4-Column Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '16px'
+          }}>
+            {/* Stat Block 1 */}
+            <div style={{
+              padding: '20px 22px',
+              borderRadius: '14px',
+              background: isDark ? '#151e2e' : '#f8fafc',
+              border: isDark ? '1px solid rgba(2, 132, 199, 0.3)' : '1px solid #e2e8f0',
+              borderTop: '4px solid #0284c7',
+              boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
+              transition: 'transform 0.2s ease'
+            }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0284c7', lineHeight: 1 }}>99.8%</div>
+              <div style={{ fontSize: '0.86rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '8px' }}>ANPR Rate</div>
+              <div style={{ fontSize: '0.74rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Optical AI OCR</div>
+            </div>
+
+            {/* Stat Block 2 */}
+            <div style={{
+              padding: '20px 22px',
+              borderRadius: '14px',
+              background: isDark ? '#151e2e' : '#f8fafc',
+              border: isDark ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid #e2e8f0',
+              borderTop: '4px solid #10b981',
+              boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
+              transition: 'transform 0.2s ease'
+            }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#10b981', lineHeight: 1 }}>&lt;0.4s</div>
+              <div style={{ fontSize: '0.86rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '8px' }}>Barrier Open</div>
+              <div style={{ fontSize: '0.74rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Fast Relay Motor</div>
+            </div>
+
+            {/* Stat Block 3 */}
+            <div style={{
+              padding: '20px 22px',
+              borderRadius: '14px',
+              background: isDark ? '#151e2e' : '#f8fafc',
+              border: isDark ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid #e2e8f0',
+              borderTop: '4px solid #f59e0b',
+              boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
+              transition: 'transform 0.2s ease'
+            }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#f59e0b', lineHeight: 1 }}>6+</div>
+              <div style={{ fontSize: '0.86rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '8px' }}>Industries</div>
+              <div style={{ fontSize: '0.74rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Turnkey Suites</div>
+            </div>
+
+            {/* Stat Block 4 */}
+            <div style={{
+              padding: '20px 22px',
+              borderRadius: '14px',
+              background: isDark ? '#151e2e' : '#f8fafc',
+              border: isDark ? '1px solid rgba(236, 72, 153, 0.3)' : '1px solid #e2e8f0',
+              borderTop: '4px solid #ec4899',
+              boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
+              transition: 'transform 0.2s ease'
+            }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#ec4899', lineHeight: 1 }}>100%</div>
+              <div style={{ fontSize: '0.86rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '8px' }}>Edge Uptime</div>
+              <div style={{ fontSize: '0.74rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Offline Autonomy</div>
             </div>
           </div>
         </div>
