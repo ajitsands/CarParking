@@ -42,6 +42,19 @@
       flex-wrap: wrap;
       gap: 20px;
     }
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-logo {
+      height: 48px;
+      width: auto;
+      background: #ffffff;
+      padding: 6px 14px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
     .doc-badge {
       display: inline-block;
       padding: 4px 12px;
@@ -193,25 +206,175 @@
       overflow-x: auto;
       border: 1px solid #1e293b;
     }
-    .tab-btn {
-      background: #e2e8f0;
-      border: none;
-      padding: 6px 14px;
-      border-radius: 4px 4px 0 0;
-      font-size: 0.78rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-right: 4px;
+
+    /* ── App Footer (Matching Application) ─────────────────── */
+    .app-footer {
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 0.88rem;
+      color: #64748b;
+      margin-top: 40px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+    }
+    .footer-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      justifyContent: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .app-footer__rights {
       color: #475569;
     }
-    .tab-btn.active {
-      background: #0f172a;
-      color: #38bdf8;
+    .app-footer__sep {
+      color: #cbd5e1;
+      margin: 0 4px;
     }
+    .app-footer__powered {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .app-footer__sands-btn {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.88rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      text-decoration: underline;
+    }
+    .app-footer__sands-btn:hover {
+      color: #ec4899;
+      background: #fdf2f8;
+    }
+
+    /* ── SaNDS Lab Light Background Modal Popup ───────────── */
+    .sands-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: sandsOverlayIn 0.2s ease;
+    }
+    @keyframes sandsOverlayIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .sands-popup {
+      position: relative;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 36px 32px 28px;
+      width: 360px;
+      max-width: 92vw;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.05);
+      text-align: center;
+      animation: sandsPopupIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes sandsPopupIn {
+      from { transform: scale(0.85) translateY(20px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .sands-popup__close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .sands-popup__close:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+    .sands-popup__logo-wrap {
+      background: transparent;
+      padding: 0;
+      margin: 0 auto 12px;
+      width: fit-content;
+    }
+    .sands-popup__logo {
+      display: block;
+      height: 54px;
+      width: auto;
+      object-fit: contain;
+      margin: 0 auto;
+    }
+    .sands-popup__tagline {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin: 0 0 24px;
+      font-weight: 500;
+    }
+    .sands-popup__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sands-popup__action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .sands-popup__action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    .sands-popup__action-btn:active {
+      transform: translateY(0);
+    }
+    .sands-popup__btn-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .sands-popup__action-btn--whatsapp {
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      color: #fff;
+    }
+    .sands-popup__action-btn--website {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #fff;
+    }
+    .sands-popup__action-btn--products {
+      background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+      color: #fff;
+    }
+
     @media print {
       body { background: #fff; color: #000; }
-      .header-banner { background: #0f172a !important; -webkit-print-color-adjust: exact; }
-      .print-btn, .tab-buttons { display: none; }
+      .header-banner { background: #0f172a !important; -webkit-print-color-adjust: exact; padding: 20px 0; }
+      .print-btn, .app-footer, .sands-overlay { display: none; }
       .card { border: 1px solid #cbd5e1; box-shadow: none; page-break-inside: avoid; }
       pre { background: #f1f5f9 !important; color: #0f172a !important; border: 1px solid #cbd5e1; }
     }
@@ -219,15 +382,22 @@
 </head>
 <body>
 
-  <!-- Top Header Banner -->
+  <!-- Top Header Banner with SaNDS Lab Logo -->
   <div class="header-banner">
     <div class="header-container">
-      <div>
-        <div class="doc-badge">KIMSHEALTH INTEGRATION SPECIFICATION</div>
-        <h1>HIMS / HIS API Integration & QR Printing Manual</h1>
-        <p style="margin: 0; color: #94a3b8; font-size: 0.95rem;">
-          Bilateral REST Integration for Real-Time Parking Status, Patient Booking Ingestion, Thermal Slip QR Printing & Visitor Validation
-        </p>
+      <div class="header-branding">
+        <img
+          src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
+          alt="SaNDS Lab Logo"
+          class="header-logo"
+        />
+        <div>
+          <div class="doc-badge">KIMSHEALTH INTEGRATION SPECIFICATION</div>
+          <h1>HIMS / HIS API Integration &amp; QR Printing Manual</h1>
+          <div style="font-size: 0.85rem; color: #94a3b8;">
+            Bilateral REST Integration for Real-Time Parking Status, Patient Booking Ingestion, Thermal Slip QR Printing &amp; Visitor Validation
+          </div>
+        </div>
       </div>
       <div>
         <button class="print-btn" onclick="window.print()">
@@ -241,9 +411,9 @@
 
     <!-- Executive Summary & Architecture -->
     <div class="card">
-      <h2>1. Architectural Overview & Workflow</h2>
+      <h2>1. Architectural Overview &amp; Workflow</h2>
       <p>
-        The KIMSHEALTH Hospital Parking Management System provides dedicated REST APIs for bilateral integration with hospital information systems (HIMS / HIS / EHR). This integration synchronizes patient clinic visits, pushes live parking lot capacity & floor occupancy, automatically generates high-resolution scannable QR codes for thermal slip printers, and authorizes validated patient parking.
+        The KIMSHEALTH Hospital Parking Management System provides dedicated REST APIs for bilateral integration with hospital information systems (HIMS / HIS / EHR). This integration synchronizes patient clinic visits, pushes live parking lot capacity &amp; floor occupancy, automatically generates high-resolution scannable QR codes for thermal slip printers, and authorizes validated patient parking.
       </p>
 
       <div class="diagram-box">
@@ -254,13 +424,13 @@
   [1. Patient Books in HIMS]
              │
              ▼
-  [2. HIMS Calls POST /api/v1/his/appointments/sync] ───► [Parking System Stores Appt & Generates QR Image]
+  [2. HIMS Calls POST /api/v1/his/appointments/sync] ───► [Parking System Stores Appt &amp; Generates QR Image]
              │                                                                      │
              ▼                                                                      ▼
-  [3. HIMS Receives Base64 QR Image & Prints on Slip] ◄─────────────────────────────┘
+  [3. HIMS Receives Base64 QR Image &amp; Prints on Slip] ◄─────────────────────────────┘
              │
              ▼
-  [4. Patient Drives to Hospital & ANPR Captures Vehicle at Entry]
+  [4. Patient Drives to Hospital &amp; ANPR Captures Vehicle at Entry]
              │
              ▼
   [5. Patient Scans QR Slip at Clinic / Visitor Validation Desk (Method A)]
@@ -270,7 +440,7 @@
       </div>
 
       <div class="callout callout-info">
-        <strong>⚡ Base Server Endpoint:</strong> All APIs are available under <code>http://&lt;PARKING_SERVER_IP&gt;:8000/api/v1/his/</code> (or your configured production domain).
+        <strong>⚡ Base Server Endpoint:</strong> All APIs are available under <code>http://&lt;PARKING_SERVER_IP&gt;:8000/api/v1/his/</code> (or your configured production domain <code>https://parking.sandslab.com/api/v1/his/</code>).
       </div>
     </div>
 
@@ -278,7 +448,7 @@
     <div class="card">
       <h2>
         <span class="endpoint-badge get-badge">GET</span>
-        2. Real-Time Parking Availability & Floor Status API
+        2. Real-Time Parking Availability &amp; Floor Status API
       </h2>
       <p>
         HIMS or outdoor digital signages can call this API periodically to fetch the live parking availability, total capacity, occupied spots, and floor-wise slot breakdowns.
@@ -344,7 +514,7 @@
       },
       {
         "floor_id": "B1",
-        "floor_name": "Basement 1 (Patient & Visitor)",
+        "floor_name": "Basement 1 (Patient &amp; Visitor)",
         "total_capacity": 200,
         "occupied_slots": 73,
         "available_slots": 127,
@@ -353,7 +523,7 @@
       },
       {
         "floor_id": "B2",
-        "floor_name": "Basement 2 (Doctors & Staff)",
+        "floor_name": "Basement 2 (Doctors &amp; Staff)",
         "total_capacity": 175,
         "occupied_slots": 64,
         "available_slots": 111,
@@ -371,7 +541,7 @@
     <div class="card">
       <h2>
         <span class="endpoint-badge post-badge">POST</span>
-        3. Online Booking Ingestion & Printable QR Code API
+        3. Online Booking Ingestion &amp; Printable QR Code API
       </h2>
       <p>
         When an appointment is confirmed in HIMS, HIMS calls this endpoint. The parking system creates the appointment record, generates a unique secure QR token, produces a high-resolution Base64 PNG and SVG vector image, and returns the printable payload immediately so HIMS can print it on the consultation slip or send it via WhatsApp.
@@ -425,7 +595,7 @@
             <td><code>appointment_datetime</code></td>
             <td>string</td>
             <td>Optional</td>
-            <td>Appointment date & time in <code>YYYY-MM-DD HH:MM:SS</code> format. Defaults to current time.</td>
+            <td>Appointment date &amp; time in <code>YYYY-MM-DD HH:MM:SS</code> format. Defaults to current time.</td>
           </tr>
           <tr>
             <td><code>registered_plate_number</code></td>
@@ -464,10 +634,10 @@
     "patient_mrn": "MRN-88192",
     "registered_plate": "BHR 43210",
     "qr_token": "QR-KIMS-88192-1788983570-491",
-    "qr_data_string": "KIMSHEALTH://VAL?TOKEN=QR-KIMS-88192-1788983570-491&MRN=MRN-88192&CODE=APT-20260912-7A9B1",
+    "qr_data_string": "KIMSHEALTH://VAL?TOKEN=QR-KIMS-88192-1788983570-491&amp;MRN=MRN-88192&amp;CODE=APT-20260912-7A9B1",
     "qr_png_base64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5g51...",
     "qr_svg_data_uri": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz...",
-    "printable_slip_html": "<div style=\"font-family: monospace; width: 280px; ...\">...</div>",
+    "printable_slip_html": "&lt;div style=\"font-family: monospace; width: 280px; ...\"&gt;...&lt;/div&gt;",
     "free_hours_granted": 3,
     "free_minutes_granted": 180,
     "sync_status": "SYNCHRONIZED",
@@ -477,7 +647,7 @@
 }</code></pre>
 
       <div class="callout callout-success">
-        <strong>💡 Thermal Slip & Receipt Printing:</strong> HIMS developers can directly take the <code>qr_png_base64</code> or <code>printable_slip_html</code> from the response and send it to their thermal receipt printers (Epson, Zebra, Bixolon, Citizen) or embed it on patient digital portal passes.
+        <strong>💡 Thermal Slip &amp; Receipt Printing:</strong> HIMS developers can directly take the <code>qr_png_base64</code> or <code>printable_slip_html</code> from the response and send it to their thermal receipt printers (Epson, Zebra, Bixolon, Citizen) or embed it on patient digital portal passes.
       </div>
     </div>
 
@@ -504,7 +674,7 @@
       <pre><code>{
   "success": true,
   "data": {
-    "session_code", "SESS-20260912-0014",
+    "session_code": "SESS-20260912-0014",
     "plate_number": "BHR 43210",
     "status": "VALIDATED",
     "message": "Parking session SESS-20260912-0014 for vehicle BHR 43210 validated successfully via HIMS consultation checkout."
@@ -623,7 +793,7 @@ public async Task&lt;string&gt; GenerateParkingQrAsync(string mrn, string name, 
     <div class="card">
       <h2>8. Thermal Slip Printer Integration Guidelines</h2>
       <p>
-        When printing patient consultation slips or appointment receipts on 80mm or 58mm POS thermal printers (Epson ESC/POS, Zebra ZPL, Citizen):
+        When printing patient consultation slips or appointment receipts on 80mm or 58mm POS thermal printers (Epson ESC/POS, Zebra ZPL, Citizen, Bixolon):
       </p>
       <ul>
         <li><strong>Base64 PNG Direct Print:</strong> Convert <code>qr_png_base64</code> to a bitonal bitmap image and send via standard ESC/POS raster graphics command (<code>ESC *</code> or <code>GS v 0</code>).</li>
@@ -634,9 +804,93 @@ public async Task&lt;string&gt; GenerateParkingQrAsync(string mrn, string name, 
 
   </div>
 
-  <div style="text-align: center; color: #94a3b8; font-size: 0.8rem; margin-bottom: 40px;">
-    KIMSHEALTH Smart Hospital Parking Management System &copy; 2026. All Rights Reserved.
+  <!-- Application Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <span class="app-footer__rights">
+        &copy; 2026 All Rights Reserved &mdash; <strong>KIMSHEALTH Hospital Parking Solution</strong>
+      </span>
+      <span class="app-footer__sep">|</span>
+      <span class="app-footer__powered">
+        Powered by <button class="app-footer__sands-btn" onclick="openSandsPopup()" aria-label="About SaNDS Lab">SaNDS Lab</button>
+      </span>
+    </div>
+  </footer>
+
+  <!-- SaNDS Lab Light Background Modal Popup -->
+  <div id="sandsOverlay" class="sands-overlay" style="display:none;" onclick="closeSandsPopup()">
+    <div class="sands-popup" onclick="event.stopPropagation()" role="dialog" aria-modal="true">
+      <button class="sands-popup__close" onclick="closeSandsPopup()" aria-label="Close dialog">&#x2715;</button>
+
+      <div class="sands-popup__logo-wrap">
+        <img
+          src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
+          alt="SaNDS Lab Logo"
+          class="sands-popup__logo"
+        />
+      </div>
+
+      <p class="sands-popup__tagline">Innovative Solutions &amp; Digital Services</p>
+
+      <div class="sands-popup__actions">
+        <a
+          href="https://wa.me/97335078079"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--whatsapp"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" class="sands-popup__btn-icon">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+          </svg>
+          Connect on WhatsApp
+        </a>
+
+        <a
+          href="https://www.sandslab.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--website"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sands-popup__btn-icon">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          Visit Our Website
+        </a>
+
+        <a
+          href="https://sandslab.com/products/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--products"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sands-popup__btn-icon">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+          Our Latest Products
+        </a>
+      </div>
+    </div>
   </div>
+
+  <script>
+    function openSandsPopup() {
+      const overlay = document.getElementById('sandsOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    }
+
+    function closeSandsPopup() {
+      const overlay = document.getElementById('sandsOverlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeSandsPopup();
+    });
+  </script>
 
 </body>
 </html>
