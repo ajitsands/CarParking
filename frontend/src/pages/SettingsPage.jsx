@@ -666,10 +666,11 @@ export default function SettingsPage() {
                       </p>
                       <div style={{
                         marginTop: '8px',
-                        fontFamily: 'var(--font-mono)',
+                        fontFamily: 'var(--font-mono, monospace)',
                         fontSize: '0.75rem',
                         color: 'var(--text-primary)',
-                        background: 'rgba(0,0,0,0.25)',
+                        background: 'var(--bg-card, #ffffff)',
+                        border: '1px solid var(--border-color)',
                         padding: '4px 8px',
                         borderRadius: '4px',
                         overflow: 'hidden',
@@ -709,10 +710,11 @@ export default function SettingsPage() {
                       </p>
                       <div style={{
                         marginTop: '8px',
-                        fontFamily: 'var(--font-mono)',
+                        fontFamily: 'var(--font-mono, monospace)',
                         fontSize: '0.75rem',
                         color: 'var(--text-primary)',
-                        background: 'rgba(0,0,0,0.25)',
+                        background: 'var(--bg-card, #ffffff)',
+                        border: '1px solid var(--border-color)',
                         padding: '4px 8px',
                         borderRadius: '4px',
                         overflow: 'hidden',
@@ -752,10 +754,11 @@ export default function SettingsPage() {
                       </p>
                       <div style={{
                         marginTop: '8px',
-                        fontFamily: 'var(--font-mono)',
+                        fontFamily: 'var(--font-mono, monospace)',
                         fontSize: '0.75rem',
                         color: 'var(--text-primary)',
-                        background: 'rgba(0,0,0,0.25)',
+                        background: 'var(--bg-card, #ffffff)',
+                        border: '1px solid var(--border-color)',
                         padding: '4px 8px',
                         borderRadius: '4px',
                         overflow: 'hidden',
@@ -1289,14 +1292,14 @@ export default function SettingsPage() {
                       </div>
 
                       <div style={{
-                        background: 'rgba(0,0,0,0.2)',
-                        padding: '8px 12px',
+                        background: 'var(--bg-input, #f8fafc)',
+                        padding: '10px 14px',
                         borderRadius: '6px',
                         border: '1px solid var(--border-color)',
                         fontSize: '0.72rem'
                       }}>
-                        <div style={{ color: 'var(--text-secondary)', marginBottom: '2px' }}>Resolved Absolute Path on Host Disk:</div>
-                        <div style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', wordBreak: 'break-all' }}>
+                        <div style={{ color: 'var(--text-secondary)', marginBottom: '4px', fontWeight: 600 }}>Resolved Absolute Path on Host Disk:</div>
+                        <div style={{ fontFamily: 'var(--font-mono, monospace)', color: 'var(--text-primary)', wordBreak: 'break-all', fontWeight: 600 }}>
                           {anprMapping.resolved_abs_path || 'E:\\parkingsolution\\backend\\storage\\uploads\\anpr_snapshots'}
                         </div>
                       </div>
@@ -1332,15 +1335,19 @@ export default function SettingsPage() {
 
                     <textarea
                       className="form-input"
-                      rows="5"
+                      rows="6"
                       value={samplePayloadText}
                       onChange={(e) => setSamplePayloadText(e.target.value)}
                       style={{
-                        fontFamily: 'var(--font-mono)',
-                        fontSize: '0.75rem',
+                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                        fontSize: '0.76rem',
+                        lineHeight: 1.45,
                         width: '100%',
-                        background: 'rgba(0,0,0,0.3)',
-                        color: '#a7f3d0'
+                        background: '#0f172a',
+                        color: '#34d399',
+                        border: '1px solid #1e293b',
+                        padding: '10px 12px',
+                        borderRadius: '6px'
                       }}
                     />
 
