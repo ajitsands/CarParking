@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 
-export default function Modal({ isOpen, onClose, title, children, maxWidth = '540px' }) {
+export default function Modal({ isOpen, onClose, title, children, maxWidth, size = 'md', className = '' }) {
   const [isShaking, setIsShaking] = useState(false);
 
   useEffect(() => {
@@ -30,6 +30,17 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '54
     setTimeout(() => setIsShaking(false), 300);
   };
 
+  const sizeMap = {
+    sm: '420px',
+    md: '540px',
+    lg: '760px',
+    xl: '1120px',
+    '2xl': '1280px',
+    full: '96vw'
+  };
+
+  const resolvedMaxWidth = maxWidth || sizeMap[size] || '540px';
+
   return (
     <div 
       className="modal-backdrop" 
@@ -38,8 +49,8 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '54
       aria-modal="true"
     >
       <div 
-        className={`modal-card ${isShaking ? 'modal-dialog-shake' : ''}`}
-        style={{ maxWidth }} 
+        className={`modal-card ${isShaking ? 'modal-dialog-shake' : ''} ${className}`}
+        style={{ maxWidth: resolvedMaxWidth, width: '100%' }} 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">

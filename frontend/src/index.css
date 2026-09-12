@@ -23,8 +23,10 @@
   --border-light: #edf2f7;
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #64748b;
   --text-inverse: #ffffff;
+  --primary-color: #2563eb;
+  --bg-surface-alt: #f8fafc;
+  --text-main: #0f172a;
 
   /* Status Colors */
   --status-green: #059669;

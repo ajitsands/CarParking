@@ -152,6 +152,7 @@ export default function VisualVehiclePickerModal({
       onClose={onClose} 
       title="🚗 Visual Vehicle Picker — Identify by Car Photo & Arrival Time"
       size="xl"
+      maxWidth="1160px"
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         
@@ -169,7 +170,7 @@ export default function VisualVehiclePickerModal({
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <UserCheck size={18} color="#0284c7" />
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-main)' }}>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-primary)' }}>
                 <strong>Validating For:</strong> {visitorName || 'Patient'} 
                 {patientMrn && <span style={{ marginLeft: '6px', color: 'var(--text-muted)' }}>({patientMrn})</span>}
                 {qrToken && (
@@ -179,7 +180,7 @@ export default function VisualVehiclePickerModal({
                 )}
               </div>
             </div>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0284c7', background: 'rgba(2,132,199,0.1)', padding: '3px 8px', borderRadius: '12px' }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#0284c7', background: 'rgba(2,132,199,0.12)', padding: '3px 10px', borderRadius: '12px' }}>
               Select Customer's Car Below
             </span>
           </div>
@@ -188,61 +189,91 @@ export default function VisualVehiclePickerModal({
         {/* Free Duration Selector Card (Hours / 1-2 Days / Admission Days) */}
         <div style={{
           background: 'var(--bg-surface)',
-          padding: '12px 14px',
-          borderRadius: 'var(--radius-sm)',
+          padding: '14px 16px',
+          borderRadius: 'var(--radius-md)',
           border: '1px solid var(--border-color)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '10px'
+          gap: '12px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={15} color="var(--primary-color)" /> Free Parking Duration to Grant:
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Clock size={16} color="#2563eb" /> Free Parking Duration to Grant:
             </span>
-            <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--status-green)', background: 'var(--status-green-bg)', padding: '2px 8px', borderRadius: '12px' }}>
+            <span style={{ 
+              fontSize: '0.78rem', 
+              fontWeight: 800, 
+              color: '#047857', 
+              background: '#ecfdf5', 
+              border: '1px solid #a7f3d0',
+              padding: '3px 10px', 
+              borderRadius: '12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px'
+            }}>
+              <CheckCircle2 size={13} color="#059669" />
               Active: {getDurationPayload().label} Free
             </span>
           </div>
 
           {/* Duration Preset Buttons */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {durationPresets.map((dp) => (
-              <button
-                key={dp.id}
-                type="button"
-                onClick={() => setFreeDurationType(dp.id)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'flex-start',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  background: freeDurationType === dp.id ? 'var(--primary-color)' : 'var(--bg-surface-alt)',
-                  color: freeDurationType === dp.id ? '#ffffff' : 'var(--text-main)',
-                  border: freeDurationType === dp.id ? '1px solid var(--primary-color)' : '1px solid var(--border-color)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <span style={{ fontSize: '0.76rem', fontWeight: 800 }}>{dp.label}</span>
-                <span style={{ fontSize: '0.62rem', opacity: freeDurationType === dp.id ? 0.9 : 0.6 }}>{dp.sub}</span>
-              </button>
-            ))}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {durationPresets.map((dp) => {
+              const isSelected = freeDurationType === dp.id;
+              return (
+                <button
+                  key={dp.id}
+                  type="button"
+                  onClick={() => setFreeDurationType(dp.id)}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    background: isSelected ? '#2563eb' : '#f8fafc',
+                    color: isSelected ? '#ffffff' : '#0f172a',
+                    border: isSelected ? '2px solid #1d4ed8' : '1px solid #cbd5e1',
+                    boxShadow: isSelected ? '0 4px 10px rgba(37, 99, 235, 0.3)' : 'none',
+                    cursor: 'pointer',
+                    minWidth: '105px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', width: '100%', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: isSelected ? '#ffffff' : '#0f172a' }}>
+                      {dp.label}
+                    </span>
+                    {isSelected && <CheckCircle2 size={13} color="#ffffff" />}
+                  </div>
+                  <span style={{ 
+                    fontSize: '0.68rem', 
+                    fontWeight: 600, 
+                    color: isSelected ? '#dbeafe' : '#64748b', 
+                    marginTop: '2px' 
+                  }}>
+                    {dp.sub}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Inpatient Admission Custom Days Input */}
           {freeDurationType === 'custom_days' && (
             <div style={{
-              padding: '10px 12px',
+              padding: '12px 14px',
               borderRadius: '8px',
               background: 'rgba(99, 102, 241, 0.08)',
               border: '1px solid rgba(99, 102, 241, 0.25)',
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px'
+              gap: '10px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                   Specify Admission Days:
                 </span>
 
@@ -250,7 +281,7 @@ export default function VisualVehiclePickerModal({
                   <button
                     type="button"
                     className="btn btn-outline btn-sm"
-                    style={{ padding: '2px 8px', fontSize: '0.8rem' }}
+                    style={{ padding: '2px 8px', fontSize: '0.8rem', background: '#ffffff' }}
                     onClick={() => setCustomDays(Math.max(1, customDays - 1))}
                   >
                     -
@@ -268,37 +299,38 @@ export default function VisualVehiclePickerModal({
                       border: '1px solid var(--border-color)',
                       textAlign: 'center',
                       fontWeight: 800,
-                      fontSize: '0.85rem'
+                      fontSize: '0.88rem',
+                      background: '#ffffff'
                     }}
                   />
                   <button
                     type="button"
                     className="btn btn-outline btn-sm"
-                    style={{ padding: '2px 8px', fontSize: '0.8rem' }}
+                    style={{ padding: '2px 8px', fontSize: '0.8rem', background: '#ffffff' }}
                     onClick={() => setCustomDays(customDays + 1)}
                   >
                     +
                   </button>
-                  <span style={{ fontSize: '0.76rem', fontWeight: 800, color: '#6366f1' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#4f46e5' }}>
                     Days ({customDays * 24} Hours Free)
                   </span>
                 </div>
 
                 {/* Quick day pills */}
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  {[3, 5, 7, 10, 14, 30].map((d) => (
+                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                  {[1, 2, 3, 5, 7, 10, 14, 30].map((d) => (
                     <button
                       key={d}
                       type="button"
                       onClick={() => setCustomDays(d)}
                       style={{
-                        padding: '2px 8px',
+                        padding: '3px 9px',
                         borderRadius: '10px',
-                        fontSize: '0.68rem',
+                        fontSize: '0.72rem',
                         fontWeight: 700,
-                        background: customDays === d ? '#6366f1' : 'var(--bg-surface)',
-                        color: customDays === d ? '#ffffff' : 'var(--text-secondary)',
-                        border: '1px solid var(--border-color)',
+                        background: customDays === d ? '#4f46e5' : '#ffffff',
+                        color: customDays === d ? '#ffffff' : '#475569',
+                        border: customDays === d ? '1px solid #4338ca' : '1px solid #cbd5e1',
                         cursor: 'pointer'
                       }}
                     >
@@ -312,8 +344,8 @@ export default function VisualVehiclePickerModal({
                 <input
                   type="text"
                   className="form-input"
-                  style={{ fontSize: '0.74rem', padding: '6px 10px' }}
-                  placeholder="Optional admission note (e.g. Ward 3B / Surgery Stay / ICU Patient)..."
+                  style={{ fontSize: '0.78rem', padding: '7px 12px', background: '#ffffff' }}
+                  placeholder="Optional admission note (e.g. Ward 3B / Surgery Stay / ICU Patient / Room 204)..."
                   value={admissionNote}
                   onChange={(e) => setAdmissionNote(e.target.value)}
                 />
@@ -339,7 +371,7 @@ export default function VisualVehiclePickerModal({
               <CheckCircle2 size={24} />
               <div>
                 <strong style={{ fontSize: '0.9rem' }}>Validation Successful!</strong>
-                <p style={{ fontSize: '0.76rem', margin: '2px 0 0 0', color: 'var(--text-main)' }}>
+                <p style={{ fontSize: '0.78rem', margin: '2px 0 0 0', color: 'var(--text-primary)' }}>
                   Vehicle <strong>{successResult.candidate.plate_number}</strong> (Session: {successResult.candidate.session_code}) is now authorized for <strong>{successResult.durationLabel} of Free Parking</strong>.
                 </p>
               </div>
@@ -376,7 +408,7 @@ export default function VisualVehiclePickerModal({
           display: 'flex',
           flexDirection: 'column',
           gap: '10px',
-          background: 'var(--bg-surface-alt)',
+          background: 'var(--bg-input)',
           padding: '12px 14px',
           borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--border-color)'
@@ -388,7 +420,7 @@ export default function VisualVehiclePickerModal({
               <input
                 type="text"
                 className="form-input"
-                style={{ paddingLeft: '32px', fontSize: '0.82rem' }}
+                style={{ paddingLeft: '32px', fontSize: '0.82rem', background: '#ffffff' }}
                 placeholder="Search by plate digits (e.g. 43210 or 88192)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -419,7 +451,7 @@ export default function VisualVehiclePickerModal({
               onClick={loadCandidates}
               disabled={loading}
               title="Refresh Parked Vehicles List"
-              style={{ padding: '7px 12px', fontSize: '0.78rem' }}
+              style={{ padding: '7px 14px', fontSize: '0.78rem', background: '#ffffff' }}
             >
               <RefreshCw size={14} className={loading ? 'spin' : ''} />
               <span>Refresh</span>
@@ -428,69 +460,73 @@ export default function VisualVehiclePickerModal({
 
           {/* Bottom Row: Quick Arrival Time Filter Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', marginRight: '4px' }}>
+            <span style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--text-secondary)', textTransform: 'uppercase', marginRight: '4px' }}>
               Arrival Window:
             </span>
-            {timeFilterOptions.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setTimeFilter(opt.id)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  padding: '4px 10px',
-                  borderRadius: '16px',
-                  fontSize: '0.74rem',
-                  fontWeight: timeFilter === opt.id ? 800 : 600,
-                  background: timeFilter === opt.id ? 'var(--primary-color)' : 'var(--bg-surface)',
-                  color: timeFilter === opt.id ? '#ffffff' : 'var(--text-secondary)',
-                  border: timeFilter === opt.id ? '1px solid var(--primary-color)' : '1px solid var(--border-color)',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <span>{opt.icon}</span>
-                <span>{opt.label}</span>
-              </button>
-            ))}
+            {timeFilterOptions.map((opt) => {
+              const isFilterActive = timeFilter === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setTimeFilter(opt.id)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '5px 12px',
+                    borderRadius: '16px',
+                    fontSize: '0.76rem',
+                    fontWeight: isFilterActive ? 800 : 600,
+                    background: isFilterActive ? '#0284c7' : '#ffffff',
+                    color: isFilterActive ? '#ffffff' : '#334155',
+                    border: isFilterActive ? '1px solid #0369a1' : '1px solid #cbd5e1',
+                    boxShadow: isFilterActive ? '0 2px 6px rgba(2, 132, 199, 0.25)' : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <span>{opt.icon}</span>
+                  <span>{opt.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Vehicles Visual Cards Grid */}
         <div style={{
-          maxHeight: '480px',
+          maxHeight: '520px',
           overflowY: 'auto',
-          paddingRight: '4px'
+          paddingRight: '6px'
         }}>
           {loading && candidates.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
-              <RefreshCw size={24} className="spin" style={{ margin: '0 auto 8px' }} />
-              <p style={{ fontSize: '0.82rem' }}>Scanning active parked vehicles in the facility...</p>
+              <RefreshCw size={24} className="spin" style={{ margin: '0 auto 8px', color: '#2563eb' }} />
+              <p style={{ fontSize: '0.82rem', fontWeight: 600 }}>Scanning active parked vehicles in the facility...</p>
             </div>
           ) : candidates.length === 0 ? (
             <div style={{
               textAlign: 'center',
-              padding: '36px 20px',
-              background: 'var(--bg-surface-alt)',
-              borderRadius: 'var(--radius-sm)',
+              padding: '40px 20px',
+              background: 'var(--bg-input)',
+              borderRadius: 'var(--radius-md)',
               border: '1px dashed var(--border-color)',
               color: 'var(--text-muted)'
             }}>
-              <Car size={32} style={{ margin: '0 auto 8px', opacity: 0.5 }} />
-              <p style={{ fontSize: '0.88rem', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-main)' }}>
+              <Car size={36} style={{ margin: '0 auto 10px', opacity: 0.5, color: '#0284c7' }} />
+              <p style={{ fontSize: '0.9rem', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-primary)' }}>
                 No Unvalidated Vehicles Found in This Time Window
               </p>
-              <p style={{ fontSize: '0.76rem', margin: 0 }}>
+              <p style={{ fontSize: '0.78rem', margin: 0 }}>
                 Try selecting <strong>"All Parked Cars"</strong> or clearing your search filter.
               </p>
             </div>
           ) : (
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-              gap: '12px'
+              gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+              gap: '14px'
             }}>
               {candidates.map((cand) => (
                 <div
