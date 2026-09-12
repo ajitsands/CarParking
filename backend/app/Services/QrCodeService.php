@@ -339,18 +339,7 @@ class QrCodeService {
             for ($r = 0; $r < $size; $r++) {
                 for ($c = 0; $c < $size; $c++) {
                     if (!$reserved[$r][$c]) {
-                        $invert = match ($mask) {
-                            0 => ($r + $c) % 2 === 0,
-                            1 => $r % 2 === 0,
-                            2 => $c % 3 === 0,
-                            3 => ($r + $c) % 3 === 0,
-                            4 => ((int)floor($r / 2) + (int)floor($c / 3)) % 2 === 0,
-                            5 => (($r * $c) % 2) + (($r * $c) % 3) === 0,
-                            6 => ((($r * $c) % 2) + (($r * $c) % 3)) % 2 === 0,
-                            7 => ((($r + $c) % 2) + (($r * $c) % 3)) % 2 === 0,
-                            default => false,
-                        };
-                        if ($invert) {
+                        if (self::evaluateMaskPattern($mask, $r, $c)) {
                             $masked[$r][$c] ^= 1;
                         }
                     }
@@ -501,6 +490,20 @@ class QrCodeService {
         for ($i = 0; $i < 7; $i++) {
             $bit = ($formatBits >> (8 + $i)) & 1;
             $matrix[$size - 7 + $i][8] = $bit;
+        }
+    }
+
+    private static function evaluateMaskPattern(int $mask, int $r, int $c): bool {
+        switch ($mask) {
+            case 0: return ($r + $c) % 2 === 0;
+            case 1: return $r % 2 === 0;
+            case 2: return $c % 3 === 0;
+            case 3: return ($r + $c) % 3 === 0;
+            case 4: return ((int)floor($r / 2) + (int)floor($c / 3)) % 2 === 0;
+            case 5: return (($r * $c) % 2) + (($r * $c) % 3) === 0;
+            case 6: return ((($r * $c) % 2) + (($r * $c) % 3)) % 2 === 0;
+            case 7: return ((($r + $c) % 2) + (($r * $c) % 3)) % 2 === 0;
+            default: return false;
         }
     }
 
