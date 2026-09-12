@@ -1,40 +1,52 @@
-# HIMS / HIS API Integration & Parking QR Printing Specification
-**KIMSHEALTH Smart Hospital Parking Management & Visitor Validation System**
+# Universal 3rd-Party & HIMS / HIS API Integration & Parking QR Specification
+**Smart Hospital & Facility Parking Management & Visitor Validation System**
 **Version**: 2.0 (REST JSON)  
 **Status**: Active & Deployed  
 
 ---
 
-## 1. Executive Architectural Overview & Workflow
+## 1. Architectural Overview & Workflow
 
-The KIMSHEALTH Hospital Parking Management System provides dedicated REST APIs for bilateral integration with Hospital Information Systems (HIMS / HIS / EHR). This integration synchronizes patient clinic visits, pushes live parking lot capacity & floor occupancy, automatically generates high-resolution scannable QR codes for thermal slip printers, and authorizes validated patient parking.
+The Smart Parking Management System provides dedicated REST APIs for bilateral integration with **ANY 3rd-Party Software Platform**. While extensively used for Hospital Information Systems (HIMS / HIS / EHR), this standard REST API integrates seamlessly with:
+- 🏥 Hospital Information Systems (HIMS / HIS / EHR)
+- 🩺 Clinic Management Systems (CMS)
+- 🏢 Enterprise Resource Planning (ERP) & CRM Systems
+- 🏨 Hotel Property Management & Valet Systems (PMS)
+- 📱 Mobile Applications & Web Appointment Schedulers
+- 🎟️ Visitor Management Kiosks & Access Gates
 
 ### Complete Sequence Workflow:
 
 ```
-[1. Patient Books in HIMS]
+[1. Booking Created in External Software (HIMS/CMS/ERP/App)]
            │
            ▼
-[2. HIMS Calls POST /api/v1/his/appointments/sync] ───► [Parking System Stores Appt & Generates QR Image]
-           │                                                                    │
-           ▼                                                                    ▼
-[3. HIMS Receives Base64 QR Image & Prints on Slip] ◄───────────────────────────┘
+[2. External Software Calls POST /api/v1/his/appointments/sync] ───► [Parking System Stores Record & Generates QR Image]
+           │                                                                                     │
+           ▼                                                                                     ▼
+[3. External System Receives Base64 QR Image & Prints on Slip / WhatsApp] ◄──────────────────────┘
            │
            ▼
-[4. Patient Drives to Hospital & ANPR Captures Vehicle at Entry]
+[4. Patient/Visitor Arrives & ANPR Camera Captures Vehicle at Entry Gate]
            │
            ▼
-[5. Patient Scans QR Slip at Clinic / Visitor Validation Desk (Method A)]
+[5. Patient Scans QR Slip at Clinic Desk OR Software Calls Auto-Checkout Validation]
            │
            ▼
 [6. Parking Session Marked "VALIDATED" -> Barrier Auto-Opens at Exit (Free Parking)]
 ```
 
+### Dynamic QR Token Prefix Configuration:
+The system dynamically creates QR tokens formatted as `{PREFIX}-{IDENTIFIER}-{TIMESTAMP}-{RANDOM}`.
+1. **System Settings**: Configured under **Settings &rarr; HIMS Integration &rarr; QR Token Prefix** (`qr_token_prefix` key in `system_settings`), such as `QR-KIMS`, `QR-PARK`, `QR-HOSP`, or `QR-VIP`.
+2. **Request Override**: External software can pass a `token_prefix` in the JSON request body.
+3. **Default**: If unconfigured, the system defaults to `QR-KIMS`.
+
 ---
 
 ## 2. Real-Time Parking Availability & Floor Status API
 
-HIMS or outdoor digital signages can call this API periodically to fetch the live parking availability, total capacity, occupied spots, and floor-wise slot breakdowns.
+External systems or digital outdoor display boards can call this API periodically to fetch the live parking availability, total capacity, occupied spots, and floor-wise slot breakdowns.
 
 - **Endpoint**: `GET /api/v1/his/parking-status`
 - **Authentication**: Public or Internal LAN
@@ -44,11 +56,11 @@ HIMS or outdoor digital signages can call this API periodically to fetch the liv
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `(none)` | - | No | Returns overall hospital parking capacity, occupied count, available slots, occupancy rate, and floor-wise breakdown. |
+| `(none)` | - | No | Returns overall facility parking capacity, occupied count, available slots, occupancy rate, and floor-wise breakdown. |
 | `plate_number` | string | No | Lookup a specific vehicle plate (e.g. `BHR 43210`) for current entry time, duration, and validation status. |
-| `patient_mrn` | string | No | Lookup vehicle status linked to patient's Medical Record Number (e.g. `MRN-88192`). |
+| `patient_mrn` | string | No | Lookup vehicle status linked to patient / visitor ID or MRN (e.g. `MRN-88192`). |
 
-### Sample Response (Overall Hospital Status):
+### Sample Response (Overall Facility Parking Capacity & Floor Breakdown):
 
 ```json
 {
@@ -101,9 +113,9 @@ HIMS or outdoor digital signages can call this API periodically to fetch the liv
 
 ---
 
-## 3. Online Booking Ingestion & Printable QR Code API
+## 3. Universal Booking Ingestion & Printable QR Code API
 
-When an appointment is confirmed in HIMS, HIMS calls this endpoint. The parking system creates the appointment record, generates a unique secure QR token, produces a high-resolution Base64 PNG and SVG vector image, and returns the printable payload immediately so HIMS can print it on the consultation slip or send it via WhatsApp.
+When an appointment is confirmed in HIMS, CMS, ERP, or web/mobile application, the software calls this endpoint. The parking system creates the appointment record, generates a unique secure QR token, produces high-resolution Base64 PNG and SVG vector images, and returns the printable payload immediately.
 
 - **Endpoint**: `POST /api/v1/his/appointments/sync`
 - **Content-Type**: `application/json`
@@ -112,14 +124,15 @@ When an appointment is confirmed in HIMS, HIMS calls this endpoint. The parking 
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `patient_mrn` | string | **Yes** | Hospital Medical Record Number (e.g. `MRN-88192`). |
-| `patient_name` | string | **Yes** | Full Name of the patient (e.g. `Ahmed Al-Sayed`). |
-| `patient_phone` | string | Optional | Patient phone number (e.g. `+973 3611 0022`). |
+| `patient_mrn` | string | **Yes** | Medical Record Number, Visitor ID, or User Reference (e.g. `MRN-88192`). |
+| `patient_name` | string | **Yes** | Full Name of the patient / visitor (e.g. `Ahmed Al-Sayed`). |
+| `patient_phone` | string | Optional | Contact phone number (e.g. `+973 3611 0022`). |
 | `doctor_name` | string | Optional | Attending consultant / doctor name (e.g. `Dr. Tariq Al-Hashimi`). |
-| `department` | string | Optional | Medical department (e.g. `Cardiology`, `Pediatrics`). |
-| `appointment_datetime` | string | Optional | Appointment date & time in `YYYY-MM-DD HH:MM:SS` format. Defaults to current time. |
-| `registered_plate_number` | string | Optional | Vehicle plate number if known (e.g. `BHR 43210`). Enables Method C automatic ANPR match. |
+| `department` | string | Optional | Medical department or clinic (e.g. `Cardiology`, `Pediatrics`). |
+| `appointment_datetime` | string | Optional | Appointment date & time in `YYYY-MM-DD HH:MM:SS` format. Defaults to current timestamp. |
+| `registered_plate_number` | string | Optional | Vehicle plate number if known (e.g. `BHR 43210`). Enables automatic ANPR match. |
 | `free_hours` | integer | Optional | Free parking duration granted upon QR validation (default: `3` hours = 180 mins). |
+| `token_prefix` | string | Optional | Custom QR token prefix (e.g. `QR-CMS`, `QR-PARK`). If omitted, uses System Settings or default `QR-KIMS`. |
 
 ### Sample JSON Request:
 
@@ -132,7 +145,8 @@ When an appointment is confirmed in HIMS, HIMS calls this endpoint. The parking 
   "department": "Cardiology",
   "appointment_datetime": "2026-09-12 14:30:00",
   "registered_plate_number": "BHR 43210",
-  "free_hours": 3
+  "free_hours": 3,
+  "token_prefix": "QR-KIMS"
 }
 ```
 
@@ -163,9 +177,9 @@ When an appointment is confirmed in HIMS, HIMS calls this endpoint. The parking 
 
 ---
 
-## 4. Consultation Checkout Validation API
+## 4. Consultation Checkout Direct Validation API
 
-If the doctor or nurse clicks "Complete Consultation" inside HIMS, HIMS can automatically validate the patient's parking without requiring any manual QR scanning.
+If the doctor or nurse clicks "Complete Consultation" inside HIMS / external software, the system can automatically validate the patient's parking without requiring manual QR scanning.
 
 - **Endpoint**: `POST /api/v1/his/validate-visitor`
 - **Content-Type**: `application/json`
@@ -196,7 +210,7 @@ If the doctor or nurse clicks "Complete Consultation" inside HIMS, HIMS can auto
 
 ## 5. Emergency Ambulance Priority Access API
 
-Used for emergency inbound ambulances or emergency room code reds to instantly trigger the boom barrier and log priority access.
+Used for emergency inbound ambulances or emergency room code reds to instantly open the inbound boom barrier and log priority access.
 
 - **Endpoint**: `POST /api/v1/his/emergency-access`
 
@@ -213,7 +227,7 @@ Used for emergency inbound ambulances or emergency room code reds to instantly t
 
 ## 6. Thermal Slip Printer Integration Guidelines
 
-When printing patient consultation slips or appointment receipts on 80mm or 58mm POS thermal printers (Epson ESC/POS, Zebra ZPL, Citizen, Bixolon):
+When printing patient consultation slips or appointment receipts on 80mm or 58mm POS thermal printers (Epson ESC/POS, Zebra ZPL, Citizen, Bixolon, Star Micronics):
 - **Base64 PNG Direct Print**: Convert `qr_png_base64` to a bitonal bitmap image and send via standard ESC/POS raster graphics command (`ESC *` or `GS v 0`).
 - **Native Thermal QR Command**: If using native printer QR commands, pass the `qr_token` string to printer function `GS ( k`.
 - **Recommended QR Dimension**: 150px × 150px to 240px × 240px (minimum 25mm on physical thermal paper) for instantaneous 100% scanning rate.

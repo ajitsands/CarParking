@@ -92,6 +92,7 @@ export default function SettingsPage() {
   ]);
 
   // HIMS API Live Tester State
+  const [qrTokenPrefix, setQrTokenPrefix] = useState('QR-KIMS');
   const [himsSyncTestResult, setHimsSyncTestResult] = useState(null);
   const [himsStatusTestResult, setHimsStatusTestResult] = useState(null);
   const [testingHimsSync, setTestingHimsSync] = useState(false);
@@ -111,6 +112,9 @@ export default function SettingsPage() {
         }));
         setTimezones(res.data.timezones || {});
         setSupportedCurrencies(res.data.supported_currencies || {});
+        if (res.data.settings?.qr_token_prefix) {
+          setQrTokenPrefix(res.data.settings.qr_token_prefix);
+        }
         if (res.data.settings?.parking_total_capacity) {
           setParkingTotalCapacity(res.data.settings.parking_total_capacity);
         }
@@ -361,6 +365,7 @@ export default function SettingsPage() {
     try {
       const payload = {
         ...formData,
+        qr_token_prefix: qrTokenPrefix,
         parking_total_capacity: parkingTotalCapacity,
         parking_floor_slots_json: JSON.stringify(floorSlots),
         anpr_lan_ip: customLanIp,
@@ -1669,7 +1674,38 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                {/* Live Interactive HIMS Tester */}
+                {/* QR Code Token Prefix Configuration */}
+                <div style={{
+                  marginBottom: '16px',
+                  padding: '12px 14px',
+                  background: 'var(--bg-input)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '6px'
+                }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      QR Code Token Prefix (Default / Customizable)
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', maxWidth: '380px' }}>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={qrTokenPrefix}
+                        onChange={(e) => setQrTokenPrefix(e.target.value.toUpperCase().trim())}
+                        placeholder="e.g. QR-KIMS or QR-PARK"
+                        style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                      />
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        Preview: <strong>{qrTokenPrefix || 'QR-KIMS'}-MRN101-9921</strong>
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      Used as the prefix for all generated parking validation QR tokens. Works with ANY hospital software, HIS/HIMS, clinic management system, EHR, ERP, or appointment scheduler.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Interactive HIMS & 3rd-Party Software Tester */}
                 <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
                     <span style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--text-primary)' }}>

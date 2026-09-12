@@ -34,11 +34,21 @@ class HisIntegrationController extends Controller {
             return;
         }
 
+        $db = Database::getInstance();
+
+        // Determine QR token prefix: 1) Request override, 2) System Settings, 3) Default (QR-KIMS)
+        $requestPrefix = trim($input['token_prefix'] ?? $input['prefix'] ?? '');
+        if ($requestPrefix) {
+            $prefix = rtrim(strtoupper($requestPrefix), '-');
+        } else {
+            $stmtPrefix = $db->query("SELECT setting_value FROM system_settings WHERE setting_key = 'qr_token_prefix' LIMIT 1");
+            $customPrefix = trim($stmtPrefix ? ($stmtPrefix->fetchColumn() ?: '') : '');
+            $prefix = $customPrefix ? rtrim(strtoupper($customPrefix), '-') : 'QR-KIMS';
+        }
+
         $code = 'APT-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -5));
         $cleanMrn = preg_replace('/[^A-Za-z0-9]/', '', $mrn);
-        $qrToken = 'QR-KIMS-' . ($cleanMrn ?: 'PATIENT') . '-' . time() . '-' . rand(100, 999);
-
-        $db = Database::getInstance();
+        $qrToken = $prefix . '-' . ($cleanMrn ?: 'PATIENT') . '-' . time() . '-' . rand(100, 999);
 
         // Check if appointment already exists for this MRN today with same time
         $stmtExist = $db->prepare("SELECT * FROM his_appointments WHERE patient_mrn = ? AND DATE(appointment_datetime) = DATE(?) LIMIT 1");
