@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SaNDS Smart Parking OS — Next-Gen AI ANPR & Multi-Industry Barrier Automation</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --secondary: #6366f1;
+      --accent: #10b981;
+      --amber: #f59e0b;
+      --pink: #ec4899;
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-card-sub: #f1f5f9;
+      --text-main: #0f172a;
+      --text-sub: #475569;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-sub: #cbd5e1;
+      --nav-bg: rgba(255, 255, 255, 0.88);
+    }
+    [data-theme="dark"] {
+      --bg-body: #090d16;
+      --bg-card: #0f172a;
+      --bg-card-sub: #020617;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --text-muted: #64748b;
+      --border: #1e293b;
+      --border-sub: #334155;
+      --nav-bg: rgba(9, 13, 22, 0.88);
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text-main);
+      background: var(--bg-body);
+    }
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    /* Navbar */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: var(--nav-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 0;
+    }
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+    }
+    .brand-logo-card {
+      background: #ffffff;
+      padding: 4px 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+    }
+    .brand-logo-card img {
+      height: 32px;
+      width: auto;
+      display: block;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .nav-link {
+      color: var(--text-sub);
+      text-decoration: none;
+      font-size: 0.84rem;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+    .nav-link:hover {
+      color: var(--primary);
+    }
+    .theme-toggle-btn {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
+      color: #ffffff;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.86rem;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1.5px solid var(--border-sub);
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.86rem;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-secondary:hover {
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 60px 0 40px;
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(2, 132, 199, 0.1);
+      border: 1px solid rgba(2, 132, 199, 0.25);
+      color: var(--primary);
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(2.1rem, 4.5vw, 3.4rem);
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.8px;
+      max-width: 920px;
+      margin: 0 auto 20px;
+    }
+    .hero p {
+      font-size: 1.08rem;
+      line-height: 1.6;
+      color: var(--text-sub);
+      max-width: 780px;
+      margin: 0 auto 32px;
+    }
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 45px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    }
+    .stat-val {
+      font-size: 1.85rem;
+      font-weight: 900;
+    }
+    .stat-lbl {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Section styling */
+    .section {
+      padding: 60px 0;
+    }
+    .section-header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .section-tag {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .section-sub {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    /* Industry Tabs */
+    .ind-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .ind-tab-btn {
+      background: var(--bg-card-sub);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      padding: 10px 18px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.84rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ind-tab-btn.active {
+      background: var(--bg-card);
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15);
+    }
+    .ind-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 36px;
+      box-shadow: 0 6px 25px rgba(0,0,0,0.03);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      align-items: center;
+    }
+    .ind-badge {
+      display: inline-block;
+      background: rgba(2, 132, 199, 0.1);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+    .ind-highlights {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .ind-h-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.86rem;
+      color: var(--text-sub);
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .feat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+    .feat-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    .feat-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(2, 132, 199, 0.1);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 14px;
+    }
+    .feat-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .feat-desc {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    /* App Banner */
+    .app-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #0c4a6e 50%, #1e1b4b 100%);
+      border-radius: 20px;
+      padding: 40px 32px;
+      color: #ffffff;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      align-items: center;
+    }
+
+    /* Footer */
+    .footer {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 28px 0;
+      text-align: center;
+      font-size: 0.86rem;
+      color: var(--text-muted);
+    }
+    .footer-sands-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 0.86rem;
+      text-decoration: underline;
+    }
+
+    /* SaNDS Modal Popup */
+    .sands-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sands-popup {
+      position: relative;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 36px 32px 28px;
+      width: 360px;
+      max-width: 92vw;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      color: #0f172a;
+    }
+    .sands-popup-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .sands-act-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+    .btn-wa { background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); }
+    .btn-web { background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); }
+    .btn-prod { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="nav">
+    <div class="container nav-container">
+      <a href="/" class="nav-brand">
+        <div class="brand-logo-card">
+          <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS Lab Logo" />
+        </div>
+        <div>
+          <div style="font-size: 0.95rem; font-weight: 800; letter-spacing: -0.3px;">SaNDS Smart Parking OS</div>
+          <div style="font-size: 0.7rem; color: var(--primary); font-weight: 600;">Multi-Industry Facility Platform</div>
+        </div>
+      </a>
+
+      <div class="nav-links">
+        <a href="#industries" class="nav-link">Industry Suites</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="/HIMS_API_Integration_Guide.html" target="_blank" class="nav-link">📖 API Guide</a>
+        
+        <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle Light / Dark Mode">
+          🌓 <span id="themeBtnText">Dark Mode</span>
+        </button>
+
+        <a href="/" class="btn-primary">
+          <span>Launch Portal</span> &rarr;
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        ✨ POWERED BY SaNDS LAB &bull; UNIVERSAL SMART PARKING OS
+      </div>
+
+      <h1>Next-Gen AI ANPR &amp; Barrier Automation for Any Industry</h1>
+
+      <p>
+        A unified, enterprise parking management platform engineered for Hospitals, Supermarkets, Hotels, Corporate Tech Parks, Airports, and Municipal facilities. Features real-time bilateral REST APIs, sub-second boom barrier relays, pure-PHP ISO QR generation, POS checkout waivers, and multi-floor slot guidance.
+      </p>
+
+      <div class="hero-actions">
+        <a href="/" class="btn-primary" style="padding: 13px 26px; font-size: 0.95rem;">
+          <span>Launch Management Dashboard</span> &rarr;
+        </a>
+        <a href="/ParkingDisplayBoard_v1.0.apk" download class="btn-secondary" style="padding: 13px 22px;">
+          📥 Download Android Display App
+        </a>
+        <button onclick="openSandsModal()" class="btn-secondary" style="padding: 13px 20px;">
+          💬 Contact SaNDS Lab
+        </button>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div>
+          <div class="stat-val" style="color: var(--primary);">99.8%</div>
+          <div class="stat-lbl">ANPR OCR Accuracy</div>
+        </div>
+        <div>
+          <div class="stat-val" style="color: var(--accent);">&lt; 0.4s</div>
+          <div class="stat-lbl">Barrier Response Rate</div>
+        </div>
+        <div>
+          <div class="stat-val" style="color: var(--amber);">100%</div>
+          <div class="stat-lbl">Offline Edge Resilience</div>
+        </div>
+        <div>
+          <div class="stat-val" style="color: var(--pink);">6+ Suites</div>
+          <div class="stat-lbl">Industry-Tailored Flows</div>
+        </div>
+        <div>
+          <div class="stat-val" style="color: var(--secondary);">Live IoT</div>
+          <div class="stat-lbl">Floor &amp; Zone Capacity</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Multi-Industry Solutions Section -->
+  <section class="section" id="industries">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Multi-Industry Architecture</div>
+        <h2 class="section-title">Engineered for Multi-Facility Operations</h2>
+        <p class="section-sub">
+          Tailored operational workflows designed for healthcare clinics, hypermarket retail plazas, resort valet management, corporate campuses, and transit terminals.
+        </p>
+      </div>
+
+      <!-- Industry Tabs -->
+      <div class="ind-tabs">
+        <button class="ind-tab-btn active" onclick="switchIndustry('hospital', this)">🏥 Hospitals &amp; Clinics</button>
+        <button class="ind-tab-btn" onclick="switchIndustry('supermarket', this)">🛒 Supermarkets &amp; Malls</button>
+        <button class="ind-tab-btn" onclick="switchIndustry('hotel', this)">🏨 Hotels &amp; Valet</button>
+        <button class="ind-tab-btn" onclick="switchIndustry('techpark', this)">🏢 Corporate Tech Parks</button>
+        <button class="ind-tab-btn" onclick="switchIndustry('airport', this)">✈️ Airports &amp; Municipal Lots</button>
+        <button class="ind-tab-btn" onclick="switchIndustry('stadium', this)">🎪 Arenas &amp; Stadiums</button>
+      </div>
+
+      <!-- Active Industry Card -->
+      <div class="ind-card" id="industryCard">
+        <div>
+          <div class="ind-badge" id="indBadge">Healthcare Suite</div>
+          <h3 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 6px;" id="indTitle">Hospitals &amp; Medical Centers</h3>
+          <div style="font-size: 0.9rem; font-weight: 700; color: var(--primary); margin-bottom: 14px;" id="indTagline">
+            Bilateral HIMS / HIS Integration &amp; Patient Validation Desks
+          </div>
+          <p style="font-size: 0.92rem; line-height: 1.6; color: var(--text-sub); margin-bottom: 16px;" id="indDesc">
+            Synchronizes clinic appointments directly from Hospital Information Systems (HIMS/HIS), auto-generates printable thermal QR slips, and authorizes validated patient parking while giving emergency ambulances instant priority clearance.
+          </p>
+          <div class="ind-highlights" id="indHighlights">
+            <div class="ind-h-item">✓ Live Bilateral REST API with ANY HIMS / EHR software</div>
+            <div class="ind-h-item">✓ Printable thermal QR slips for consultation desks</div>
+            <div class="ind-h-item">✓ Automatic emergency ambulance priority barrier opening</div>
+            <div class="ind-h-item">✓ Doctor &amp; staff whitelist with RFID/ANPR fast lanes</div>
+            <div class="ind-h-item">✓ Visitor &amp; patient validation portals (Method A, B &amp; C)</div>
+          </div>
+        </div>
+
+        <!-- Workflow Box -->
+        <div style="background: var(--bg-card-sub); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <span style="font-size: 0.78rem; font-weight: 800; color: var(--primary); letter-spacing: 0.5px;">SYSTEM WORKFLOW</span>
+            <span style="background: rgba(2, 132, 199, 0.15); color: var(--primary); font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: 700;">Sub-Second Latency</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 10px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.78rem;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 10px; border-radius: 6px;">
+              <strong>1.</strong> ANPR Inbound Scan &rarr; Barrier Opens
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 10px; border-radius: 6px;">
+              <strong>2.</strong> External Software Sync &rarr; Printable QR Pass Issued
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 10px; border-radius: 6px;">
+              <strong>3.</strong> QR Scanned at Validation Desk &rarr; Session Marked "VALIDATED"
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 10px; border-radius: 6px;">
+              <strong>4.</strong> Exit ANPR Match &rarr; Free Barrier Auto-Open
+            </div>
+          </div>
+          <div style="margin-top: 18px;">
+            <a href="/" class="btn-primary" style="width: 100%; text-align: center; justify-content: center;">
+              Launch Industry Module &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 Core Features -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Complete Feature Matrix</div>
+        <h2 class="section-title">8 Core Pillars of the SaNDS Parking Platform</h2>
+        <p class="section-sub">
+          Built with zero unnecessary dependencies, ultra-fast database engine, native pure-PHP QR generators, and instant GPIO/IP relay triggering.
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feat-card">
+          <div class="feat-icon-box">📹</div>
+          <div class="feat-title">AI ANPR Ingestion Engine</div>
+          <div class="feat-desc">Native HTTP push listener compatible with Dahua, Hikvision, Uniview, Hanwha, and custom LPR edge cameras with sub-second plate OCR recognition.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon-box">🌐</div>
+          <div class="feat-title">Universal 3rd-Party REST API</div>
+          <div class="feat-desc">Bilateral REST endpoints for ANY software — HIMS, ERP, POS, CRM, Hotel PMS, or custom mobile apps with live status pushing.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon-box">🎟️</div>
+          <div class="feat-title">Instant QR Code Generator</div>
+          <div class="feat-desc">Built-in pure-PHP ISO/IEC 18004 compliant QR generator. Emits high-resolution Base64 PNGs and SVG slips for POS thermal receipt printers.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon-box">📊</div>
+          <div class="feat-title">Floor-Wise Capacity Manager</div>
+          <div class="feat-desc">Configure total facility capacity and floor-by-floor slot quotas. Real-time occupancy KPI counters, progress meters, and dynamic available spot updates.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon-box">💳</div>
+          <div class="feat-title">POS Cashier &amp; Digital Payments</div>
+          <div class="feat-desc">Multi-currency cashier checkout supporting BenefitPay QR, credit cards, cash, discount coupons, and anti-passback enforcement.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon-box">📱</div>
+          <div class="feat-title">Android Display Board App</div>
+          <div class="feat-desc">Free downloadable native Android APK for outdoor LED display totems and tablets showing real-time floor availability and rate cards.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon-box">🛡️</div>
+          <div class="feat-title">Hardware Relay &amp; Barrier Control</div>
+          <div class="feat-desc">Direct IP relay, serial COM, and GPIO integration for instant boom barrier triggering with safety loop sensor interlocking.</div>
+        </div>
+        <div class="feat-card">
+          <div class="feat-icon-box">📑</div>
+          <div class="feat-title">Financial Ledger &amp; Audit Logs</div>
+          <div class="feat-desc">Complete vehicle access history, shift settlement logs, revenue breakdown, and exportable PDF/Excel reports with role-based security.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Downloadable App Banner -->
+  <section class="section" style="padding-top: 0;">
+    <div class="container">
+      <div class="app-banner">
+        <div>
+          <span style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-size: 0.74rem; font-weight: 800; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 12px;">
+            FREE COMPANION APP
+          </span>
+          <h3 style="font-size: 1.7rem; font-weight: 900; margin-bottom: 10px;">Android Parking Display Board APK</h3>
+          <p style="font-size: 0.92rem; line-height: 1.6; color: #94a3b8; margin-bottom: 20px;">
+            Deploy real-time parking spot counters on outdoor digital LED boards, Android TV totems, and reception tablets. Automatically synchronizes available slots per floor over LAN or Wi-Fi.
+          </p>
+          <a href="/ParkingDisplayBoard_v1.0.apk" download class="btn-primary" style="background: #10b981;">
+            📥 Download APK (v1.0 &bull; 81 MB)
+          </a>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 24px;">
+          <h4 style="font-size: 1.1rem; font-weight: 800; color: #38bdf8; margin-bottom: 10px;">Connect with SaNDS Lab Engineers</h4>
+          <p style="font-size: 0.86rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 16px;">
+            Our engineering team at SaNDS Lab provides turnkey integration support for Hospital Information Systems, ERPs, POS hardware, and access control barriers.
+          </p>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="openSandsModal()" class="btn-primary" style="background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);">
+              📞 WhatsApp Support
+            </button>
+            <a href="/HIMS_API_Integration_Guide.html" target="_blank" class="btn-secondary" style="background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.2);">
+              📖 Integration Manual
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <span>&copy; 2026 All Rights Reserved &mdash; <strong>SaNDS Smart Parking OS</strong></span>
+      <span style="margin: 0 6px;">|</span>
+      <span>Powered by <button class="footer-sands-btn" onclick="openSandsModal()">SaNDS Lab</button></span>
+    </div>
+  </footer>
+
+  <!-- SaNDS Lab Light Background Modal Popup -->
+  <div id="sandsModal" class="sands-overlay" style="display: none;" onclick="closeSandsModal()">
+    <div class="sands-popup" onclick="event.stopPropagation()">
+      <button class="sands-popup-close" onclick="closeSandsModal()">✕</button>
+      <div style="margin: 0 auto 12px; width: fit-content;">
+        <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS Lab Logo" style="height: 52px; width: auto; display: block;" />
+      </div>
+      <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 22px; font-weight: 500;">
+        Innovative Solutions &amp; Digital Services
+      </p>
+
+      <a href="https://wa.me/97335078079" target="_blank" rel="noopener noreferrer" class="sands-act-btn btn-wa">
+        💬 Connect on WhatsApp
+      </a>
+      <a href="https://www.sandslab.com" target="_blank" rel="noopener noreferrer" class="sands-act-btn btn-web">
+        🌐 Visit Website
+      </a>
+      <a href="https://products.sandslab.com" target="_blank" rel="noopener noreferrer" class="sands-act-btn btn-prod">
+        🚀 Explore All Products
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // Industry Data
+    const industryData = {
+      hospital: {
+        badge: 'Healthcare Suite',
+        title: 'Hospitals & Medical Centers',
+        tagline: 'Bilateral HIMS / HIS Integration & Patient Validation Desks',
+        desc: 'Synchronizes clinic appointments directly from Hospital Information Systems (HIMS/HIS), auto-generates printable thermal QR slips, and authorizes validated patient parking while giving emergency ambulances instant priority clearance.',
+        highlights: [
+          '✓ Live Bilateral REST API with ANY HIMS / EHR software',
+          '✓ Printable thermal QR slips for consultation desks',
+          '✓ Automatic emergency ambulance priority barrier opening',
+          '✓ Doctor & staff whitelist with RFID/ANPR fast lanes',
+          '✓ Visitor & patient validation portals (Method A, B & C)'
+        ]
+      },
+      supermarket: {
+        badge: 'Retail & Commercial',
+        title: 'Supermarkets & Shopping Malls',
+        tagline: 'POS Spend-to-Park Waivers & Rapid Flow Management',
+        desc: 'Boost customer satisfaction and dwell time by linking cashier checkout barcodes to free parking waivers. Supports high-throughput weekend rushes with automated barrier opens and dynamic outdoor LED lane guidance.',
+        highlights: [
+          '✓ POS receipt barcode scan for instant parking discounts',
+          '✓ Tiered spend-to-park validation rules (e.g. BD 10 = 2 Hours Free)',
+          '✓ Multi-level parking guidance with floor-by-floor slot meters',
+          '✓ Automated cashier POS terminal with BenefitPay & Card payments',
+          '✓ Ticketless entry reducing paper consumption and queue times'
+        ]
+      },
+      hotel: {
+        badge: 'Hospitality & Valet',
+        title: 'Hotels, Resorts & Valet Services',
+        tagline: 'PMS Integration & Digital SMS Valet Retrieval',
+        desc: 'Seamless integration with Hotel Property Management Systems (PMS). Registered guests enjoy automatic barrier access throughout their stay, while valet operators track vehicles with digital SMS tokens and vehicle inspection logs.',
+        highlights: [
+          '✓ Direct synchronization with Hotel PMS room bookings',
+          '✓ Digital SMS valet retrieval token for hotel guests',
+          '✓ VIP guest license plate pre-registration & greeting alerts',
+          '✓ Banquet & wedding event parking validation vouchers',
+          '✓ Anti-passback protection across multi-gate resort perimeters'
+        ]
+      },
+      techpark: {
+        badge: 'Enterprise & Tech Parks',
+        title: 'Corporate Parks & Business Towers',
+        tagline: 'Multi-Tenant Allocation & Employee Access Control',
+        desc: 'Designed for high-density business hubs. Manages tenant slot allocations, employee monthly permits, contractor temporary passes, and visitor pre-registration with automated financial chargeback ledgers.',
+        highlights: [
+          '✓ Multi-tenant slot quotas with over-capacity alerts',
+          '✓ Employee monthly & yearly prepaid ANPR subscriptions',
+          '✓ Self-service visitor invitation links with QR passes',
+          '✓ Departmental & company financial billing ledger reports',
+          '✓ Integration with corporate Active Directory & HRMS'
+        ]
+      },
+      airport: {
+        badge: 'Municipal & Transit',
+        title: 'Airports & Multi-Storey Municipal Lots',
+        tagline: 'Dynamic Tariff Engines & Multi-Floor Display Boards',
+        desc: 'High-capacity infrastructure for long-term and short-term airport terminals. Features tiered progressive pricing, Android LED display boards, lost ticket resolution, and multi-currency billing.',
+        highlights: [
+          '✓ Progressive hourly & multi-day long-term tariff engines',
+          '✓ Free downloadable Android Parking Display Board APK',
+          '✓ Real-time floor-by-floor capacity & zone guidance',
+          '✓ Centralized cloud management across multiple city locations',
+          '✓ Comprehensive financial audit trail & cashier shift settlements'
+        ]
+      },
+      stadium: {
+        badge: 'Events & Entertainment',
+        title: 'Stadiums, Arenas & Event Venues',
+        tagline: 'Surge-Rate Tariffs & Mass Throughput Automation',
+        desc: 'Handles tens of thousands of vehicles during concerts, matches, and trade expos. Includes rapid event barrier open modes, surge pricing rules, and cashless mobile scan-to-exit gates.',
+        highlights: [
+          '✓ High-speed batch entry mode during peak match hours',
+          '✓ Pre-booked digital event QR passes on mobile phones',
+          '✓ Cashless exit terminals with instant BenefitPay QR payments',
+          '✓ Offline edge resilience — gates operate without internet',
+          '✓ VIP & press media dedicated access lanes'
+        ]
+      }
+    };
+
+    function switchIndustry(key, btn) {
+      document.querySelectorAll('.ind-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const data = industryData[key];
+      if (!data) return;
+
+      document.getElementById('indBadge').innerText = data.badge;
+      document.getElementById('indTitle').innerText = data.title;
+      document.getElementById('indTagline').innerText = data.tagline;
+      document.getElementById('indDesc').innerText = data.desc;
+
+      const hlContainer = document.getElementById('indHighlights');
+      hlContainer.innerHTML = data.highlights.map(h => `<div class="ind-h-item">${h}</div>`).join('');
+    }
+
+    // Theme Switcher (Default: Light)
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('app-theme', theme);
+      const text = document.getElementById('themeBtnText');
+      if (text) text.innerText = theme === 'dark' ? 'Light Mode' : 'Dark Mode';
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    // Initial theme check
+    const savedTheme = localStorage.getItem('app-theme') || 'light';
+    applyTheme(savedTheme);
+
+    // SaNDS Modal
+    function openSandsModal() {
+      document.getElementById('sandsModal').style.display = 'flex';
+    }
+    function closeSandsModal() {
+      document.getElementById('sandsModal').style.display = 'none';
+    }
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeSandsModal();
+    });
+  </script>
+</body>
+</html>

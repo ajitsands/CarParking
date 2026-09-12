@@ -23,6 +23,7 @@ import LicenseManagementPage from './pages/LicenseManagementPage';
 import UserManagementPage from './pages/UserManagementPage';
 import DisplayBoardPage from './pages/DisplayBoardPage';
 import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/LandingPage';
 
 import AnprSimulatorModal from './components/simulator/AnprSimulatorModal';
 import PaymentModal from './components/payment/PaymentModal';
@@ -32,9 +33,10 @@ import { api } from './services/api';
 function MainApp() {
   const { user, loading, isReception } = useAuth();
   const { license } = useSettings();
+  const [showPublicLanding, setShowPublicLanding] = useState(false);
   // Restore last active tab from localStorage so refresh keeps the user on the same page
   const [activeTab, setActiveTabState] = useState(
-    () => localStorage.getItem('parking_active_tab') || 'dashboard'
+    () => localStorage.getItem('parking_active_tab') || 'home'
   );
 
   const setActiveTab = (tab) => {
@@ -78,7 +80,15 @@ function MainApp() {
   }
 
   if (!user) {
-    return <LoginPage />;
+    if (showPublicLanding) {
+      return (
+        <LandingPage 
+          onLaunchPortal={() => setShowPublicLanding(false)} 
+          onOpenGuide={() => window.open('/ANPR_Configuration_Procedure_Guide.html', '_blank')} 
+        />
+      );
+    }
+    return <LoginPage onExploreFeatures={() => setShowPublicLanding(true)} />;
   }
 
   const handleSelfPasswordChange = async (e) => {
@@ -119,7 +129,14 @@ function MainApp() {
       />
 
       {/* 3. Full-width Main Content Area */}
-      <main className="content-body">
+      <main className="content-body" style={activeTab === 'home' ? { padding: 0 } : {}}>
+        {activeTab === 'home' && (
+          <LandingPage 
+            onLaunchPortal={() => setActiveTab('dashboard')} 
+            onOpenGuide={() => window.open('/ANPR_Configuration_Procedure_Guide.html', '_blank')} 
+          />
+        )}
+
         {activeTab === 'dashboard' && (
           <Dashboard 
             onNavigate={(tab) => setActiveTab(tab)}

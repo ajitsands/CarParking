@@ -3,7 +3,7 @@ import { Car, Lock, User, ArrowRight, ShieldCheck, Sparkles, Building2 } from 'l
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 
-export default function LoginPage() {
+export default function LoginPage({ onExploreFeatures }) {
   const { login } = useAuth();
   const { settings } = useSettings();
 
@@ -44,7 +44,7 @@ export default function LoginPage() {
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '420px',
+        maxWidth: '430px',
         background: 'var(--bg-surface)',
         borderRadius: 'var(--radius-lg)',
         boxShadow: 'var(--shadow-xl)',
@@ -85,7 +85,7 @@ export default function LoginPage() {
             {settings.company_name || 'KIMSHEALTH'}
           </h1>
           <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-            Smart Hospital Parking & Visitor Validation System
+            Smart Multi-Industry Parking & Visitor Management System
           </p>
         </div>
 
@@ -151,8 +151,8 @@ export default function LoginPage() {
 
           {/* Quick Demo Sign-in Helper */}
           <div style={{
-            marginTop: '20px',
-            paddingTop: '16px',
+            marginTop: '16px',
+            paddingTop: '14px',
             borderTop: '1px dashed var(--border-color)',
             fontSize: '0.72rem',
             color: 'var(--text-muted)'
@@ -187,6 +187,33 @@ export default function LoginPage() {
                 Reception
               </button>
             </div>
+          </div>
+
+          {/* Explore Features & Landing Page Action */}
+          <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
+            <button
+              type="button"
+              onClick={onExploreFeatures || (() => window.location.href = '/landing.html')}
+              style={{
+                width: '100%',
+                padding: '9px 12px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.12) 0%, rgba(99, 102, 241, 0.12) 100%)',
+                border: '1px solid rgba(2, 132, 199, 0.35)',
+                color: '#0284c7',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <Building2 size={15} />
+              <span>Explore Multi-Industry Features (Home Page)</span>
+            </button>
           </div>
         </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
+  Home,
   LayoutDashboard, 
   Video, 
   Car, 
@@ -10,11 +11,11 @@ import {
   Settings, 
   Users, 
   Server, 
-  Sparkles,
-  WalletCards,
-  Key,
-  ChevronDown,
-  Monitor
+  Sparkles, 
+  WalletCards, 
+  Key, 
+  ChevronDown, 
+  Monitor 
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -41,6 +42,7 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
   }, []);
 
   const allNavItems = [
+    { id: 'home', label: 'Home / Overview', icon: Home },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'live-lanes', label: 'Live Gate Monitor', icon: Video },
     { id: 'sessions', label: 'Parking Sessions', icon: Car },
@@ -52,9 +54,9 @@ export default function HorizontalMenu({ activeTab, setActiveTab, onOpenSimulato
     { id: 'display-board', label: 'Display Board', icon: Monitor }
   ];
 
-  // For Reception, ONLY show Dashboard, Parking Sessions, and Visitor Validation
+  // For Reception, show Home, Dashboard, Parking Sessions, and Visitor Validation
   const navItems = isReception
-    ? allNavItems.filter(item => ['dashboard', 'sessions', 'validation'].includes(item.id))
+    ? allNavItems.filter(item => ['home', 'dashboard', 'sessions', 'validation'].includes(item.id))
     : allNavItems;
 
   // Admin configurable menu colors (Default: Pink & Blue combination)
