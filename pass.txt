@@ -24,3 +24,9 @@ Live Lanes & Gate Monitor: https://parking.sandslab.com/lanes
 Display Board & Simulator: https://parking.sandslab.com/display-board
 Direct APK Download: https://parking.sandslab.com/downloads/ParkingDisplayBoard.apk
 In the Android Display App: Set Server Mode → Cloud Server with URL https://parking.sandslab.com
+
+
+
+git checkout -- .htaccess
+git pull origin main
+bash deployment/cpanel_setup.sh

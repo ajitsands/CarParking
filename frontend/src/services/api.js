@@ -130,7 +130,7 @@ export const api = {
   // HIS Integration Endpoints
   hisSyncAppointment: (payload) => request('/his/appointments/sync', { method: 'POST', body: payload }),
   hisValidateVisitor: (payload) => request('/his/validate-visitor', { method: 'POST', body: payload }),
-  hisCheckStatus: (plate) => request(`/his/parking-status?plate_number=${encodeURIComponent(plate)}`),
+  hisCheckStatus: (query = '') => request(`/his/parking-status${query ? '?plate_number=' + encodeURIComponent(query) : ''}`),
   hisEmergencyAccess: (payload) => request('/his/emergency-access', { method: 'POST', body: payload }),
 
   // Prepaid Parking & Vehicle Ledger

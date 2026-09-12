@@ -5,26 +5,45 @@ use App\Core\Controller;
 use App\Core\Database;
 
 class VisitorValidationController extends Controller {
+
+    /**
+     * POST /api/v1/validation/qr
+     * Validates parking session by scanned appointment QR code.
+     * Supports raw tokens, KIMSHEALTH:// URI schemes, and JSON payloads.
+     */
     public function validateByQr(): void {
         $input = $this->getJsonInput();
-        $token = trim($input['qr_token'] ?? $input['token'] ?? '');
+        $rawToken = trim($input['qr_token'] ?? $input['token'] ?? '');
         $plate = strtoupper(trim($input['plate_number'] ?? ''));
 
-        if (!$token) {
+        if (!$rawToken) {
             $this->error('QR token is required for validation', 400);
             return;
         }
 
+        // Parse token if it's formatted as a URL/URI scheme (e.g. KIMSHEALTH://VAL?TOKEN=... or http://...)
+        $token = $rawToken;
+        $extractedMrn = '';
+        $extractedCode = '';
+
+        if (str_contains($rawToken, 'TOKEN=') || str_contains($rawToken, 'token=')) {
+            $queryString = parse_url($rawToken, PHP_URL_QUERY) ?: $rawToken;
+            parse_str($queryString, $parsedParams);
+            if (!empty($parsedParams['TOKEN'])) $token = trim($parsedParams['TOKEN']);
+            if (!empty($parsedParams['token'])) $token = trim($parsedParams['token']);
+            if (!empty($parsedParams['MRN'])) $extractedMrn = trim($parsedParams['MRN']);
+            if (!empty($parsedParams['CODE'])) $extractedCode = trim($parsedParams['CODE']);
+        }
+
         $db = Database::getInstance();
 
-        // 1. Verify Appointment QR Token
-        $stmtAppt = $db->prepare("SELECT * FROM his_appointments WHERE qr_token = ? LIMIT 1");
-        $stmtAppt->execute([$token]);
+        // 1. Verify Appointment in database
+        $stmtAppt = $db->prepare("SELECT * FROM his_appointments WHERE qr_token = ? OR appointment_code = ? LIMIT 1");
+        $stmtAppt->execute([$token, $extractedCode ?: $token]);
         $appointment = $stmtAppt->fetch();
 
-        // If not found in seed appointments, treat as general verified hospital QR token
-        $mrn = $appointment['patient_mrn'] ?? 'MRN-' . substr(abs(crc32($token)), 0, 6);
-        $patientName = $appointment['patient_name'] ?? 'Hospital Visitor';
+        $mrn = $appointment['patient_mrn'] ?? ($extractedMrn ?: ('MRN-' . substr(abs(crc32($token)), 0, 6)));
+        $patientName = $appointment['patient_name'] ?? 'Hospital Patient / Visitor';
         $registeredPlate = $appointment['registered_plate_number'] ?? $plate;
 
         // 2. Find matching active parking session
@@ -37,14 +56,21 @@ class VisitorValidationController extends Controller {
             $session = $stmtSess->fetch();
         }
 
+        if (!$session && $mrn) {
+            // Check if there is a session with any plate belonging to this MRN
+            $stmtSess = $db->prepare("SELECT * FROM parking_sessions WHERE (plate_number = ? OR validation_ref = ?) AND exit_time IS NULL ORDER BY id DESC LIMIT 1");
+            $stmtSess->execute([$registeredPlate, $mrn]);
+            $session = $stmtSess->fetch();
+        }
+
         if (!$session) {
-            // Find latest active session without validation
+            // Find latest active session requiring validation
             $stmtSess = $db->query("SELECT * FROM parking_sessions WHERE exit_time IS NULL AND status IN ('VALIDATION_PENDING', 'CHARGING') ORDER BY id DESC LIMIT 1");
             $session = $stmtSess->fetch();
         }
 
         if (!$session) {
-            $this->error('No active parking session found requiring validation', 404);
+            $this->error('No active parking session found requiring validation in the parking area', 404);
             return;
         }
 
@@ -60,15 +86,16 @@ class VisitorValidationController extends Controller {
         $stmtVal->execute([
             $session['id'],
             $mrn,
-            $appointment['appointment_code'] ?? 'APT-QR-DIRECT',
+            $appointment['appointment_code'] ?? ($extractedCode ?: 'APT-QR-DIRECT'),
             $patientName,
             $token,
             $userId,
-            'Validated via Method A (Appointment QR Code)'
+            'Validated via Appointment QR Code'
         ]);
 
         if ($appointment) {
-            $db->prepare("UPDATE his_appointments SET is_validated = 1, validated_session_id = ? WHERE id = ?")->execute([$session['id'], $appointment['id']]);
+            $db->prepare("UPDATE his_appointments SET is_validated = 1, status = 'checked_in', validated_session_id = ? WHERE id = ?")
+               ->execute([$session['id'], $appointment['id']]);
         }
 
         $this->success([
@@ -77,7 +104,8 @@ class VisitorValidationController extends Controller {
             'status'       => 'VALIDATED',
             'patient_name' => $patientName,
             'patient_mrn'  => $mrn,
-            'message'      => "Visit successfully validated! Vehicle {$session['plate_number']} is now authorized for free parking."
+            'appointment_code' => $appointment['appointment_code'] ?? ($extractedCode ?: 'APT-QR-DIRECT'),
+            'message'      => "Appointment QR verified! Vehicle {$session['plate_number']} (Session: {$session['session_code']}) is now authorized for 3 hours of free parking."
         ], 'Validation successful via QR Code');
     }
 
@@ -138,10 +166,10 @@ class VisitorValidationController extends Controller {
         $q = trim($this->getQueryParams()['q'] ?? '');
 
         if ($q) {
-            $stmt = $db->prepare("SELECT * FROM his_appointments WHERE (patient_name LIKE ? OR patient_mrn LIKE ? OR registered_plate_number LIKE ?) ORDER BY id DESC LIMIT 20");
-            $stmt->execute(["%{$q}%", "%{$q}%", "%{$q}%"]);
+            $stmt = $db->prepare("SELECT * FROM his_appointments WHERE (patient_name LIKE ? OR patient_mrn LIKE ? OR registered_plate_number LIKE ? OR appointment_code LIKE ?) ORDER BY id DESC LIMIT 25");
+            $stmt->execute(["%{$q}%", "%{$q}%", "%{$q}%", "%{$q}%"]);
         } else {
-            $stmt = $db->query("SELECT * FROM his_appointments ORDER BY id DESC LIMIT 20");
+            $stmt = $db->query("SELECT * FROM his_appointments ORDER BY id DESC LIMIT 25");
         }
 
         $appointments = $stmt->fetchAll();

@@ -9,7 +9,10 @@ import {
   Coins, 
   RefreshCw,
   Video,
-  ShieldCheck
+  Layers,
+  Sparkles,
+  Percent,
+  Compass
 } from 'lucide-react';
 import { api } from '../services/api';
 import StatusBadge from '../components/common/StatusBadge';
@@ -57,6 +60,15 @@ export default function Dashboard({ onNavigate, onOpenPayment, onOpenValidation 
   }
 
   const metrics = data?.metrics || {};
+  const floorBreakdown = data?.floor_breakdown || [];
+  const totalCapacity = metrics.total_parking_capacity || 500;
+  const occupiedCount = metrics.inside_count || 0;
+  const availableSlots = metrics.available_parking_slots !== undefined 
+    ? metrics.available_parking_slots 
+    : Math.max(0, totalCapacity - occupiedCount);
+  const occupancyRate = metrics.occupancy_rate_percent !== undefined 
+    ? metrics.occupancy_rate_percent 
+    : Math.round((occupiedCount / totalCapacity) * 100);
 
   return (
     <div>
@@ -67,7 +79,7 @@ export default function Dashboard({ onNavigate, onOpenPayment, onOpenValidation 
             Hospital Parking Operations Dashboard
           </h2>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-            Real-time ANPR vehicle monitoring, visitor validation status & revenue metrics
+            Real-time ANPR vehicle monitoring, capacity & floor occupancy, visitor validation & revenue
           </p>
         </div>
 
@@ -91,18 +103,213 @@ export default function Dashboard({ onNavigate, onOpenPayment, onOpenValidation 
         </div>
       )}
 
-      {/* KPI Stat Cards */}
-      <div className="stat-grid">
-        <div className="stat-card">
-          <div>
-            <div className="stat-label">Vehicles Inside</div>
-            <div className="stat-value">{metrics.inside_count ?? 0}</div>
+      {/* ── Highlighted Parking Capacity & Live Availability Banner ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%)',
+        border: '1px solid rgba(2, 132, 199, 0.25)',
+        borderRadius: '12px',
+        padding: '16px 20px',
+        marginBottom: '20px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Car size={18} />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                Real-Time Hospital Parking Capacity
+              </h3>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                Live lot status synchronized with HIMS & Entrance Barrier Gates
+              </span>
+            </div>
           </div>
-          <div className="stat-icon-wrap stat-icon-blue">
-            <Car size={20} />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{
+              fontSize: '0.75rem',
+              fontWeight: 800,
+              padding: '4px 12px',
+              borderRadius: '20px',
+              background: availableSlots > 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+              color: availableSlots > 0 ? 'var(--status-green)' : 'var(--status-red)',
+              border: `1px solid ${availableSlots > 0 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+            }}>
+              ● {availableSlots > 0 ? (occupancyRate >= 85 ? 'NEAR CAPACITY' : 'SLOTS AVAILABLE') : 'PARKING FULL'}
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+              {occupancyRate}% Occupied
+            </span>
           </div>
         </div>
 
+        {/* 3 Core Capacity Cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '12px',
+          marginBottom: '14px'
+        }}>
+          {/* Card 1: Total Capacity */}
+          <div style={{
+            background: 'var(--bg-panel)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>
+                Total Capacity
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 900, color: 'var(--text-primary)', marginTop: '2px' }}>
+                {totalCapacity} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>Slots</span>
+              </div>
+            </div>
+            <div className="stat-icon-wrap stat-icon-blue">
+              <Compass size={18} />
+            </div>
+          </div>
+
+          {/* Card 2: Occupied */}
+          <div style={{
+            background: 'var(--bg-panel)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>
+                Currently Occupied
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 900, color: 'var(--status-blue)', marginTop: '2px' }}>
+                {occupiedCount} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>Vehicles</span>
+              </div>
+            </div>
+            <div className="stat-icon-wrap stat-icon-purple">
+              <Car size={18} />
+            </div>
+          </div>
+
+          {/* Card 3: Available Slots */}
+          <div style={{
+            background: 'var(--bg-panel)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 700, textTransform: 'uppercase' }}>
+                Available Slots
+              </div>
+              <div style={{ fontSize: '1.45rem', fontWeight: 900, color: availableSlots > 0 ? 'var(--status-green)' : 'var(--status-red)', marginTop: '2px' }}>
+                {availableSlots} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>Vacant</span>
+              </div>
+            </div>
+            <div className="stat-icon-wrap stat-icon-green">
+              <CheckCircle2 size={18} />
+            </div>
+          </div>
+        </div>
+
+        {/* Real-time Occupancy Progress Bar */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+            <span>Overall Occupancy Level</span>
+            <span>{occupiedCount} / {totalCapacity} Slots ({occupancyRate}%)</span>
+          </div>
+          <div style={{ width: '100%', height: '8px', background: 'var(--bg-input)', borderRadius: '6px', overflow: 'hidden' }}>
+            <div style={{
+              width: `${Math.min(100, occupancyRate)}%`,
+              height: '100%',
+              background: occupancyRate >= 90 ? 'var(--status-red)' : (occupancyRate >= 75 ? 'var(--status-amber)' : 'linear-gradient(90deg, #0284c7 0%, #10b981 100%)'),
+              transition: 'width 0.4s ease'
+            }} />
+          </div>
+        </div>
+
+        {/* Floor-Wise Slot Availability Grid */}
+        {floorBreakdown.length > 0 && (
+          <div style={{ marginTop: '16px', borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+              <Layers size={14} color="#0284c7" />
+              <span style={{ fontSize: '0.78rem', fontWeight: 800, color: 'var(--text-primary)' }}>
+                Floor-Wise Real-Time Breakdown:
+              </span>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '10px'
+            }}>
+              {floorBreakdown.map((fl, idx) => (
+                <div 
+                  key={fl.floor_id || idx}
+                  style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '8px',
+                    padding: '10px 14px'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--text-primary)' }}>
+                      {fl.floor_name}
+                    </span>
+                    <span style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 800,
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      background: fl.available_slots > 0 ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                      color: fl.available_slots > 0 ? 'var(--status-green)' : 'var(--status-red)'
+                    }}>
+                      {fl.available_slots > 0 ? `${fl.available_slots} Free` : 'FULL'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                    <span>Occupied: <strong>{fl.occupied_slots}</strong> / {fl.total_capacity}</span>
+                    <span>{fl.occupancy_rate}%</span>
+                  </div>
+
+                  <div style={{ width: '100%', height: '5px', background: 'var(--bg-input)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${Math.min(100, fl.occupancy_rate)}%`,
+                      height: '100%',
+                      background: fl.occupancy_rate >= 90 ? 'var(--status-red)' : (fl.occupancy_rate >= 75 ? 'var(--status-amber)' : 'var(--status-blue)'),
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Operational Lifecycle Metrics Grid ── */}
+      <div className="stat-grid">
         <div className="stat-card">
           <div>
             <div className="stat-label">Validation Pending</div>

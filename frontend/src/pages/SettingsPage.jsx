@@ -83,6 +83,24 @@ export default function SettingsPage() {
   const [mappingTestResult, setMappingTestResult] = useState(null);
   const [testingMapping, setTestingMapping] = useState(false);
 
+  // Total Parking Slots & Floor-Wise Slots State
+  const [parkingTotalCapacity, setParkingTotalCapacity] = useState('500');
+  const [floorSlots, setFloorSlots] = useState([
+    { id: 'GF', name: 'Ground Floor', capacity: 125 },
+    { id: 'B1', name: 'Basement 1 (Patient & Visitor)', capacity: 200 },
+    { id: 'B2', name: 'Basement 2 (Doctors & Staff)', capacity: 175 }
+  ]);
+
+  // HIMS API Live Tester State
+  const [himsSyncTestResult, setHimsSyncTestResult] = useState(null);
+  const [himsStatusTestResult, setHimsStatusTestResult] = useState(null);
+  const [testingHimsSync, setTestingHimsSync] = useState(false);
+  const [testingHimsStatus, setTestingHimsStatus] = useState(false);
+  const [himsMrnInput, setHimsMrnInput] = useState('MRN-88192');
+  const [himsNameInput, setHimsNameInput] = useState('Ahmed Al-Sayed');
+  const [himsPlateInput, setHimsPlateInput] = useState('BHR 43210');
+  const [himsDoctorInput, setHimsDoctorInput] = useState('Dr. Tariq Al-Hashimi');
+
   const loadData = async () => {
     try {
       const res = await api.getSettings();
@@ -93,6 +111,17 @@ export default function SettingsPage() {
         }));
         setTimezones(res.data.timezones || {});
         setSupportedCurrencies(res.data.supported_currencies || {});
+        if (res.data.settings?.parking_total_capacity) {
+          setParkingTotalCapacity(res.data.settings.parking_total_capacity);
+        }
+        if (res.data.settings?.parking_floor_slots_json) {
+          try {
+            const parsed = JSON.parse(res.data.settings.parking_floor_slots_json);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setFloorSlots(parsed);
+            }
+          } catch (e) {}
+        }
         if (res.data.network_info) {
           setNetworkInfo(res.data.network_info);
           setCustomLanIp(res.data.settings?.anpr_lan_ip || res.data.network_info.detected_lan_ip || '192.168.100.4');
@@ -290,6 +319,39 @@ export default function SettingsPage() {
     }
   };
 
+  const handleTestHimsSync = async () => {
+    setTestingHimsSync(true);
+    setHimsSyncTestResult(null);
+    try {
+      const res = await api.hisSyncAppointment({
+        patient_mrn: himsMrnInput.trim() || 'MRN-88192',
+        patient_name: himsNameInput.trim() || 'Ahmed Al-Sayed',
+        registered_plate_number: himsPlateInput.trim() || 'BHR 43210',
+        doctor_name: himsDoctorInput.trim() || 'Dr. Tariq Al-Hashimi',
+        department: 'Cardiology',
+        free_hours: 3
+      });
+      setHimsSyncTestResult({ success: true, data: res.data, message: res.message });
+    } catch (err) {
+      setHimsSyncTestResult({ success: false, error: err.message || 'HIMS Sync test failed' });
+    } finally {
+      setTestingHimsSync(false);
+    }
+  };
+
+  const handleTestHimsStatus = async () => {
+    setTestingHimsStatus(true);
+    setHimsStatusTestResult(null);
+    try {
+      const res = await api.hisCheckStatus();
+      setHimsStatusTestResult({ success: true, data: res.data });
+    } catch (err) {
+      setHimsStatusTestResult({ success: false, error: err.message || 'HIMS status test failed' });
+    } finally {
+      setTestingHimsStatus(false);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -299,6 +361,8 @@ export default function SettingsPage() {
     try {
       const payload = {
         ...formData,
+        parking_total_capacity: parkingTotalCapacity,
+        parking_floor_slots_json: JSON.stringify(floorSlots),
         anpr_lan_ip: customLanIp,
         anpr_lan_port: customLanPort,
         anpr_webhook_mode: selectedWebhookType,
@@ -316,7 +380,7 @@ export default function SettingsPage() {
       };
       const res = await api.updateSettings(payload);
       if (res.success) {
-        setSuccessMsg('System settings, camera field mapping, and image storage path successfully saved!');
+        setSuccessMsg('System settings, parking capacity, floor slots, and camera mapping successfully saved!');
         refreshSettings();
       }
     } catch (err) {
@@ -515,6 +579,40 @@ export default function SettingsPage() {
                   >
                     <Globe size={12} />
                     Cloud Architecture Guide
+                    <ExternalLink size={11} style={{ opacity: 0.8 }} />
+                  </a>
+
+                  <a
+                    href="/HIMS_API_Integration_Guide.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '3px 10px',
+                      borderRadius: '4px',
+                      background: 'rgba(2, 132, 199, 0.15)',
+                      color: '#0284c7',
+                      border: '1px solid rgba(2, 132, 199, 0.4)',
+                      textDecoration: 'none',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(2, 132, 199, 0.25)';
+                      e.currentTarget.style.borderColor = 'rgba(2, 132, 199, 0.7)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(2, 132, 199, 0.15)';
+                      e.currentTarget.style.borderColor = 'rgba(2, 132, 199, 0.4)';
+                    }}
+                    title="Open HIMS / HIS API Integration & Printable QR Code Specification Manual"
+                  >
+                    <Building2 size={12} />
+                    HIMS API & QR Guide
                     <ExternalLink size={11} style={{ opacity: 0.8 }} />
                   </a>
                 </div>
@@ -1274,6 +1372,453 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 1b. Total Parking Slots & Floor-Wise Capacity Manager */}
+            <div className="panel" style={{
+              marginBottom: '16px',
+              border: '1.5px solid rgba(2, 132, 199, 0.4)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+              background: 'var(--bg-panel)'
+            }}>
+              <div className="panel-header" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '10px',
+                borderBottom: '1px solid var(--border-color)',
+                paddingBottom: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    boxShadow: '0 2px 10px rgba(2,132,199,0.35)'
+                  }}>
+                    <Layers size={20} />
+                  </div>
+                  <div>
+                    <span className="panel-title" style={{ fontSize: '0.98rem', fontWeight: 800 }}>
+                      Total Parking Slots & Floor-Wise Capacity Configuration
+                    </span>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                      Define total hospital parking bays and floor-by-floor slot allocation for real-time dashboard display and HIMS synchronization.
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 800,
+                    padding: '4px 10px',
+                    borderRadius: '4px',
+                    background: 'rgba(2, 132, 199, 0.12)',
+                    color: '#0284c7',
+                    border: '1px solid rgba(2, 132, 199, 0.3)'
+                  }}>
+                    Total: {parkingTotalCapacity} Slots
+                  </span>
+                </div>
+              </div>
+
+              <div className="panel-body" style={{ paddingTop: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" style={{ fontWeight: 700 }}>
+                      Total Hospital Parking Capacity (All Floors Combined) *
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10000"
+                        className="form-input"
+                        value={parkingTotalCapacity}
+                        onChange={(e) => setParkingTotalCapacity(e.target.value)}
+                        placeholder="e.g. 500"
+                        required
+                        style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'var(--font-mono)' }}
+                      />
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>Bays / Slots</span>
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      Used to calculate live occupancy percentage and available spaces on the dashboard & HIMS API.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floor-by-floor manager */}
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <label className="form-label" style={{ fontWeight: 700, margin: 0 }}>
+                      Floor-Wise Slot Breakdown:
+                    </label>
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      onClick={() => {
+                        const newId = `FL-${floorSlots.length + 1}`;
+                        setFloorSlots([...floorSlots, { id: newId, name: `Level ${floorSlots.length + 1}`, capacity: 100 }]);
+                      }}
+                      style={{ fontSize: '0.72rem', padding: '3px 8px' }}
+                    >
+                      + Add Floor / Level
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {floorSlots.map((fl, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: '80px 1.5fr 1fr 40px',
+                          gap: '10px',
+                          alignItems: 'center',
+                          padding: '8px 12px',
+                          background: 'var(--bg-input)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '6px'
+                        }}
+                      >
+                        <div>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={fl.id}
+                            onChange={(e) => {
+                              const updated = [...floorSlots];
+                              updated[idx].id = e.target.value;
+                              setFloorSlots(updated);
+                            }}
+                            placeholder="ID (e.g. GF)"
+                            style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', padding: '4px 8px' }}
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            className="form-input"
+                            value={fl.name}
+                            onChange={(e) => {
+                              const updated = [...floorSlots];
+                              updated[idx].name = e.target.value;
+                              setFloorSlots(updated);
+                            }}
+                            placeholder="Floor Name (e.g. Ground Floor)"
+                            style={{ fontSize: '0.78rem', padding: '4px 8px' }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <input
+                            type="number"
+                            min="0"
+                            className="form-input"
+                            value={fl.capacity}
+                            onChange={(e) => {
+                              const updated = [...floorSlots];
+                              updated[idx].capacity = parseInt(e.target.value) || 0;
+                              setFloorSlots(updated);
+                            }}
+                            placeholder="Slots"
+                            style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', padding: '4px 8px' }}
+                          />
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>slots</span>
+                        </div>
+                        <div>
+                          {floorSlots.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFloorSlots(floorSlots.filter((_, i) => i !== idx));
+                              }}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'var(--status-red)',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                padding: '4px'
+                              }}
+                              title="Delete Floor"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 1c. HIMS (Hospital Information System) API Integration & Live QR Testing Desk */}
+            <div className="panel" style={{
+              marginBottom: '16px',
+              border: '1.5px solid rgba(99, 102, 241, 0.4)',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
+              background: 'var(--bg-panel)'
+            }}>
+              <div className="panel-header" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '10px',
+                borderBottom: '1px solid var(--border-color)',
+                paddingBottom: '12px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{
+                    width: '38px',
+                    height: '38px',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #6366f1 0%, #ec4899 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    boxShadow: '0 2px 10px rgba(99,102,241,0.35)'
+                  }}>
+                    <Building2 size={20} />
+                  </div>
+                  <div>
+                    <span className="panel-title" style={{ fontSize: '0.98rem', fontWeight: 800 }}>
+                      HIMS / HIS API Integration & Printable QR Generator
+                    </span>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                      Synchronize appointments, generate printable QR codes for thermal slips, and provide real-time parking status to HIMS.
+                    </p>
+                  </div>
+                </div>
+
+                <a
+                  href="/HIMS_API_Integration_Guide.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline btn-sm"
+                  style={{
+                    fontSize: '0.74rem',
+                    padding: '4px 10px',
+                    color: '#6366f1',
+                    borderColor: 'rgba(99, 102, 241, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <BookOpen size={13} /> View Complete HIMS Integration Manual
+                </a>
+              </div>
+
+              <div className="panel-body" style={{ paddingTop: '16px' }}>
+                {/* HIMS API Endpoints Reference Strip */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label className="form-label" style={{ fontWeight: 700, marginBottom: '8px' }}>
+                    Active HIMS REST API Endpoints:
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '10px' }}>
+                    {/* Endpoint 1 */}
+                    <div style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px 12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--status-green)' }}>POST · Appt & QR Sync</span>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          style={{ fontSize: '0.68rem', padding: '2px 6px' }}
+                          onClick={() => copyToClipboard(`http://${customLanIp || '127.0.0.1'}:${customLanPort || 8000}/api/v1/his/appointments/sync`, 'hims_sync')}
+                        >
+                          {copiedKey === 'hims_sync' ? <Check size={11} color="#10b981" /> : <Copy size={11} />}
+                          {copiedKey === 'hims_sync' ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', wordBreak: 'break-all' }}>
+                        http://{customLanIp || '127.0.0.1'}:{customLanPort || 8000}/api/v1/his/appointments/sync
+                      </div>
+                    </div>
+
+                    {/* Endpoint 2 */}
+                    <div style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '10px 12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--status-blue)' }}>GET · Live Parking Status</span>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          style={{ fontSize: '0.68rem', padding: '2px 6px' }}
+                          onClick={() => copyToClipboard(`http://${customLanIp || '127.0.0.1'}:${customLanPort || 8000}/api/v1/his/parking-status`, 'hims_status')}
+                        >
+                          {copiedKey === 'hims_status' ? <Check size={11} color="#10b981" /> : <Copy size={11} />}
+                          {copiedKey === 'hims_status' ? 'Copied' : 'Copy'}
+                        </button>
+                      </div>
+                      <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', wordBreak: 'break-all' }}>
+                        http://{customLanIp || '127.0.0.1'}:{customLanPort || 8000}/api/v1/his/parking-status
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Interactive HIMS Tester */}
+                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--text-primary)' }}>
+                      Interactive HIMS Simulator & QR Code Preview:
+                    </span>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        disabled={testingHimsStatus}
+                        onClick={handleTestHimsStatus}
+                        style={{ fontSize: '0.74rem', padding: '4px 10px' }}
+                      >
+                        {testingHimsStatus ? 'Querying...' : '1. Test Parking Status Query'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        disabled={testingHimsSync}
+                        onClick={handleTestHimsSync}
+                        style={{ fontSize: '0.74rem', padding: '4px 10px', background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)' }}
+                      >
+                        <Send size={12} />
+                        {testingHimsSync ? 'Generating...' : '2. Test Sync & Generate QR'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Test Form Inputs */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                    gap: '8px',
+                    marginBottom: '12px'
+                  }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.7rem' }}>Patient MRN</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={himsMrnInput}
+                        onChange={(e) => setHimsMrnInput(e.target.value)}
+                        style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.7rem' }}>Patient Name</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={himsNameInput}
+                        onChange={(e) => setHimsNameInput(e.target.value)}
+                        style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.7rem' }}>Vehicle Plate</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={himsPlateInput}
+                        onChange={(e) => setHimsPlateInput(e.target.value)}
+                        style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.7rem' }}>Doctor Name</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={himsDoctorInput}
+                        onChange={(e) => setHimsDoctorInput(e.target.value)}
+                        style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* QR Result Box */}
+                  {himsSyncTestResult && (
+                    <div style={{
+                      marginTop: '10px',
+                      padding: '14px',
+                      borderRadius: '8px',
+                      background: himsSyncTestResult.success ? 'rgba(16, 185, 129, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                      border: `1px solid ${himsSyncTestResult.success ? '#10b981' : '#ef4444'}`,
+                      display: 'grid',
+                      gridTemplateColumns: himsSyncTestResult.success ? '140px 1fr' : '1fr',
+                      gap: '14px',
+                      alignItems: 'center'
+                    }}>
+                      {himsSyncTestResult.success && himsSyncTestResult.data?.qr_png_base64 && (
+                        <div style={{ textAlign: 'center', background: '#fff', padding: '8px', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+                          <img
+                            src={himsSyncTestResult.data.qr_png_base64}
+                            alt="Generated Parking QR"
+                            style={{ width: '120px', height: '120px', display: 'block', margin: '0 auto' }}
+                          />
+                          <span style={{ fontSize: '0.65rem', color: '#000', fontWeight: 700, display: 'block', marginTop: '4px' }}>
+                            Printable QR Slip
+                          </span>
+                        </div>
+                      )}
+
+                      <div>
+                        <div style={{ fontWeight: 800, color: himsSyncTestResult.success ? '#10b981' : '#ef4444', marginBottom: '4px', fontSize: '0.82rem' }}>
+                          {himsSyncTestResult.success ? '✓ HIMS Appointment Synced & QR Generated Successfully!' : '✗ Sync Failed'}
+                        </div>
+                        {himsSyncTestResult.success ? (
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                            <div><strong>Appointment ID:</strong> {himsSyncTestResult.data.appointment_code}</div>
+                            <div><strong>Patient:</strong> {himsSyncTestResult.data.patient_name} ({himsSyncTestResult.data.patient_mrn})</div>
+                            <div><strong>Vehicle Plate:</strong> {himsSyncTestResult.data.registered_plate || 'N/A'}</div>
+                            <div><strong>Free Parking:</strong> {himsSyncTestResult.data.free_hours_granted} Hours ({himsSyncTestResult.data.free_minutes_granted} mins)</div>
+                            <div style={{ marginTop: '4px', fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-primary)', wordBreak: 'break-all' }}>
+                              <strong>QR Token:</strong> {himsSyncTestResult.data.qr_token}
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ color: '#ef4444', fontSize: '0.75rem' }}>{himsSyncTestResult.error}</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Status Result Box */}
+                  {himsStatusTestResult && (
+                    <div style={{
+                      marginTop: '10px',
+                      padding: '12px 14px',
+                      borderRadius: '8px',
+                      background: 'rgba(2, 132, 199, 0.08)',
+                      border: '1px solid #0284c7',
+                      fontSize: '0.75rem'
+                    }}>
+                      <div style={{ fontWeight: 800, color: '#0284c7', marginBottom: '4px' }}>
+                        ✓ Live Parking Status Response (GET /api/v1/his/parking-status):
+                      </div>
+                      <pre style={{
+                        margin: '6px 0 0',
+                        padding: '8px',
+                        background: 'rgba(0,0,0,0.3)',
+                        borderRadius: '4px',
+                        fontSize: '0.72rem',
+                        color: '#38bdf8'
+                      }}>
+                        {JSON.stringify(himsStatusTestResult.data, null, 2)}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

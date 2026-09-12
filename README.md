@@ -69,6 +69,9 @@ The application will be available at `http://localhost:5173`.
 
 ## 📖 Documentation & Guides
 
+- [HIMS API Integration & QR Printing Guide (HTML)](development_files/HIMS_API_Integration_Guide.html)
+- [HIMS API Integration & QR Printing Guide (Markdown)](development_files/HIMS_API_Integration_Guide.md)
 - [ANPR Configuration Procedure Guide (HTML)](development_files/ANPR_Configuration_Procedure_Guide.html)
 - [ANPR Configuration Procedure Guide (Markdown)](development_files/ANPR_Configuration_Procedure_Guide.md)
+- [Cloud ANPR Integration Architecture Guide (HTML)](development_files/Cloud_ANPR_Integration_Architecture_Guide.html)
 - [System Architecture & Flow Diagram](development_files/flow_diagram.jpg)
