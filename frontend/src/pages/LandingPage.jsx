@@ -339,62 +339,62 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
           justifyContent: 'space-between',
           gap: '16px'
         }}>
-          {/* Logo & SaNDS Lab Badge */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <div 
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-              <div style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '10px',
-                background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)'
-              }}>
-                <Car size={20} />
+          {/* Left: Brand */}
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', flexShrink: 0 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
+              background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)',
+              color: '#fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)'
+            }}>
+              <Car size={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 900, lineHeight: 1.1, color: isDark ? '#ffffff' : '#0f172a' }}>
+                Smart Parking Solution
               </div>
-              <div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 900, lineHeight: 1.1, color: isDark ? '#ffffff' : '#0f172a' }}>
-                  Smart Parking Solution
-                </div>
-                <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                  Turnkey Facility Automation OS
-                </div>
+              <div style={{ fontSize: '0.66rem', fontWeight: 800, color: '#0284c7', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Turnkey Facility Automation OS
               </div>
             </div>
+          </div>
 
-            {/* Official SaNDS Lab Header Badge */}
-            <div 
-              onClick={() => setSandsModalOpen(true)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '5px 12px',
-                borderRadius: '20px',
-                background: isDark ? 'rgba(236, 72, 153, 0.14)' : 'rgba(236, 72, 153, 0.08)',
-                border: '1px solid rgba(236, 72, 153, 0.35)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              title="Click to view SaNDS Lab profile & direct contact"
-            >
-              <img 
-                src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" 
-                alt="SaNDS Lab" 
-                style={{ height: '15px', width: 'auto', display: 'block' }}
-                onError={(e) => { e.currentTarget.style.display = 'none'; }}
-              />
-              <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#ec4899', letterSpacing: '0.04em' }}>
-                POWERED BY SaNDS LAB
-              </span>
-              <ExternalLink size={11} color="#ec4899" />
-            </div>
+          {/* Middle: Official SaNDS Lab Header Badge (Centered & Bigger) */}
+          <div 
+            onClick={() => setSandsModalOpen(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '6px 18px',
+              borderRadius: '24px',
+              background: isDark ? 'rgba(236, 72, 153, 0.16)' : 'rgba(236, 72, 153, 0.08)',
+              border: '1px solid rgba(236, 72, 153, 0.35)',
+              boxShadow: isDark ? '0 2px 10px rgba(236, 72, 153, 0.2)' : '0 2px 8px rgba(236, 72, 153, 0.12)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              flexShrink: 0
+            }}
+            title="Click to view SaNDS Lab profile & direct contact"
+          >
+            <img 
+              src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" 
+              alt="SaNDS Lab" 
+              style={{ height: '24px', width: 'auto', display: 'block', objectFit: 'contain' }}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
+            <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#ec4899', letterSpacing: '0.04em' }}>
+              POWERED BY SaNDS LAB
+            </span>
+            <ExternalLink size={13} color="#ec4899" />
           </div>
 
           {/* Right Navigation & Controls */}
