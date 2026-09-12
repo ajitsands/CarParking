@@ -525,17 +525,137 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
               Intelligent Multi-Industry Parking & Facility Management
             </h1>
 
-            <p style={{
-              fontSize: '1.05rem',
-              lineHeight: 1.6,
-              color: isDark ? '#94a3b8' : '#475569',
-              marginBottom: '30px'
+            {/* Distinct Block 1: Multi-Industry Quick Selection Chips */}
+            <div style={{
+              marginBottom: '20px',
+              padding: '14px 18px',
+              borderRadius: '14px',
+              background: isDark ? '#111928' : '#ffffff',
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0',
+              boxShadow: isDark ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 16px rgba(0,0,0,0.03)'
             }}>
-              A comprehensive automated parking solution engineered for <strong style={{ color: isDark ? '#38bdf8' : '#0284c7' }}>Hospitals, Supermarkets, Commercial Tech Towers, Hotels, Transit Hubs, and Arenas</strong>. Featuring 99.8% ANPR license plate recognition, sub-second barrier actuation, multi-deck LED guidance, and seamless bilateral ERP/HIS integration.
-            </p>
+              <div style={{
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                color: isDark ? '#94a3b8' : '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                marginBottom: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <Building2 size={13} color="#0284c7" />
+                <span>Turnkey Multi-Parking Architecture For:</span>
+              </div>
 
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginBottom: '36px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {[
+                  { id: 'hospital', label: 'Hospitals & HIS', icon: Building2, color: '#0284c7' },
+                  { id: 'supermarket', label: 'Supermarkets & POS', icon: ShoppingBag, color: '#10b981' },
+                  { id: 'hotel', label: 'Hotels & Valet', icon: Hotel, color: '#f59e0b' },
+                  { id: 'corporate', label: 'Corporate Tech Parks', icon: Layers, color: '#6366f1' },
+                  { id: 'airport', label: 'Transit Hubs & Airports', icon: Plane, color: '#ec4899' },
+                  { id: 'stadium', label: 'Stadiums & Arenas', icon: Ticket, color: '#8b5cf6' }
+                ].map((chip) => {
+                  const ChipIcon = chip.icon;
+                  return (
+                    <button
+                      key={chip.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveIndustry(chip.id);
+                        const sec = document.getElementById('industry-section');
+                        if (sec) sec.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 12px',
+                        borderRadius: '20px',
+                        background: isDark ? 'rgba(255, 255, 255, 0.05)' : '#f1f5f9',
+                        border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #cbd5e1',
+                        color: isDark ? '#e2e8f0' : '#1e293b',
+                        fontSize: '0.76rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = chip.color;
+                        e.currentTarget.style.color = chip.color;
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = isDark ? 'rgba(255, 255, 255, 0.1)' : '#cbd5e1';
+                        e.currentTarget.style.color = isDark ? '#e2e8f0' : '#1e293b';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <ChipIcon size={13} color={chip.color} />
+                      <span>{chip.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Distinct Block 2: Key Capabilities Value Bar */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+              gap: '10px',
+              marginBottom: '26px'
+            }}>
+              <div style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                background: isDark ? 'rgba(2, 132, 199, 0.1)' : 'rgba(2, 132, 199, 0.06)',
+                border: '1px solid rgba(2, 132, 199, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <Video size={16} color="#0284c7" />
+                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isDark ? '#93c5fd' : '#0369a1' }}>
+                  99.8% ANPR Recognition
+                </span>
+              </div>
+
+              <div style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                background: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(16, 185, 129, 0.06)',
+                border: '1px solid rgba(16, 185, 129, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <Zap size={16} color="#10b981" />
+                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isDark ? '#6ee7b7' : '#047857' }}>
+                  &lt;0.4s Fast Barrier Relay
+                </span>
+              </div>
+
+              <div style={{
+                padding: '10px 14px',
+                borderRadius: '10px',
+                background: isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.06)',
+                border: '1px solid rgba(99, 102, 241, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <Globe size={16} color="#6366f1" />
+                <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isDark ? '#c7d2fe' : '#4338ca' }}>
+                  Bilateral REST API
+                </span>
+              </div>
+            </div>
+
+            {/* Distinct Block 3: Action Buttons Block */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginBottom: '28px' }}>
               <button
                 type="button"
                 onClick={onLaunchPortal}
@@ -577,35 +697,74 @@ export default function LandingPage({ onLaunchPortal, onOpenGuide }) {
                 }}
               >
                 <Play size={16} color="#10b981" />
-                <span>Test Live Interactive Simulator</span>
+                <span>Test Live Interactive Lab</span>
               </a>
             </div>
 
-            {/* Live KPI Metric Badges */}
+            {/* Distinct Block 4: 4 Separate Floating Metric Cards */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px',
-              padding: '16px',
-              borderRadius: '14px',
-              background: isDark ? '#111928' : '#f1f5f9',
-              border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e2e8f0'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+              gap: '12px'
             }}>
-              <div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0284c7' }}>99.8%</div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b' }}>ANPR Accuracy</div>
+              {/* Stat Block 1 */}
+              <div style={{
+                padding: '14px 16px',
+                borderRadius: '12px',
+                background: isDark ? '#111928' : '#ffffff',
+                border: isDark ? '1px solid rgba(2, 132, 199, 0.3)' : '1px solid #e2e8f0',
+                borderTop: '3px solid #0284c7',
+                boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
+                transition: 'transform 0.2s ease'
+              }}>
+                <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0284c7', lineHeight: 1 }}>99.8%</div>
+                <div style={{ fontSize: '0.74rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '6px' }}>ANPR Rate</div>
+                <div style={{ fontSize: '0.64rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Optical AI OCR</div>
               </div>
-              <div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#10b981' }}>&lt;0.4s</div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b' }}>Barrier Open</div>
+
+              {/* Stat Block 2 */}
+              <div style={{
+                padding: '14px 16px',
+                borderRadius: '12px',
+                background: isDark ? '#111928' : '#ffffff',
+                border: isDark ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid #e2e8f0',
+                borderTop: '3px solid #10b981',
+                boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
+                transition: 'transform 0.2s ease'
+              }}>
+                <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#10b981', lineHeight: 1 }}>&lt;0.4s</div>
+                <div style={{ fontSize: '0.74rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '6px' }}>Barrier Open</div>
+                <div style={{ fontSize: '0.64rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Fast Relay Motor</div>
               </div>
-              <div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#f59e0b' }}>6+</div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b' }}>Industry Suites</div>
+
+              {/* Stat Block 3 */}
+              <div style={{
+                padding: '14px 16px',
+                borderRadius: '12px',
+                background: isDark ? '#111928' : '#ffffff',
+                border: isDark ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid #e2e8f0',
+                borderTop: '3px solid #f59e0b',
+                boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
+                transition: 'transform 0.2s ease'
+              }}>
+                <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#f59e0b', lineHeight: 1 }}>6+</div>
+                <div style={{ fontSize: '0.74rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '6px' }}>Industries</div>
+                <div style={{ fontSize: '0.64rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Turnkey Suites</div>
               </div>
-              <div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#ec4899' }}>100%</div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b' }}>Offline Edge SLA</div>
+
+              {/* Stat Block 4 */}
+              <div style={{
+                padding: '14px 16px',
+                borderRadius: '12px',
+                background: isDark ? '#111928' : '#ffffff',
+                border: isDark ? '1px solid rgba(236, 72, 153, 0.3)' : '1px solid #e2e8f0',
+                borderTop: '3px solid #ec4899',
+                boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.4)' : '0 4px 14px rgba(0,0,0,0.04)',
+                transition: 'transform 0.2s ease'
+              }}>
+                <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#ec4899', lineHeight: 1 }}>100%</div>
+                <div style={{ fontSize: '0.74rem', fontWeight: 800, color: isDark ? '#f8fafc' : '#0f172a', marginTop: '6px' }}>Edge Uptime</div>
+                <div style={{ fontSize: '0.64rem', color: isDark ? '#94a3b8' : '#64748b', marginTop: '2px' }}>Offline Autonomy</div>
               </div>
             </div>
           </div>

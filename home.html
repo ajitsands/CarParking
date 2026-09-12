@@ -145,21 +145,66 @@
           <h1 style="font-size: clamp(2.2rem, 3.5vw, 3.2rem); font-weight: 900; line-height: 1.15; margin-bottom: 18px;">
             Intelligent Multi-Industry Parking & Facility Management
           </h1>
-          <p style="font-size: 1.02rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;">
-            Turnkey automation for <strong style="color: var(--brand-primary)">Hospitals, Supermarkets, Commercial Tech Towers, Hotels, Transit Hubs, and Arenas</strong>. Featuring 99.8% ANPR recognition, sub-second barrier actuation, and seamless bilateral ERP/HIS integration.
-          </p>
 
-          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 30px;">
+          <!-- Distinct Block 1: Industry Selection Chips -->
+          <div style="margin-bottom: 20px; padding: 14px 18px; border-radius: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+            <div style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;">
+              🏢 Turnkey Multi-Parking Architecture For:
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <span style="padding: 5px 12px; border-radius: 20px; background: rgba(2,132,199,0.1); border: 1px solid rgba(2,132,199,0.25); color: #0284c7; font-size: 0.76rem; font-weight: 700;">🏥 Hospitals & HIS</span>
+              <span style="padding: 5px 12px; border-radius: 20px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: #10b981; font-size: 0.76rem; font-weight: 700;">🛒 Supermarkets & POS</span>
+              <span style="padding: 5px 12px; border-radius: 20px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: #f59e0b; font-size: 0.76rem; font-weight: 700;">🏨 Hotels & Valet</span>
+              <span style="padding: 5px 12px; border-radius: 20px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25); color: #6366f1; font-size: 0.76rem; font-weight: 700;">🏢 Tech Parks & Towers</span>
+              <span style="padding: 5px 12px; border-radius: 20px; background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.25); color: #ec4899; font-size: 0.76rem; font-weight: 700;">✈️ Transit & Airports</span>
+              <span style="padding: 5px 12px; border-radius: 20px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25); color: #8b5cf6; font-size: 0.76rem; font-weight: 700;">🏟️ Stadiums & Arenas</span>
+            </div>
+          </div>
+
+          <!-- Distinct Block 2: Capabilities Bar -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 24px;">
+            <div style="padding: 9px 12px; border-radius: 10px; background: rgba(2,132,199,0.08); border: 1px solid rgba(2,132,199,0.2); color: #0284c7; font-size: 0.76rem; font-weight: 700;">
+              📹 99.8% ANPR Recognition
+            </div>
+            <div style="padding: 9px 12px; border-radius: 10px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: #10b981; font-size: 0.76rem; font-weight: 700;">
+              ⚡ &lt;0.4s Fast Barrier Relay
+            </div>
+            <div style="padding: 9px 12px; border-radius: 10px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); color: #6366f1; font-size: 0.76rem; font-weight: 700;">
+              🌐 Bilateral REST API
+            </div>
+          </div>
+
+          <!-- Distinct Block 3: Action Buttons -->
+          <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 26px;">
             <a href="/" class="btn btn-primary" style="padding: 12px 26px; font-size: 0.92rem;">Launch Live Control Room →</a>
             <a href="#simulator-sec" class="btn btn-outline" style="padding: 12px 22px; font-size: 0.9rem;">▶ Test Live Interactive Lab</a>
           </div>
 
-          <!-- KPI Strip -->
-          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 14px; border-radius: 12px; background: var(--bg-surface-alt); border: 1px solid var(--border-color);">
-            <div><div style="font-size: 1.3rem; font-weight: 900; color: #0284c7;">99.8%</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">ANPR Rate</div></div>
-            <div><div style="font-size: 1.3rem; font-weight: 900; color: #10b981;">&lt;0.4s</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">Barrier Open</div></div>
-            <div><div style="font-size: 1.3rem; font-weight: 900; color: #f59e0b;">6+</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">Industries</div></div>
-            <div><div style="font-size: 1.3rem; font-weight: 900; color: #ec4899;">100%</div><div style="font-size: 0.68rem; font-weight: 700; color: var(--text-muted);">Edge Uptime</div></div>
+          <!-- Distinct Block 4: 4 Separate Floating Metric Cards -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;">
+            <div style="padding: 14px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-top: 3px solid #0284c7; box-shadow: var(--shadow-sm);">
+              <div style="font-size: 1.4rem; font-weight: 900; color: #0284c7; line-height: 1;">99.8%</div>
+              <div style="font-size: 0.74rem; font-weight: 800; margin-top: 6px;">ANPR Rate</div>
+              <div style="font-size: 0.64rem; color: var(--text-muted); margin-top: 2px;">Optical AI OCR</div>
+            </div>
+
+            <div style="padding: 14px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-top: 3px solid #10b981; box-shadow: var(--shadow-sm);">
+              <div style="font-size: 1.4rem; font-weight: 900; color: #10b981; line-height: 1;">&lt;0.4s</div>
+              <div style="font-size: 0.74rem; font-weight: 800; margin-top: 6px;">Barrier Open</div>
+              <div style="font-size: 0.64rem; color: var(--text-muted); margin-top: 2px;">Fast Relay Motor</div>
+            </div>
+
+            <div style="padding: 14px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-top: 3px solid #f59e0b; box-shadow: var(--shadow-sm);">
+              <div style="font-size: 1.4rem; font-weight: 900; color: #f59e0b; line-height: 1;">6+</div>
+              <div style="font-size: 0.74rem; font-weight: 800; margin-top: 6px;">Industries</div>
+              <div style="font-size: 0.64rem; color: var(--text-muted); margin-top: 2px;">Turnkey Suites</div>
+            </div>
+
+            <div style="padding: 14px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-top: 3px solid #ec4899; box-shadow: var(--shadow-sm);">
+              <div style="font-size: 1.4rem; font-weight: 900; color: #ec4899; line-height: 1;">100%</div>
+              <div style="font-size: 0.74rem; font-weight: 800; margin-top: 6px;">Edge Uptime</div>
+              <div style="font-size: 0.64rem; color: var(--text-muted); margin-top: 2px;">Offline Autonomy</div>
+            </div>
           </div>
         </div>
 
