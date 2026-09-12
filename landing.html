@@ -3,38 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Multi-Industry Parking & Facility OS | Powered by SaNDS Lab</title>
+  <title>Smart Multi-Industry Parking & Facility Management OS | SaNDS Lab</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg-primary: #f8fafc;
       --bg-surface: #ffffff;
       --bg-surface-alt: #f1f5f9;
+      --bg-card: #ffffff;
       --text-main: #0f172a;
       --text-muted: #64748b;
+      --text-subtle: #94a3b8;
       --border-color: #e2e8f0;
+      --border-hover: #cbd5e1;
       --brand-primary: #0284c7;
       --brand-secondary: #6366f1;
-      --brand-pink: #ec4899;
+      --brand-accent: #ec4899;
       --status-green: #10b981;
+      --status-amber: #f59e0b;
       --status-red: #ef4444;
       --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-      --shadow-md: 0 10px 25px rgba(0,0,0,0.05);
+      --shadow-md: 0 10px 25px rgba(0,0,0,0.06);
       --shadow-lg: 0 20px 45px rgba(2, 132, 199, 0.12);
+      --shadow-card: 0 4px 20px rgba(0,0,0,0.05);
     }
     [data-theme="dark"] {
       --bg-primary: #070b14;
-      --bg-surface: #151e2e;
+      --bg-surface: #111827;
       --bg-surface-alt: #0b1120;
+      --bg-card: #151e2e;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
+      --text-subtle: #64748b;
       --border-color: rgba(255, 255, 255, 0.08);
+      --border-hover: rgba(255, 255, 255, 0.16);
       --shadow-sm: 0 4px 12px rgba(0,0,0,0.4);
       --shadow-md: 0 10px 30px rgba(0,0,0,0.5);
       --shadow-lg: 0 25px 60px rgba(0,0,0,0.7);
+      --shadow-card: 0 4px 25px rgba(0,0,0,0.4);
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -44,148 +54,262 @@
       overflow-x: hidden;
       transition: background-color 0.3s ease, color 0.3s ease;
     }
+
+    /* Layout Margins & Container */
     .layout-container {
       max-width: 1440px;
       margin: 0 auto;
       padding: 0 clamp(20px, 4vw, 48px);
     }
+
+    /* Sticky Header */
     .header-bar {
       position: sticky; top: 0; z-index: 1000;
       background: var(--bg-surface);
       border-bottom: 1px solid var(--border-color);
       padding: 12px clamp(20px, 4vw, 48px);
       backdrop-filter: blur(14px);
+      transition: background 0.3s ease, border-color 0.3s ease;
     }
     .header-inner {
       max-width: 1440px; margin: 0 auto;
       display: flex; align-items: center; justify-content: space-between; gap: 16px;
     }
+
+    /* Buttons */
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 0.84rem;
+      padding: 10px 20px; border-radius: 9px; font-weight: 700; font-size: 0.85rem;
       cursor: pointer; text-decoration: none; border: none; transition: all 0.2s ease;
+      user-select: none;
     }
     .btn-primary {
       background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
       color: #ffffff; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
     }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(2, 132, 199, 0.45); }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
+    }
     .btn-outline {
-      background: transparent; border: 1px solid var(--border-color); color: var(--text-main);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
     }
-    .btn-outline:hover { background: var(--bg-surface-alt); }
-    .section-wrap {
-      padding: 70px 0; border-top: 1px solid var(--border-color);
+    .btn-outline:hover {
+      background: var(--bg-surface-alt);
+      border-color: var(--border-hover);
     }
+    .btn-sm {
+      padding: 6px 14px; font-size: 0.78rem; border-radius: 6px;
+    }
+
+    /* Navigation Filter Tabs */
+    .nav-tabs-wrapper {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 6px; border-radius: 14px;
+      background: var(--bg-surface-alt);
+      border: 1px solid var(--border-color);
+      margin: 0 auto 36px;
+      max-width: fit-content;
+      flex-wrap: wrap;
+    }
+    .nav-tab-btn {
+      padding: 9px 20px; border-radius: 10px; font-weight: 700; font-size: 0.84rem;
+      border: none; background: transparent; color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s ease;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .nav-tab-btn:hover {
+      color: var(--text-main);
+    }
+    .nav-tab-btn.active {
+      background: var(--bg-surface);
+      color: var(--brand-primary);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    /* Card styling */
     .card-box {
-      background: var(--bg-surface); border: 1px solid var(--border-color);
-      border-radius: 18px; box-shadow: var(--shadow-md); overflow: hidden;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
-    .ind-tab-btn {
-      padding: 9px 18px; border-radius: 30px; font-weight: 800; font-size: 0.82rem;
+    .card-box:hover {
+      border-color: var(--border-hover);
+    }
+
+    /* Section padding */
+    .section-wrap {
+      padding: 70px 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* Industry Chip Selector */
+    .ind-chip-btn {
+      padding: 10px 18px; border-radius: 30px; font-weight: 700; font-size: 0.84rem;
       border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-muted);
       cursor: pointer; transition: all 0.2s ease;
+      display: inline-flex; align-items: center; gap: 8px;
     }
-    .ind-tab-btn.active {
-      color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    .ind-chip-btn:hover {
+      background: var(--bg-surface-alt);
+      color: var(--text-main);
     }
+    .ind-chip-btn.active {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+    }
+
+    /* Hardware Selector */
+    .hw-tab-btn {
+      padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 0.86rem;
+      border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s ease; text-align: left;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%;
+    }
+    .hw-tab-btn:hover {
+      background: var(--bg-surface-alt);
+      color: var(--text-main);
+    }
+    .hw-tab-btn.active {
+      background: var(--bg-surface);
+      color: var(--brand-primary);
+      border-color: var(--brand-primary);
+      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.15);
+    }
+
     /* Lightbox Modal */
     .lightbox-modal {
       display: none; position: fixed; inset: 0; z-index: 99999;
-      background: rgba(0,0,0,0.88); backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.92); backdrop-filter: blur(10px);
       align-items: center; justify-content: center; padding: 20px;
     }
     .lightbox-modal.active { display: flex; }
     .lightbox-modal img {
-      max-width: 90vw; max-height: 85vh; border-radius: 10px; object-fit: contain;
+      max-width: 90vw; max-height: 85vh; border-radius: 12px; object-fit: contain;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
     }
+
     /* SaNDS Modal */
     .sands-modal-backdrop {
       display: none; position: fixed; inset: 0; z-index: 9999;
-      background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.78); backdrop-filter: blur(8px);
       align-items: center; justify-content: center; padding: 20px;
     }
     .sands-modal-backdrop.active { display: flex; }
+
+    /* Mono badge */
+    .badge-mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px;
+    }
+
+    /* Animation */
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.15); }
+    }
+    .pulse-indicator {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background: #10b981; animation: pulseDot 2s infinite ease-in-out;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 1. Header with margins -->
+  <!-- 1. HEADER WITH EXPANDED MARGINS -->
   <header class="header-bar">
     <div class="header-inner">
       <div style="display: flex; align-items: center; gap: 16px;">
-        <a href="/" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
-          <div style="width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, #0284c7, #6366f1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+        <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit;">
+          <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #0284c7, #6366f1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);">
             🚗
           </div>
           <div>
-            <div style="font-size: 1.05rem; font-weight: 900; line-height: 1.1;">Smart Parking Solution</div>
-            <div style="font-size: 0.66rem; font-weight: 800; color: #0284c7; text-transform: uppercase;">Facility Automation OS</div>
+            <div style="font-size: 1.05rem; font-weight: 900; line-height: 1.1; letter-spacing: -0.01em;">Smart Parking Solution</div>
+            <div style="font-size: 0.68rem; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 0.05em;">Facility Automation OS</div>
           </div>
         </a>
 
-        <!-- SaNDS Lab Badge -->
-        <div onclick="openSandsModal()" style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 20px; background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.3); cursor: pointer;">
-          <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS" style="height: 15px;" onerror="this.style.display='none'" />
+        <!-- SaNDS Lab Credentials Badge -->
+        <div onclick="openSandsModal()" style="display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 20px; background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.3); cursor: pointer; transition: all 0.2s;" title="Click for SaNDS Lab Credentials">
+          <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS Lab" style="height: 15px;" onerror="this.style.display='none'" />
           <span style="font-size: 0.72rem; font-weight: 800; color: #ec4899;">POWERED BY SaNDS LAB</span>
         </div>
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px;">
-        <button class="btn btn-outline" onclick="toggleTheme()" id="theme-btn">🌙 Dark Mode</button>
-        <a href="/ANPR_Configuration_Procedure_Guide.html" class="btn btn-outline" target="_blank">📖 Guide</a>
-        <a href="/" class="btn btn-primary">🚀 Enter Control Room</a>
+        <button class="btn btn-outline btn-sm" onclick="toggleTheme()" id="theme-btn">🌙 Dark Mode</button>
+        <a href="/ANPR_Configuration_Procedure_Guide.html" class="btn btn-outline btn-sm" target="_blank">📖 Guide</a>
+        <a href="/" class="btn btn-primary btn-sm">🚀 Enter Live Portal</a>
       </div>
     </div>
   </header>
 
-  <!-- 2. Hero Section (Balanced Margins & Modular Blocks) -->
+  <!-- 2. HERO SECTION WITH MODULAR BLOCKS & SPACIOUS MARGINS -->
   <section style="padding: 50px 0 60px;">
     <div class="layout-container">
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 40px; align-items: center;">
+        
+        <!-- Left Hero Content Blocks -->
         <div>
-          <div style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(2,132,199,0.1); border: 1px solid rgba(2,132,199,0.3); color: #0284c7; font-size: 0.75rem; font-weight: 800; margin-bottom: 16px;">
-            ✨ ENTERPRISE SMART PARKING & ANPR SUITE 2026
+          <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; background: rgba(2,132,199,0.1); border: 1px solid rgba(2,132,199,0.3); color: #0284c7; font-size: 0.76rem; font-weight: 800; margin-bottom: 18px;">
+            <span class="pulse-indicator"></span> ENTERPRISE SMART PARKING & ANPR SUITE 2026
           </div>
-          <h1 style="font-size: clamp(2.2rem, 3.5vw, 3.2rem); font-weight: 900; line-height: 1.15; margin-bottom: 18px;">
-            Intelligent Multi-Industry Parking & Facility Management
+          
+          <h1 style="font-size: clamp(2.3rem, 3.8vw, 3.4rem); font-weight: 900; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 18px;">
+            Intelligent Multi-Industry <span style="background: linear-gradient(135deg, #0284c7, #6366f1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Parking & Facility</span> Management
           </h1>
 
-          <!-- Distinct Block 1: Industry Selection Chips -->
+          <!-- Modular Block 1: Industry Scope Banner -->
           <div style="margin-bottom: 20px; padding: 14px 18px; border-radius: 14px; background: var(--bg-surface); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
             <div style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;">
-              🏢 Turnkey Multi-Parking Architecture For:
+              🏢 Complete Turnkey Multi-Parking Architecture For:
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 8px;">
               <span style="padding: 5px 12px; border-radius: 20px; background: rgba(2,132,199,0.1); border: 1px solid rgba(2,132,199,0.25); color: #0284c7; font-size: 0.76rem; font-weight: 700;">🏥 Hospitals & HIS</span>
               <span style="padding: 5px 12px; border-radius: 20px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: #10b981; font-size: 0.76rem; font-weight: 700;">🛒 Supermarkets & POS</span>
               <span style="padding: 5px 12px; border-radius: 20px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); color: #f59e0b; font-size: 0.76rem; font-weight: 700;">🏨 Hotels & Valet</span>
-              <span style="padding: 5px 12px; border-radius: 20px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25); color: #6366f1; font-size: 0.76rem; font-weight: 700;">🏢 Tech Parks & Towers</span>
-              <span style="padding: 5px 12px; border-radius: 20px; background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.25); color: #ec4899; font-size: 0.76rem; font-weight: 700;">✈️ Transit & Airports</span>
+              <span style="padding: 5px 12px; border-radius: 20px; background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25); color: #6366f1; font-size: 0.76rem; font-weight: 700;">🏢 Corporate Tech Parks</span>
+              <span style="padding: 5px 12px; border-radius: 20px; background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.25); color: #ec4899; font-size: 0.76rem; font-weight: 700;">✈️ Airports & Transit</span>
               <span style="padding: 5px 12px; border-radius: 20px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.25); color: #8b5cf6; font-size: 0.76rem; font-weight: 700;">🏟️ Stadiums & Arenas</span>
             </div>
           </div>
 
-          <!-- Distinct Block 2: Capabilities Bar -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 24px;">
-            <div style="padding: 9px 12px; border-radius: 10px; background: rgba(2,132,199,0.08); border: 1px solid rgba(2,132,199,0.2); color: #0284c7; font-size: 0.76rem; font-weight: 700;">
-              📹 99.8% ANPR Recognition
+          <!-- Modular Block 2: Capabilities Strip -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 24px;">
+            <div style="padding: 10px 14px; border-radius: 10px; background: rgba(2,132,199,0.08); border: 1px solid rgba(2,132,199,0.2); color: #0284c7; font-size: 0.76rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <span>📹</span> 99.8% ANPR Recognition
             </div>
-            <div style="padding: 9px 12px; border-radius: 10px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: #10b981; font-size: 0.76rem; font-weight: 700;">
-              ⚡ &lt;0.4s Fast Barrier Relay
+            <div style="padding: 10px 14px; border-radius: 10px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); color: #10b981; font-size: 0.76rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <span>⚡</span> &lt;0.4s Fast Barrier Relay
             </div>
-            <div style="padding: 9px 12px; border-radius: 10px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); color: #6366f1; font-size: 0.76rem; font-weight: 700;">
-              🌐 Bilateral REST API
+            <div style="padding: 10px 14px; border-radius: 10px; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); color: #6366f1; font-size: 0.76rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <span>🌐</span> Bilateral REST API
             </div>
           </div>
 
-          <!-- Distinct Block 3: Action Buttons -->
+          <!-- Modular Block 3: Action Buttons -->
           <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 26px;">
-            <a href="/" class="btn btn-primary" style="padding: 12px 26px; font-size: 0.92rem;">Launch Live Control Room →</a>
-            <a href="#simulator-sec" class="btn btn-outline" style="padding: 12px 22px; font-size: 0.9rem;">▶ Test Live Interactive Lab</a>
+            <a href="/" class="btn btn-primary" style="padding: 12px 28px; font-size: 0.92rem;">
+              Launch Live Control Room →
+            </a>
+            <a href="#simulator-section" class="btn btn-outline" style="padding: 12px 22px; font-size: 0.9rem;">
+              ▶ Test Live Interactive Lab
+            </a>
+            <button onclick="openSandsModal()" class="btn btn-outline" style="padding: 12px 20px; font-size: 0.9rem; color: #ec4899; border-color: rgba(236,72,153,0.3);">
+              💎 SaNDS Credentials
+            </button>
           </div>
 
-          <!-- Distinct Block 4: 4 Separate Floating Metric Cards -->
+          <!-- Modular Block 4: 4 Separate Floating Metric Cards -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px;">
             <div style="padding: 14px; border-radius: 12px; background: var(--bg-surface); border: 1px solid var(--border-color); border-top: 3px solid #0284c7; box-shadow: var(--shadow-sm);">
               <div style="font-size: 1.4rem; font-weight: 900; color: #0284c7; line-height: 1;">99.8%</div>
@@ -213,276 +337,1025 @@
           </div>
         </div>
 
-        <!-- Right Hero Boom Barrier Image Card -->
+        <!-- Right Hero Interactive Boom Barrier Card with Zoom -->
         <div class="card-box" style="cursor: pointer; position: relative;" onclick="openLightbox('/images/boom_barrier_gate.jpg')">
-          <div style="height: 360px; overflow: hidden; position: relative;">
-            <img src="/images/boom_barrier_gate.jpg" alt="Boom Barrier ANPR Lane" style="width: 100%; height: 100%; object-fit: cover;" />
-            <div style="position: absolute; top: 14px; left: 14px; padding: 5px 12px; border-radius: 20px; background: rgba(15,23,42,0.85); color: #10b981; font-size: 0.72rem; font-weight: 800; border: 1px solid rgba(16,185,129,0.4);">
-              ● LIVE GATE 01: ARMED · ANPR ACTIVE
+          <div style="height: 380px; overflow: hidden; position: relative;">
+            <img src="/images/boom_barrier_gate.jpg" alt="Boom Barrier ANPR Lane" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1.0)'" />
+            <div style="position: absolute; top: 14px; left: 14px; padding: 6px 14px; border-radius: 20px; background: rgba(15,23,42,0.85); color: #10b981; font-size: 0.72rem; font-weight: 800; border: 1px solid rgba(16,185,129,0.4); display: flex; align-items: center; gap: 6px;">
+              <span class="pulse-indicator"></span> LIVE GATE 01: ARMED · ANPR ACTIVE
             </div>
-            <div style="position: absolute; bottom: 10px; right: 10px; padding: 4px 10px; border-radius: 6px; background: rgba(0,0,0,0.7); color: #fff; font-size: 0.7rem; font-weight: 700;">
-              🔍 Click to Zoom
+            <div style="position: absolute; bottom: 12px; right: 12px; padding: 6px 12px; border-radius: 8px; background: rgba(0,0,0,0.75); color: #fff; font-size: 0.72rem; font-weight: 700; backdrop-filter: blur(4px);">
+              🔍 Click to Zoom Photo
             </div>
           </div>
+          <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); background: var(--bg-surface);">
+            <div>
+              <div style="font-size: 0.88rem; font-weight: 800;">Gate 01 Main Entrance Lane</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Brushless DC Barrier + IP67 ANPR Sensor</div>
+            </div>
+            <span style="font-size: 0.75rem; font-weight: 800; color: #0284c7; background: rgba(2,132,199,0.1); padding: 4px 10px; border-radius: 6px;">Sub-0.4s Actuation</span>
+          </div>
         </div>
+
       </div>
     </div>
   </section>
 
-  <!-- 3. Hardware & Infrastructure Suite (Balanced Margins) -->
-  <section class="section-wrap" style="background: var(--bg-surface-alt);">
+  <!-- 3. TOP LEVEL NAVIGATION FILTER TABS -->
+  <div class="layout-container">
+    <div class="nav-tabs-wrapper">
+      <button class="nav-tab-btn active" onclick="switchMainTab('hardware', this)">
+        ⚡ Physical Hardware Suite
+      </button>
+      <button class="nav-tab-btn" onclick="switchMainTab('industries', this)">
+        🏢 Multi-Industry Suites
+      </button>
+      <button class="nav-tab-btn" onclick="switchMainTab('simulator', this)">
+        🧪 Live Interactive Simulation Lab
+      </button>
+      <button class="nav-tab-btn" onclick="switchMainTab('architecture', this)">
+        🌐 API & Cloud Architecture
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. TAB 1: DYNAMIC PHYSICAL HARDWARE SUITE -->
+  <section id="tab-hardware" class="section-wrap" style="background: var(--bg-surface-alt); border-top: 1px solid var(--border-color);">
     <div class="layout-container">
       <div style="text-align: center; max-width: 800px; margin: 0 auto 36px;">
-        <div style="font-size: 0.75rem; font-weight: 800; color: #6366f1; text-transform: uppercase; margin-bottom: 8px;">PHYSICAL HARDWARE & CONTROL INFRASTRUCTURE</div>
+        <div style="font-size: 0.75rem; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">PHYSICAL HARDWARE & CONTROL INFRASTRUCTURE</div>
         <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Boom Barriers, LED Totems & Command Centers</h2>
         <p style="color: var(--text-muted); font-size: 0.94rem;">Fully integrated physical hardware suite designed for high durability and sub-second execution.</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 26px;">
-        <!-- Card 1: Boom Barrier -->
-        <div class="card-box">
-          <div style="height: 260px; overflow: hidden; position: relative; cursor: pointer;" onclick="openLightbox('/images/boom_barrier_gate.jpg')">
+      <!-- Hardware Switcher Interactive Row -->
+      <div style="display: grid; grid-template-columns: 320px 1fr; gap: 30px; margin-bottom: 40px; align-items: start;">
+        
+        <!-- Left Hardware Selector Buttons -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button class="hw-tab-btn active" onclick="selectHardware('barrier', this)">
+            <div>
+              <div style="font-size: 0.7rem; font-weight: 800; color: #0284c7; text-transform: uppercase;">Perimeter Access</div>
+              <div style="font-size: 0.92rem; font-weight: 800;">Boom Barrier & ANPR Gate</div>
+            </div>
+            <span style="font-size: 1.1rem;">➔</span>
+          </button>
+
+          <button class="hw-tab-btn" onclick="selectHardware('display', this)">
+            <div>
+              <div style="font-size: 0.7rem; font-weight: 800; color: #10b981; text-transform: uppercase;">Wayfinding & Signage</div>
+              <div style="font-size: 0.92rem; font-weight: 800;">Multi-Deck LED Totem</div>
+            </div>
+            <span style="font-size: 1.1rem;">➔</span>
+          </button>
+
+          <button class="hw-tab-btn" onclick="selectHardware('control-room', this)">
+            <div>
+              <div style="font-size: 0.7rem; font-weight: 800; color: #f59e0b; text-transform: uppercase;">Operations & Monitoring</div>
+              <div style="font-size: 0.92rem; font-weight: 800;">Command Video Wall</div>
+            </div>
+            <span style="font-size: 1.1rem;">➔</span>
+          </button>
+
+          <button class="hw-tab-btn" onclick="selectHardware('kiosk', this)">
+            <div>
+              <div style="font-size: 0.7rem; font-weight: 800; color: #ec4899; text-transform: uppercase;">Payment & Validation</div>
+              <div style="font-size: 0.92rem; font-weight: 800;">Self-Service QR Pay Kiosk</div>
+            </div>
+            <span style="font-size: 1.1rem;">➔</span>
+          </button>
+        </div>
+
+        <!-- Right Dynamic Hardware Detail Card -->
+        <div class="card-box" id="hw-detail-card" style="padding: 26px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 26px; align-items: center;">
+            <div style="position: relative; border-radius: 12px; overflow: hidden; height: 280px; cursor: pointer;" onclick="openLightboxCurrentHw()">
+              <img id="hw-img" src="/images/boom_barrier_gate.jpg" alt="Hardware Preview" style="width: 100%; height: 100%; object-fit: cover;" />
+              <div id="hw-badge" style="position: absolute; top: 12px; left: 12px; padding: 5px 12px; border-radius: 12px; background: rgba(0,0,0,0.8); color: #38bdf8; font-size: 0.72rem; font-weight: 800;">
+                0.4s Fast Actuation
+              </div>
+              <div style="position: absolute; bottom: 10px; right: 10px; padding: 4px 10px; border-radius: 6px; background: rgba(0,0,0,0.7); color: #fff; font-size: 0.7rem; font-weight: 700;">
+                🔍 Zoom Image
+              </div>
+            </div>
+
+            <div>
+              <div id="hw-cat" style="font-size: 0.72rem; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 6px;">Perimeter Access</div>
+              <h3 id="hw-title" style="font-size: 1.4rem; font-weight: 900; margin-bottom: 10px;">Automated Boom Barrier & ANPR Gate</h3>
+              <p id="hw-desc" style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 18px;">
+                High-durability brushless DC barrier motor paired with IP67 deep-learning ANPR camera with integrated infrared illuminator for 24/7 day/night optical plate recognition.
+              </p>
+
+              <div id="hw-hotspots" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div style="padding: 10px; border-radius: 8px; background: var(--bg-surface-alt); border: 1px solid var(--border-color);">
+                  <div style="font-size: 0.76rem; font-weight: 800;">Sub-Second Barrier Relay</div>
+                  <div style="font-size: 0.68rem; color: var(--text-muted);">0.4s to 0.9s adjustable speeds</div>
+                </div>
+                <div style="padding: 10px; border-radius: 8px; background: var(--bg-surface-alt); border: 1px solid var(--border-color);">
+                  <div style="font-size: 0.76rem; font-weight: 800;">99.8% LPR Recognition</div>
+                  <div style="font-size: 0.68rem; color: var(--text-muted);">Embedded deep-learning OCR</div>
+                </div>
+                <div style="padding: 10px; border-radius: 8px; background: var(--bg-surface-alt); border: 1px solid var(--border-color);">
+                  <div style="font-size: 0.76rem; font-weight: 800;">Dual Safety Interlocks</div>
+                  <div style="font-size: 0.68rem; color: var(--text-muted);">Loop detector + safety photo-beams</div>
+                </div>
+                <div style="padding: 10px; border-radius: 8px; background: var(--bg-surface-alt); border: 1px solid var(--border-color);">
+                  <div style="font-size: 0.76rem; font-weight: 800;">Illuminated LED Arm</div>
+                  <div style="font-size: 0.68rem; color: var(--text-muted);">Red/Green LED arm light strip</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 4 Hardware Cards Grid for Direct Viewing & Zoom -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <div class="card-box" style="cursor: pointer;" onclick="openLightbox('/images/boom_barrier_gate.jpg')">
+          <div style="height: 180px; overflow: hidden; position: relative;">
             <img src="/images/boom_barrier_gate.jpg" alt="Boom Barrier" style="width: 100%; height: 100%; object-fit: cover;" />
-            <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #38bdf8; font-size: 0.72rem; font-weight: 800;">0.4s Fast Actuation</div>
+            <div style="position: absolute; top: 10px; left: 10px; padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.75); color: #38bdf8; font-size: 0.7rem; font-weight: 800;">0.4s Fast Relay</div>
           </div>
-          <div style="padding: 24px;">
-            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Automated Boom Barrier & ANPR System</h3>
-            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Sub-second 0.4s barrier arm actuation with IP67 deep-learning ANPR camera, dual loop detectors, and night LED guidance.</p>
-          </div>
-        </div>
-
-        <!-- Card 2: LED Display Board -->
-        <div class="card-box">
-          <div style="height: 260px; overflow: hidden; position: relative; cursor: pointer;" onclick="openLightbox('/images/led_display_board.jpg')">
-            <img src="/images/led_display_board.jpg" alt="LED Display Board" style="width: 100%; height: 100%; object-fit: cover;" />
-            <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #10b981; font-size: 0.72rem; font-weight: 800;">Real-Time LED Guidance</div>
-          </div>
-          <div style="padding: 24px;">
-            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Multi-Deck LED Parking Guidance Display</h3>
-            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Ultra-bright digital outdoor totem displaying floor-by-floor vacant slots (P1, P2, P3) synced with our Android TV APK.</p>
+          <div style="padding: 16px;">
+            <div style="font-size: 0.92rem; font-weight: 800;">Boom Barrier & ANPR</div>
+            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 4px;">High-speed brushless DC motor gate with dual safety loops.</div>
           </div>
         </div>
 
-        <!-- Card 3: Control Room -->
-        <div class="card-box">
-          <div style="height: 260px; overflow: hidden; position: relative; cursor: pointer;" onclick="openLightbox('/images/control_room_dashboard.jpg')">
-            <img src="/images/control_room_dashboard.jpg" alt="Control Room Video Wall" style="width: 100%; height: 100%; object-fit: cover;" />
-            <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #f59e0b; font-size: 0.72rem; font-weight: 800;">Master Control Room</div>
+        <div class="card-box" style="cursor: pointer;" onclick="openLightbox('/images/led_display_board.jpg')">
+          <div style="height: 180px; overflow: hidden; position: relative;">
+            <img src="/images/led_display_board.jpg" alt="LED Board" style="width: 100%; height: 100%; object-fit: cover;" />
+            <div style="position: absolute; top: 10px; left: 10px; padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.75); color: #10b981; font-size: 0.7rem; font-weight: 800;">Real-Time LED</div>
           </div>
-          <div style="padding: 24px;">
-            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Central Command Center & Video Wall</h3>
-            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Multi-lane RTSP live video feeds, 3D floor occupancy heatmaps, cashier collection audits, and one-click manual barrier overrides.</p>
+          <div style="padding: 16px;">
+            <div style="font-size: 0.92rem; font-weight: 800;">Multi-Deck LED Totem</div>
+            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 4px;">Dynamic floor occupancy totem synced via Android TV APK.</div>
           </div>
         </div>
 
-        <!-- Card 4: QR Kiosk -->
-        <div class="card-box">
-          <div style="height: 260px; overflow: hidden; position: relative; cursor: pointer;" onclick="openLightbox('/images/qr_payment_kiosk.jpg')">
+        <div class="card-box" style="cursor: pointer;" onclick="openLightbox('/images/control_room_dashboard.jpg')">
+          <div style="height: 180px; overflow: hidden; position: relative;">
+            <img src="/images/control_room_dashboard.jpg" alt="Control Room" style="width: 100%; height: 100%; object-fit: cover;" />
+            <div style="position: absolute; top: 10px; left: 10px; padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.75); color: #f59e0b; font-size: 0.7rem; font-weight: 800;">Command Center</div>
+          </div>
+          <div style="padding: 16px;">
+            <div style="font-size: 0.92rem; font-weight: 800;">Video Wall Command</div>
+            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 4px;">Multi-lane RTSP streams, shift cashier audits & barrier overrides.</div>
+          </div>
+        </div>
+
+        <div class="card-box" style="cursor: pointer;" onclick="openLightbox('/images/qr_payment_kiosk.jpg')">
+          <div style="height: 180px; overflow: hidden; position: relative;">
             <img src="/images/qr_payment_kiosk.jpg" alt="QR Pay Station" style="width: 100%; height: 100%; object-fit: cover;" />
-            <div style="position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 12px; background: rgba(0,0,0,0.75); color: #ec4899; font-size: 0.72rem; font-weight: 800;">Self-Service Pay Station</div>
+            <div style="position: absolute; top: 10px; left: 10px; padding: 4px 8px; border-radius: 8px; background: rgba(0,0,0,0.75); color: #ec4899; font-size: 0.7rem; font-weight: 800;">Contactless Kiosk</div>
           </div>
-          <div style="padding: 24px;">
-            <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 6px;">Self-Service QR Barcode Pay Station & Kiosk</h3>
-            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.5;">Weatherproof outdoor totem for ISO/IEC 18004 thermal receipt scanning, NFC contactless card payments, and visitor validation.</p>
+          <div style="padding: 16px;">
+            <div style="font-size: 0.92rem; font-weight: 800;">Self-Service Pay Station</div>
+            <div style="font-size: 0.74rem; color: var(--text-muted); margin-top: 4px;">ISO/IEC 18004 QR scanner, NFC cards and thermal receipts.</div>
           </div>
         </div>
       </div>
+
     </div>
   </section>
 
-  <!-- 4. Interactive Simulation Lab (Balanced Margins) -->
-  <section id="simulator-sec" class="section-wrap">
+  <!-- 5. TAB 2: DYNAMIC MULTI-INDUSTRY SUITES -->
+  <section id="tab-industries" class="section-wrap">
     <div class="layout-container">
       <div style="text-align: center; max-width: 800px; margin: 0 auto 36px;">
-        <div style="font-size: 0.75rem; font-weight: 800; color: #10b981; text-transform: uppercase; margin-bottom: 8px;">LIVE INTERACTIVE SIMULATION LAB</div>
-        <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Test the Boom Barrier & Display Panel</h2>
-        <p style="color: var(--text-muted); font-size: 0.94rem;">Trigger simulated ANPR gate entries and adjust floor occupancy sliders in real-time.</p>
+        <div style="font-size: 0.75rem; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">SPECIALIZED INDUSTRY ARCHITECTURES</div>
+        <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Turnkey Workflows for Every Facility</h2>
+        <p style="color: var(--text-muted); font-size: 0.94rem;">Select your industry below to inspect the dedicated integration scheme, validation rules, and automated workflow.</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 26px;">
-        <!-- Barrier Simulator Card -->
-        <div class="card-box" style="padding: 24px;">
-          <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 14px;">Gate 01 Boom Barrier Simulator</h3>
-          
-          <div style="height: 160px; background: #0b1120; border-radius: 10px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 16px;">
-            <div style="position: absolute; left: 40px; bottom: 20px; width: 28px; height: 70px; background: #f97316; border-radius: 3px;">
-              <div id="barrier-light" style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; margin: 5px auto; box-shadow: 0 0 8px #ef4444;"></div>
+      <!-- Industry Selector Chips -->
+      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 36px;">
+        <button class="ind-chip-btn active" onclick="selectIndustry('hospital', this)">
+          <span>🏥</span> Hospitals & Medical Centers
+        </button>
+        <button class="ind-chip-btn" onclick="selectIndustry('supermarket', this)">
+          <span>🛒</span> Supermarkets & Malls
+        </button>
+        <button class="ind-chip-btn" onclick="selectIndustry('hotel', this)">
+          <span>🏨</span> Hotels & Valet
+        </button>
+        <button class="ind-chip-btn" onclick="selectIndustry('corporate', this)">
+          <span>🏢</span> Corporate Tech Towers
+        </button>
+        <button class="ind-chip-btn" onclick="selectIndustry('airport', this)">
+          <span>✈️</span> Airports & Municipal Hubs
+        </button>
+        <button class="ind-chip-btn" onclick="selectIndustry('stadium', this)">
+          <span>🏟️</span> Stadiums & Arenas
+        </button>
+      </div>
+
+      <!-- Dynamic Industry Deep-Dive Card -->
+      <div class="card-box" id="ind-deepdive-card" style="padding: 32px; margin-bottom: 36px; border-left: 6px solid #0284c7;">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+          <div>
+            <div id="ind-tag" style="font-size: 0.75rem; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px;">Healthcare & Clinical Suites</div>
+            <h3 id="ind-title" style="font-size: 1.6rem; font-weight: 900;">Hospitals & Medical Centers</h3>
+            <div id="ind-tagline" style="font-size: 0.88rem; font-weight: 700; color: var(--text-muted); margin-top: 4px;">Bilateral HIMS / HIS Sync & Clinic QR Validation</div>
+          </div>
+          <a href="/HIMS_API_Integration_Guide.html" target="_blank" class="btn btn-outline btn-sm" style="color: #0284c7;">
+            📖 View HIMS API Specs ↗
+          </a>
+        </div>
+
+        <p id="ind-summary" style="font-size: 0.92rem; color: var(--text-main); line-height: 1.6; margin-bottom: 26px;">
+          Automates patient parking validation upon clinic registration, synchronizes appointment tokens with hospital EHR systems, and provides priority green-corridor clearance for emergency ambulances.
+        </p>
+
+        <!-- Two Columns: Key Enterprise Benefits & 3-Step Flow -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px;">
+          <!-- Left: 5 Enterprise Benefits -->
+          <div style="background: var(--bg-surface-alt); padding: 22px; border-radius: 14px; border: 1px solid var(--border-color);">
+            <div style="font-size: 0.78rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 14px;">Enterprise Capabilities</div>
+            <div id="ind-benefits" style="display: flex; flex-direction: column; gap: 10px; font-size: 0.84rem;">
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="color: #10b981; font-weight: 900;">✓</span>
+                <span>Live Bilateral REST API syncing with ANY Hospital Information System (HIMS)</span>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="color: #10b981; font-weight: 900;">✓</span>
+                <span>Printable thermal QR validation receipts issued at clinic consultation counters</span>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="color: #10b981; font-weight: 900;">✓</span>
+                <span>Automatic emergency ambulance priority barrier opening via ANPR whitelist</span>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="color: #10b981; font-weight: 900;">✓</span>
+                <span>Doctor and medical staff dedicated fast lanes with RFID and license plate tags</span>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="color: #10b981; font-weight: 900;">✓</span>
+                <span>Patient discount waivers configured by appointment duration (e.g. 2h free)</span>
+              </div>
             </div>
-            <div id="boom-arm" style="position: absolute; left: 66px; bottom: 70px; width: 220px; height: 8px; background: repeating-linear-gradient(90deg, #fff 0px, #fff 20px, #ef4444 20px, #ef4444 40px); transform-origin: left center; transform: rotate(0deg); transition: transform 0.5s ease; border-radius: 4px;"></div>
-            <div id="sim-plate" style="position: absolute; right: 40px; bottom: 25px; background: #fff; color: #000; font-family: monospace; font-weight: 900; padding: 4px 10px; border: 2px solid #000; border-radius: 4px;">
+          </div>
+
+          <!-- Right: 3-Step Turnkey Flow -->
+          <div style="background: var(--bg-surface-alt); padding: 22px; border-radius: 14px; border: 1px solid var(--border-color);">
+            <div style="font-size: 0.78rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 14px;">Automated 3-Step Flow</div>
+            <div id="ind-steps" style="display: flex; flex-direction: column; gap: 14px;">
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78rem; flex-shrink: 0;">1</div>
+                <div>
+                  <div style="font-size: 0.84rem; font-weight: 800;">Patient Arrival</div>
+                  <div style="font-size: 0.76rem; color: var(--text-muted);">ANPR registers plate and prints thermal barcode slip at gate.</div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78rem; flex-shrink: 0;">2</div>
+                <div>
+                  <div style="font-size: 0.84rem; font-weight: 800;">Clinic Consultation</div>
+                  <div style="font-size: 0.76rem; color: var(--text-muted);">Nurse/Receptionist scans QR in HIMS to apply patient discount.</div>
+                </div>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: #0284c7; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78rem; flex-shrink: 0;">3</div>
+                <div>
+                  <div style="font-size: 0.84rem; font-weight: 800;">Automatic Exit</div>
+                  <div style="font-size: 0.76rem; color: var(--text-muted);">Barrier verifies validated QR token and opens automatically.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 6. TAB 3: 3-CARD LIVE INTERACTIVE SIMULATION LAB -->
+  <section id="tab-simulator" class="section-wrap" style="background: var(--bg-surface-alt);">
+    <div class="layout-container" id="simulator-section">
+      <div style="text-align: center; max-width: 800px; margin: 0 auto 36px;">
+        <div style="font-size: 0.75rem; font-weight: 800; color: #10b981; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">LIVE INTERACTIVE SIMULATION LAB</div>
+        <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Test the Boom Barrier, LED Board & QR Generator</h2>
+        <p style="color: var(--text-muted); font-size: 0.94rem;">Interact directly with the simulated physical hardware, vacancy totems, and live ISO/IEC 18004 ticket generator.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 26px;">
+        
+        <!-- Simulator Card 1: Boom Barrier Simulator -->
+        <div class="card-box" style="padding: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="font-size: 1.1rem; font-weight: 800;">Gate 01 Boom Barrier Simulator</h3>
+            <span id="barrier-state-badge" class="badge-mono" style="background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3);">
+              ARMED / CLOSED
+            </span>
+          </div>
+
+          <!-- Animated Barrier Lane Canvas -->
+          <div style="height: 170px; background: #070b14; border-radius: 12px; position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.1);">
+            <!-- Ground Road Lines -->
+            <div style="position: absolute; bottom: 15px; left: 0; right: 0; height: 3px; background: repeating-linear-gradient(90deg, #e2e8f0 0, #e2e8f0 20px, transparent 20px, transparent 40px); opacity: 0.4;"></div>
+            
+            <!-- Barrier Housing Post -->
+            <div style="position: absolute; left: 45px; bottom: 20px; width: 28px; height: 75px; background: #f97316; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+              <div id="barrier-light" style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; margin: 6px auto; box-shadow: 0 0 10px #ef4444; transition: all 0.3s ease;"></div>
+            </div>
+
+            <!-- Rotating Boom Arm -->
+            <div id="boom-arm" style="position: absolute; left: 71px; bottom: 74px; width: 210px; height: 8px; background: repeating-linear-gradient(90deg, #fff 0px, #fff 20px, #ef4444 20px, #ef4444 40px); transform-origin: left center; transform: rotate(0deg); transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);"></div>
+
+            <!-- Simulated Vehicle Plate -->
+            <div id="sim-plate-tag" style="position: absolute; right: 40px; bottom: 26px; background: #ffffff; color: #000000; font-family: 'JetBrains Mono', monospace; font-weight: 900; padding: 4px 12px; border: 2px solid #000; border-radius: 5px; box-shadow: 0 4px 12px rgba(0,0,0,0.6); letter-spacing: 0.08em; font-size: 0.85rem;">
               BH-84920
             </div>
           </div>
 
-          <div id="sim-log" style="padding: 8px 12px; border-radius: 6px; background: var(--bg-surface-alt); font-family: monospace; font-size: 0.74rem; color: #0284c7; margin-bottom: 14px;">
-            > Gate 01 [Entry]: ARMED & READY.
+          <!-- Input to customize vehicle plate -->
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <input type="text" id="custom-plate-input" value="BH-84920" placeholder="Custom Plate No." style="flex: 1; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 0.8rem;" oninput="updateSimPlate(this.value)" />
+            <select id="custom-vehicle-type" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.78rem; font-weight: 700;">
+              <option>Sedan / Private</option>
+              <option>VIP / Doctor Bay</option>
+              <option>Delivery / Contractor</option>
+              <option>Emergency Ambulance</option>
+            </select>
           </div>
 
-          <button class="btn btn-primary" onclick="triggerSimulatedEntry()" style="width: 100%;">
+          <!-- Telemetry Terminal Log -->
+          <div id="sim-log" style="padding: 10px 12px; border-radius: 8px; background: #070b14; color: #38bdf8; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; line-height: 1.4; height: 52px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 14px;">
+            &gt; Gate 01 [Entry]: ARMED & READY. Loop sensor active.
+          </div>
+
+          <button id="sim-trigger-btn" class="btn btn-primary" onclick="triggerSimulatedEntry()" style="width: 100%;">
             ▶ Simulate Vehicle Approach & Trigger Gate Open
           </button>
         </div>
 
-        <!-- LED Display Board Card -->
+        <!-- Simulator Card 2: Multi-Floor LED Display Board Simulator -->
         <div class="card-box" style="padding: 24px;">
-          <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 14px;">Multi-Floor LED Guidance Totem</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="font-size: 1.1rem; font-weight: 800;">Multi-Deck LED Totem</h3>
+            <span class="badge-mono" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);">
+              HDMI / APK SYNC
+            </span>
+          </div>
 
-          <div style="background: #040812; padding: 18px; border-radius: 10px; border: 2px solid #1e293b; margin-bottom: 16px;">
-            <div style="text-align: center; font-size: 0.7rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.1em; margin-bottom: 10px;">● PARKING ENTRANCE GUIDANCE</div>
+          <!-- Real-Time High-Contrast Digital Signage Box -->
+          <div style="background: #040812; padding: 18px 22px; border-radius: 12px; border: 2px solid #1e293b; margin-bottom: 16px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8);">
+            <div style="text-align: center; font-size: 0.7rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.12em; margin-bottom: 12px; text-transform: uppercase;">
+              ● PARKING ENTRANCE GUIDANCE TOTEM
+            </div>
+            
             <div style="display: flex; flex-direction: column; gap: 8px;">
-              <div style="display: flex; justify-content: space-between; font-family: monospace; font-weight: 900; font-size: 1.05rem;">
-                <span style="color: #fff;">P1 LEVEL :</span>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 1.05rem; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                <span style="color: #cbd5e1;">P1 LEVEL (GROUND):</span>
                 <span id="p1-val" style="color: #10b981;">42 VACANT</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-family: monospace; font-weight: 900; font-size: 1.05rem;">
-                <span style="color: #fff;">P2 LEVEL :</span>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 1.05rem; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                <span style="color: #cbd5e1;">P2 LEVEL (UPPER):</span>
                 <span id="p2-val" style="color: #10b981;">18 VACANT</span>
               </div>
-              <div style="display: flex; justify-content: space-between; font-family: monospace; font-weight: 900; font-size: 1.05rem;">
-                <span style="color: #fff;">P3 LEVEL :</span>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 1.05rem; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 4px;">
+                <span style="color: #cbd5e1;">P3 LEVEL (ROOF):</span>
                 <span id="p3-val" style="color: #ef4444;">FULL</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-weight: 900; font-size: 1.05rem; padding-top: 2px;">
+                <span style="color: #cbd5e1;">VIP / DOCTOR BAY:</span>
+                <span id="vip-val" style="color: #38bdf8;">07 RESERVED</span>
               </div>
             </div>
           </div>
 
-          <div style="display: flex; flex-direction: column; gap: 8px;">
+          <!-- Real-Time Interactive Slot Sliders -->
+          <div style="display: flex; flex-direction: column; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <label style="font-size: 0.76rem; font-weight: 700; width: 60px;">P1 Slots:</label>
+              <label style="font-size: 0.76rem; font-weight: 700; width: 85px;">P1 Slots (42):</label>
               <input type="range" min="0" max="60" value="42" oninput="updateFloor(1, this.value)" style="flex: 1; accent-color: #10b981;" />
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
-              <label style="font-size: 0.76rem; font-weight: 700; width: 60px;">P2 Slots:</label>
+              <label style="font-size: 0.76rem; font-weight: 700; width: 85px;">P2 Slots (18):</label>
               <input type="range" min="0" max="40" value="18" oninput="updateFloor(2, this.value)" style="flex: 1; accent-color: #10b981;" />
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
-              <label style="font-size: 0.76rem; font-weight: 700; width: 60px;">P3 Slots:</label>
+              <label style="font-size: 0.76rem; font-weight: 700; width: 85px;">P3 Slots (0):</label>
               <input type="range" min="0" max="30" value="0" oninput="updateFloor(3, this.value)" style="flex: 1; accent-color: #ef4444;" />
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label style="font-size: 0.76rem; font-weight: 700; width: 85px;">VIP Bay (7):</label>
+              <input type="range" min="0" max="15" value="7" oninput="updateFloor('vip', this.value)" style="flex: 1; accent-color: #38bdf8;" />
             </div>
           </div>
         </div>
+
+        <!-- Simulator Card 3: Live ISO/IEC 18004 QR Receipt Ticket Generator -->
+        <div class="card-box" style="padding: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h3 style="font-size: 1.1rem; font-weight: 800;">ISO 18004 QR Ticket Generator</h3>
+            <span class="badge-mono" style="background: rgba(236,72,153,0.15); color: #ec4899; border: 1px solid rgba(236,72,153,0.3);">
+              2D MATRIX QR
+            </span>
+          </div>
+
+          <!-- Live Rendered Thermal Slip Box -->
+          <div style="background: #ffffff; color: #000000; padding: 16px; border-radius: 8px; border: 1px dashed #64748b; font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; margin-bottom: 14px; box-shadow: var(--shadow-sm);">
+            <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 6px; margin-bottom: 8px;">
+              <div style="font-weight: 900; font-size: 0.85rem;">SMART PARKING PASS</div>
+              <div style="font-size: 0.65rem; color: #475569;">SaNDS LAB AUTOMATION · BAHRAIN</div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>NAME:</span>
+              <span id="qr-name-disp" style="font-weight: 800;">Ahmed Al-Mansoor</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>DEPT:</span>
+              <span id="qr-dept-disp" style="font-weight: 800;">Cardiology Clinic</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span>VALIDITY:</span>
+              <span id="qr-dur-disp" style="font-weight: 800; color: #16a34a;">3 Hours Free</span>
+            </div>
+
+            <!-- SVG QR Code Display -->
+            <div style="text-align: center; margin: 10px 0;">
+              <div style="display: inline-block; padding: 8px; background: #fff; border: 1px solid #000; border-radius: 6px;">
+                <svg width="84" height="84" viewBox="0 0 25 25" style="display: block;">
+                  <rect width="25" height="25" fill="#ffffff"/>
+                  <!-- Position Markers Top Left -->
+                  <rect x="2" y="2" width="7" height="7" fill="#000000"/>
+                  <rect x="3" y="3" width="5" height="5" fill="#ffffff"/>
+                  <rect x="4" y="4" width="3" height="3" fill="#000000"/>
+                  <!-- Position Markers Top Right -->
+                  <rect x="16" y="2" width="7" height="7" fill="#000000"/>
+                  <rect x="17" y="3" width="5" height="5" fill="#ffffff"/>
+                  <rect x="18" y="4" width="3" height="3" fill="#000000"/>
+                  <!-- Position Markers Bottom Left -->
+                  <rect x="2" y="16" width="7" height="7" fill="#000000"/>
+                  <rect x="3" y="17" width="5" height="5" fill="#ffffff"/>
+                  <rect x="4" y="18" width="3" height="3" fill="#000000"/>
+                  <!-- Data Dots -->
+                  <rect x="10" y="3" width="1" height="1" fill="#000"/>
+                  <rect x="12" y="3" width="1" height="1" fill="#000"/>
+                  <rect x="10" y="5" width="2" height="1" fill="#000"/>
+                  <rect x="13" y="6" width="1" height="2" fill="#000"/>
+                  <rect x="10" y="10" width="5" height="5" fill="#000"/>
+                  <rect x="11" y="11" width="3" height="3" fill="#fff"/>
+                  <rect x="12" y="12" width="1" height="1" fill="#000"/>
+                  <rect x="3" y="11" width="2" height="1" fill="#000"/>
+                  <rect x="6" y="12" width="1" height="2" fill="#000"/>
+                  <rect x="17" y="11" width="2" height="2" fill="#000"/>
+                  <rect x="20" y="12" width="2" height="1" fill="#000"/>
+                  <rect x="10" y="17" width="2" height="2" fill="#000"/>
+                  <rect x="13" y="19" width="3" height="1" fill="#000"/>
+                  <rect x="17" y="16" width="1" height="3" fill="#000"/>
+                  <rect x="19" y="18" width="3" height="3" fill="#000"/>
+                </svg>
+              </div>
+              <div id="qr-token-disp" style="font-weight: 900; font-size: 0.75rem; letter-spacing: 0.1em; margin-top: 4px;">
+                KIMS-2026-98421
+              </div>
+            </div>
+            
+            <div style="text-align: center; font-size: 0.62rem; color: #475569; border-top: 1px dashed #000; padding-top: 4px;">
+              SCAN AT SELF-PAY KIOSK OR EXIT BARRIER
+            </div>
+          </div>
+
+          <!-- Custom QR Form Inputs -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <input type="text" id="qr-in-name" value="Ahmed Al-Mansoor" placeholder="Visitor / Patient Name" style="padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.78rem;" oninput="updateQrSlip()" />
+            
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="qr-in-dept" value="Cardiology Clinic" placeholder="Dept / Clinic" style="flex: 1; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.78rem;" oninput="updateQrSlip()" />
+              
+              <select id="qr-in-dur" style="padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 0.78rem;" onchange="updateQrSlip()">
+                <option value="2 Hours Free">2 Hours Free</option>
+                <option value="3 Hours Free" selected>3 Hours Free</option>
+                <option value="Full Day Pass">Full Day Pass</option>
+                <option value="100% Free VIP">100% Free VIP</option>
+              </select>
+            </div>
+
+            <button class="btn btn-outline btn-sm" onclick="generateNewQrToken()" style="width: 100%;">
+              🔄 Generate New QR Barcode Token
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
 
-  <!-- 5. Multi-Industry Turnkey Suites (Balanced Margins) -->
-  <section class="section-wrap" style="background: var(--bg-surface-alt);">
+  <!-- 7. TAB 4: API & CLOUD ARCHITECTURE -->
+  <section id="tab-architecture" class="section-wrap">
     <div class="layout-container">
       <div style="text-align: center; max-width: 800px; margin: 0 auto 36px;">
-        <div style="font-size: 0.75rem; font-weight: 800; color: #0284c7; text-transform: uppercase; margin-bottom: 8px;">SPECIALIZED INDUSTRY ARCHITECTURES</div>
-        <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Turnkey Workflows for Every Facility</h2>
-        <p style="color: var(--text-muted); font-size: 0.94rem;">Pre-configured integration schemes and validation logic tailored for diverse sectors.</p>
+        <div style="font-size: 0.75rem; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px;">TECHNICAL SYSTEM ARCHITECTURE</div>
+        <h2 style="font-size: clamp(1.8rem, 2.5vw, 2.4rem); font-weight: 900; margin-bottom: 10px;">Cloud & Edge Computing Topology</h2>
+        <p style="color: var(--text-muted); font-size: 0.94rem;">Architected for 100% edge offline resilience, sub-millisecond local barrier actuation, and cloud synchronization.</p>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
         <div class="card-box" style="padding: 24px;">
-          <div style="font-size: 1.5rem; margin-bottom: 8px;">🏥</div>
-          <h3 style="font-size: 1.1rem; font-weight: 800; color: #0284c7; margin-bottom: 6px;">Hospitals & Medical Centers</h3>
-          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">Bilateral HIMS/HIS patient registration sync, printable consultation discount QR slips, and ambulance priority lanes.</p>
+          <div style="font-size: 1.6rem; margin-bottom: 8px;">⚡</div>
+          <h3 style="font-size: 1.05rem; font-weight: 800; color: #0284c7; margin-bottom: 6px;">Edge Gateway Node</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">Local Linux/Windows micro-server running in the security booth. Actuates relays and loops locally with 0ms WAN dependency.</p>
         </div>
 
         <div class="card-box" style="padding: 24px;">
-          <div style="font-size: 1.5rem; margin-bottom: 8px;">🛒</div>
-          <h3 style="font-size: 1.1rem; font-weight: 800; color: #10b981; margin-bottom: 6px;">Supermarkets & Retail Malls</h3>
-          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">POS checkout receipt barcode scans for instant spend-based free parking waivers and outdoor LED guidance.</p>
+          <div style="font-size: 1.6rem; margin-bottom: 8px;">🌐</div>
+          <h3 style="font-size: 1.05rem; font-weight: 800; color: #10b981; margin-bottom: 6px;">Bilateral REST API</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">JSON REST webhooks connecting any third-party Hospital HIS, Hotel PMS, Retail POS, or Municipal parking tariff engines.</p>
         </div>
 
         <div class="card-box" style="padding: 24px;">
-          <div style="font-size: 1.5rem; margin-bottom: 8px;">🏨</div>
-          <h3 style="font-size: 1.1rem; font-weight: 800; color: #f59e0b; margin-bottom: 6px;">Hotels, Resorts & Valet</h3>
-          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">PMS room booking synchronization for guest stay privileges and digital SMS valet retrieval tokens.</p>
+          <div style="font-size: 1.6rem; margin-bottom: 8px;">☁️</div>
+          <h3 style="font-size: 1.05rem; font-weight: 800; color: #f59e0b; margin-bottom: 6px;">Multi-Site Cloud Sync</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">Aggregates multiple branches, multi-deck parking garages, revenue reports, and cashier shift audits in one unified HQ portal.</p>
         </div>
 
         <div class="card-box" style="padding: 24px;">
-          <div style="font-size: 1.5rem; margin-bottom: 8px;">🏢</div>
-          <h3 style="font-size: 1.1rem; font-weight: 800; color: #6366f1; margin-bottom: 6px;">Corporate Tech Towers</h3>
-          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">Multi-tenant employee ANPR whitelist, contractor digital QR passes, and company quota enforcement.</p>
-        </div>
-
-        <div class="card-box" style="padding: 24px;">
-          <div style="font-size: 1.5rem; margin-bottom: 8px;">✈️</div>
-          <h3 style="font-size: 1.1rem; font-weight: 800; color: #ec4899; margin-bottom: 6px;">Airports & Municipal Hubs</h3>
-          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">Dynamic tiered tariffs (Drop-off grace, Short-term, Multi-day), ride-share staging, and 100% offline edge uptime.</p>
-        </div>
-
-        <div class="card-box" style="padding: 24px;">
-          <div style="font-size: 1.5rem; margin-bottom: 8px;">🏟️</div>
-          <h3 style="font-size: 1.1rem; font-weight: 800; color: #8b5cf6; margin-bottom: 6px;">Stadiums & Arenas</h3>
-          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">Prepaid ticket barcode scanning at gate kiosks for lightning-fast 5,000+ cars/hour surge ingress rates.</p>
+          <div style="font-size: 1.6rem; margin-bottom: 8px;">🛡️</div>
+          <h3 style="font-size: 1.05rem; font-weight: 800; color: #ec4899; margin-bottom: 6px;">100% Offline Autonomy</h3>
+          <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">If internet connection drops, local SQLite cache stores all plate entries and synchronizes automatically upon WAN recovery.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 6. Footer with Margins -->
-  <footer style="background: #0f172a; color: #fff; padding: 40px 0 30px;">
+  <!-- 8. FOOTER WITH SPACIOUS MARGINS & SaNDS CREDENTIALS -->
+  <footer style="background: #0b1120; color: #ffffff; padding: 50px 0 35px; border-top: 1px solid rgba(255,255,255,0.08);">
     <div class="layout-container">
-      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 36px; padding-bottom: 30px; border-bottom: 1px solid rgba(255,255,255,0.1);">
         <div>
-          <div style="font-size: 1.1rem; font-weight: 900;">Smart Parking Solution OS</div>
-          <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 4px;">Next-Generation Multi-Industry Facility Automation System</div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #0284c7, #6366f1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1rem;">
+              🚗
+            </div>
+            <div style="font-size: 1.05rem; font-weight: 900;">Smart Parking Solution OS</div>
+          </div>
+          <p style="font-size: 0.8rem; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+            Next-generation automated multi-industry parking management platform powered by deep-learning ANPR and physical barrier telemetry.
+          </p>
+          <div onclick="openSandsModal()" style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 20px; background: rgba(236,72,153,0.15); border: 1px solid rgba(236,72,153,0.3); cursor: pointer;">
+            <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS" style="height: 14px;" onerror="this.style.display='none'" />
+            <span style="font-size: 0.7rem; font-weight: 800; color: #ec4899;">POWERED BY SaNDS LAB MIDDLE EAST</span>
+          </div>
         </div>
-        <div style="display: flex; gap: 16px; align-items: center;">
-          <a href="https://sandslab.com" target="_blank" style="color: #cbd5e1; text-decoration: none; font-size: 0.82rem; font-weight: 600;">SaNDS Lab Official ↗</a>
-          <a href="https://wa.me/97335078079" target="_blank" style="color: #25D366; text-decoration: none; font-size: 0.82rem; font-weight: 700;">WhatsApp Support (+973 35078079)</a>
+
+        <div>
+          <div style="font-size: 0.85rem; font-weight: 800; color: #cbd5e1; text-transform: uppercase; margin-bottom: 12px;">Integration Guides</div>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem;">
+            <a href="/ANPR_Configuration_Procedure_Guide.html" target="_blank" style="color: #94a3b8; text-decoration: none;">📖 ANPR Camera Configuration Guide ↗</a>
+            <a href="/HIMS_API_Integration_Guide.html" target="_blank" style="color: #94a3b8; text-decoration: none;">🏥 Hospital HIMS Bilateral API Specs ↗</a>
+            <a href="/Cloud_ANPR_Integration_Architecture_Guide.html" target="_blank" style="color: #94a3b8; text-decoration: none;">☁️ Cloud Edge Topology Whitepaper ↗</a>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 0.85rem; font-weight: 800; color: #cbd5e1; text-transform: uppercase; margin-bottom: 12px;">Direct Support & Contact</div>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem;">
+            <a href="https://wa.me/97335078079" target="_blank" style="color: #25D366; text-decoration: none; font-weight: 700;">💬 WhatsApp: +973 35078079</a>
+            <a href="mailto:info@sandslab.com" style="color: #94a3b8; text-decoration: none;">✉️ info@sandslab.com</a>
+            <a href="https://sandslab.com" target="_blank" style="color: #38bdf8; text-decoration: none;">🌐 www.sandslab.com ↗</a>
+          </div>
         </div>
       </div>
-      <div style="padding-top: 20px; font-size: 0.72rem; color: #64748b; text-align: center;">
-        © 2026 Smart Parking Solution. Powered by SaNDS Lab Middle East W.L.L.
+
+      <div style="padding-top: 24px; font-size: 0.74rem; color: #64748b; text-align: center;">
+        © 2026 Smart Parking Solution OS. Engineered & Powered by SaNDS Lab Middle East W.L.L. All Rights Reserved.
       </div>
     </div>
   </footer>
 
-  <!-- Lightbox Modal -->
+  <!-- 9. LIGHTBOX IMAGE ZOOM MODAL -->
   <div id="lightbox" class="lightbox-modal" onclick="closeLightbox()">
     <img id="lightbox-img" src="" alt="Hardware Zoom" onclick="event.stopPropagation()" />
   </div>
 
-  <!-- SaNDS Modal Popup -->
+  <!-- 10. SaNDS LAB OFFICIAL MODAL POPUP -->
   <div id="sands-modal" class="sands-modal-backdrop" onclick="closeSandsModal()">
-    <div style="background: var(--bg-surface); color: var(--text-main); border-radius: 16px; max-width: 500px; width: 100%; overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);" onclick="event.stopPropagation()">
+    <div style="background: var(--bg-surface); color: var(--text-main); border-radius: 16px; max-width: 520px; width: 100%; overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);" onclick="event.stopPropagation()">
       <div style="padding: 24px; background: linear-gradient(135deg, #ec4899, #7c3aed, #2563eb); color: #fff; text-align: center;">
-        <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS" style="height: 32px; margin-bottom: 8px;" />
-        <h3 style="font-size: 1.25rem; font-weight: 900;">SaNDS Lab Middle East W.L.L</h3>
+        <img src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png" alt="SaNDS" style="height: 34px; margin-bottom: 8px;" />
+        <h3 style="font-size: 1.3rem; font-weight: 900;">SaNDS Lab Middle East W.L.L</h3>
         <p style="font-size: 0.78rem; opacity: 0.9;">Enterprise AI & Smart Automation Systems</p>
       </div>
       <div style="padding: 24px;">
-        <p style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">
-          Engineers turnkey software solutions for healthcare networks, commercial real-estate towers, and government bodies across the GCC.
+        <p style="font-size: 0.86rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 18px;">
+          Engineers turnkey software solutions for healthcare networks, commercial real-estate towers, and government bodies across Bahrain and the GCC.
         </p>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <a href="https://sandslab.com" target="_blank" style="padding: 12px; border-radius: 8px; background: var(--bg-surface-alt); color: inherit; text-decoration: none; font-weight: 700; font-size: 0.84rem; display: flex; justify-content: space-between;">
-            <span>Official Corporate Website</span> <span>↗</span>
-          </a>
-          <a href="https://wa.me/97335078079" target="_blank" style="padding: 12px; border-radius: 8px; background: rgba(37,211,102,0.1); color: #25D366; text-decoration: none; font-weight: 700; font-size: 0.84rem; display: flex; justify-content: space-between;">
-            <span>WhatsApp Direct (+973 35078079)</span> <span>↗</span>
-          </a>
+        <div style="background: var(--bg-surface-alt); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 0.8rem; display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px;">
+          <div><strong>📍 Regional HQ:</strong> Manama, Kingdom of Bahrain</div>
+          <div><strong>💬 WhatsApp / Tel:</strong> <a href="https://wa.me/97335078079" target="_blank" style="color: #25D366; font-weight: 800; text-decoration: none;">+973 35078079</a></div>
+          <div><strong>✉️ Official Email:</strong> <a href="mailto:info@sandslab.com" style="color: #0284c7; text-decoration: none;">info@sandslab.com</a></div>
+          <div><strong>🌐 Website:</strong> <a href="https://sandslab.com" target="_blank" style="color: #0284c7; font-weight: 700; text-decoration: none;">https://sandslab.com ↗</a></div>
         </div>
-        <button class="btn btn-primary" onclick="closeSandsModal()" style="width: 100%; margin-top: 20px;">Close Window</button>
+        <div style="display: flex; gap: 10px;">
+          <a href="https://wa.me/97335078079" target="_blank" class="btn btn-primary" style="flex: 1; background: #25D366; box-shadow: 0 4px 14px rgba(37,211,102,0.35);">
+            Chat on WhatsApp
+          </a>
+          <button class="btn btn-outline" onclick="closeSandsModal()" style="flex: 1;">Close</button>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- 11. PURE JAVASCRIPT INTERACTION LOGIC -->
   <script>
-    function toggleTheme() {
-      const cur = document.documentElement.getAttribute('data-theme') || 'light';
-      const nxt = cur === 'light' ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', nxt);
-      localStorage.setItem('app-theme', nxt);
-      document.getElementById('theme-btn').innerText = nxt === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode';
+    // Theme Management
+    function initTheme() {
+      const saved = localStorage.getItem('app-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+      updateThemeBtn(saved);
     }
-    if (localStorage.getItem('app-theme') === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      document.getElementById('theme-btn').innerText = '☀️ Light Mode';
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('app-theme', next);
+      updateThemeBtn(next);
+    }
+    function updateThemeBtn(theme) {
+      const btn = document.getElementById('theme-btn');
+      if (btn) {
+        btn.innerHTML = theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+      }
+    }
+    initTheme();
+
+    // Main Tab Switching
+    function switchMainTab(tabId, btn) {
+      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const targetEl = document.getElementById('tab-' + tabId);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
 
-    function openLightbox(src) {
-      document.getElementById('lightbox-img').src = src;
-      document.getElementById('lightbox').classList.add('active');
+    // Hardware Suite Data
+    const hardwareData = {
+      'barrier': {
+        name: 'Automated Boom Barrier & ANPR Gate',
+        cat: 'Perimeter Access',
+        img: '/images/boom_barrier_gate.jpg',
+        badge: '0.4s Fast Actuation',
+        desc: 'High-durability brushless DC barrier motor paired with IP67 deep-learning ANPR camera with integrated infrared illuminator for 24/7 day/night optical plate recognition.',
+        hotspots: [
+          { title: 'Sub-Second Barrier Relay', desc: '0.4s to 0.9s adjustable opening speeds' },
+          { title: '99.8% LPR Recognition', desc: 'Embedded deep-learning OCR' },
+          { title: 'Dual Safety Interlocks', desc: 'Loop detector + safety photo-beams' },
+          { title: 'Illuminated LED Arm', desc: 'Red/Green LED arm light strip' }
+        ]
+      },
+      'display': {
+        name: 'Smart Multi-Deck LED Guidance Totem',
+        cat: 'Wayfinding & Signage',
+        img: '/images/led_display_board.jpg',
+        badge: 'High-Brightness Outdoor',
+        desc: 'Rugged aluminum outdoor LED digital totem delivering real-time floor-by-floor vacancy counts, parking status banners, and directional guidance powered by our Android TV APK.',
+        hotspots: [
+          { title: 'Multi-Floor Vacancy Engine', desc: 'Dynamic P1, P2, P3 vacancy meters' },
+          { title: 'Android TV / Signage APK', desc: 'Direct HDMI output to any TV or LED' },
+          { title: 'Automatic Status Shift', desc: 'Instant switch between VACANT & FULL' },
+          { title: 'Custom Welcome Branding', desc: 'Company logo & visitor greetings' }
+        ]
+      },
+      'control-room': {
+        name: 'Unified Command Center & Video Wall',
+        cat: 'Operations & Monitoring',
+        img: '/images/control_room_dashboard.jpg',
+        badge: '24/7 Central Control',
+        desc: 'Comprehensive operator station featuring live RTSP multi-lane camera feeds, real-time 3D parking occupancy heatmaps, cashier collection audits, and one-click remote barrier triggers.',
+        hotspots: [
+          { title: 'Multi-Lane Live Streams', desc: 'Zero-latency RTSP camera streaming' },
+          { title: '3D Floor Heatmaps', desc: 'Occupied, vacant & reserved bay maps' },
+          { title: 'Financial Audit Dashboard', desc: 'Shift reconciliation & POS card logs' },
+          { title: 'Manual Security Override', desc: 'One-click emergency gate opening' }
+        ]
+      },
+      'kiosk': {
+        name: 'Self-Service QR Barcode Pay Station',
+        cat: 'Payment & Validation',
+        img: '/images/qr_payment_kiosk.jpg',
+        badge: 'Contactless & Cashless',
+        desc: 'All-weather self-service payment kiosk featuring high-speed 2D QR code scanner, contactless NFC card terminal, thermal receipt printer, and live multi-lingual voice guidance.',
+        hotspots: [
+          { title: 'ISO/IEC 18004 QR Reader', desc: 'Scans thermal slips & mobile wallet QR' },
+          { title: 'NFC & BenefitPay POS', desc: 'Accepts Apple Pay, Visa, Mastercard' },
+          { title: 'Heavy-Duty Thermal Print', desc: 'High-speed 80mm receipt printer' },
+          { title: 'Emergency VoIP Intercom', desc: 'Two-way crystal-clear audio to control' }
+        ]
+      }
+    };
+
+    let currentHwKey = 'barrier';
+
+    function selectHardware(key, btn) {
+      currentHwKey = key;
+      document.querySelectorAll('.hw-tab-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const data = hardwareData[key];
+      if (!data) return;
+
+      document.getElementById('hw-img').src = data.img;
+      document.getElementById('hw-badge').innerText = data.badge;
+      document.getElementById('hw-cat').innerText = data.cat;
+      document.getElementById('hw-title').innerText = data.name;
+      document.getElementById('hw-desc').innerText = data.desc;
+
+      const hotspotsHtml = data.hotspots.map(h => `
+        <div style="padding: 10px; border-radius: 8px; background: var(--bg-surface-alt); border: 1px solid var(--border-color);">
+          <div style="font-size: 0.76rem; font-weight: 800;">${h.title}</div>
+          <div style="font-size: 0.68rem; color: var(--text-muted);">${h.desc}</div>
+        </div>
+      `).join('');
+      document.getElementById('hw-hotspots').innerHTML = hotspotsHtml;
+    }
+
+    function openLightboxCurrentHw() {
+      const data = hardwareData[currentHwKey];
+      if (data) openLightbox(data.img);
+    }
+
+    // Industry Data
+    const industryData = {
+      'hospital': {
+        title: 'Hospitals & Medical Centers',
+        tag: 'Healthcare & Clinical Suites',
+        color: '#0284c7',
+        tagline: 'Bilateral HIMS / HIS Sync & Clinic QR Validation',
+        summary: 'Automates patient parking validation upon clinic registration, synchronizes appointment tokens with hospital EHR systems, and provides priority green-corridor clearance for emergency ambulances.',
+        benefits: [
+          'Live Bilateral REST API syncing with ANY Hospital Information System (HIMS)',
+          'Printable thermal QR validation receipts issued at clinic consultation counters',
+          'Automatic emergency ambulance priority barrier opening via ANPR whitelist',
+          'Doctor and medical staff dedicated fast lanes with RFID and license plate tags',
+          'Patient discount waivers configured by appointment duration (e.g. 2h free)'
+        ],
+        steps: [
+          { num: '1', title: 'Patient Arrival', desc: 'ANPR registers plate and prints thermal barcode slip at gate.' },
+          { num: '2', title: 'Clinic Consultation', desc: 'Nurse/Receptionist scans QR in HIMS to apply patient discount.' },
+          { num: '3', title: 'Automatic Exit', desc: 'Barrier verifies validated QR token and opens automatically.' }
+        ]
+      },
+      'supermarket': {
+        title: 'Supermarkets & Shopping Malls',
+        tag: 'Retail & Commercial Malls',
+        color: '#10b981',
+        tagline: 'POS Checkout Spend-to-Park Waivers',
+        summary: 'Increases retail dwell time by linking POS checkout cash registers to automatic parking discounts. Features dynamic outdoor LED guidance to prevent weekend entry bottlenecks.',
+        benefits: [
+          'POS receipt barcode scan grants instant tiered parking fee waivers',
+          'Spend-based validation rules (e.g. Spend BD 10 = 2 Hours Free Parking)',
+          'Ticketless entry with license plate recognition for lightning-fast ingress',
+          'Multi-deck LED guidance totems directing shoppers to vacant levels',
+          'Integrated cashier POS terminal supporting card, cash, and split payments'
+        ],
+        steps: [
+          { num: '1', title: 'Ticketless Entry', desc: 'Camera captures plate; barrier raises in 0.3s without queue delay.' },
+          { num: '2', title: 'Checkout Scan', desc: 'Cashier POS prints discount barcode on customer grocery receipt.' },
+          { num: '3', title: 'Free Exit', desc: 'Customer scans receipt at kiosk or exit gate for instant free exit.' }
+        ]
+      },
+      'hotel': {
+        title: 'Hotels, Resorts & Valet Services',
+        tag: 'Hospitality & Luxury Valet',
+        color: '#f59e0b',
+        tagline: 'PMS Integration & Digital SMS Valet Dispatch',
+        summary: 'Integrates with Hotel Property Management Systems (PMS) for seamless guest stay parking privileges, VIP pre-arrival greetings, and digital SMS valet retrieval.',
+        benefits: [
+          'Direct synchronization with Hotel PMS room bookings (Opera, Fidelio, etc.)',
+          'Digital SMS valet retrieval token for guests with estimated vehicle ready time',
+          'VIP guest license plate pre-registration & automatic barrier greeting',
+          'Banquet, wedding, and conference parking validation vouchers',
+          'Anti-passback protection across multi-gate resort perimeters'
+        ],
+        steps: [
+          { num: '1', title: 'Guest Check-In', desc: 'Front desk assigns room key and whitelists guest vehicle in PMS.' },
+          { num: '2', title: 'Unlimited In/Out', desc: 'Boom barrier opens automatically for registered guest throughout stay.' },
+          { num: '3', title: 'SMS Valet Recall', desc: 'Guest clicks SMS link to request valet car retrieval in 5 minutes.' }
+        ]
+      },
+      'corporate': {
+        title: 'Corporate Tech Parks & Towers',
+        tag: 'Commercial Real Estate',
+        color: '#6366f1',
+        tagline: 'Multi-Tenant Company Quotas & Contractor Passes',
+        summary: 'Manages complex multi-tenant office towers with company slot quotas, pre-registered visitor invitations, contractor QR badges, and monthly departmental billing reports.',
+        benefits: [
+          'Tenant company slot quota enforcement with overflow protection',
+          'Pre-registered visitor invitations with digital QR wallet passes',
+          'Tailgating detection and strict anti-passback security protocols',
+          'Seamless integration with building speed-gates and elevator dispatch',
+          'Comprehensive monthly tenant parking invoice and usage audits'
+        ],
+        steps: [
+          { num: '1', title: 'Visitor Invite', desc: 'Tenant employee sends QR invitation link to client via email/WhatsApp.' },
+          { num: '2', title: 'Gate Recognition', desc: 'Client scans QR at entrance kiosk or ANPR matches pre-registered plate.' },
+          { num: '3', title: 'Quota Deduct', desc: 'System automatically attributes parking duration to host company quota.' }
+        ]
+      },
+      'airport': {
+        title: 'Airports & Transit Terminals',
+        tag: 'Aviation & Municipal Hubs',
+        color: '#ec4899',
+        tagline: 'Multi-Tariff Engine & Ride-Share Staging',
+        summary: 'Heavy-duty 24/7 municipal infrastructure featuring multi-tier tariffs (Drop-off 15min grace, Short-term, Long-term multi-day) and geo-fenced taxi/Uber dispatch queues.',
+        benefits: [
+          'Multi-tier dynamic tariff calculator (Hourly, Daily, Multi-day & Grace)',
+          'Automated Taxi & Ride-share geo-fenced staging holding zones',
+          'Blacklist plate alarms and security hotlist instant notifications',
+          '100% offline edge resilience: Operates uninterrupted during WAN downtime',
+          'Audited revenue collection and tamper-proof shift reconciliation'
+        ],
+        steps: [
+          { num: '1', title: 'Drop-off Zone', desc: '15-minute free grace period calculated automatically by ANPR.' },
+          { num: '2', title: 'Long-Term Lot', desc: 'Daily rate accumulation with multi-day discount calculation.' },
+          { num: '3', title: 'Rapid Exit', desc: 'Contactless tap-and-go payment or pre-paid flight booking barcode scan.' }
+        ]
+      },
+      'stadium': {
+        title: 'Stadiums & Event Arenas',
+        tag: 'Events & Mass Venues',
+        color: '#8b5cf6',
+        tagline: 'Prepaid Ticket Barcode Ingress & Surge Clearance',
+        summary: 'Built for high-volume crowds (50,000+ attendees). Scans prepaid event barcodes directly at boom barrier kiosks to achieve rapid clearance rates of 5,000+ cars/hour.',
+        benefits: [
+          'Prepaid event parking barcodes integrated with Ticketing platforms',
+          'Dynamic lane reversal (Convert all lanes to Exit during dispersal)',
+          'Bus and coach dedicated parking bay allocations',
+          'VIP & press media license plate priority lanes',
+          'Live digital directional boards guiding drivers to open bays'
+        ],
+        steps: [
+          { num: '1', title: 'Pre-Purchased Pass', desc: 'Attendee buys parking ticket online along with event entry ticket.' },
+          { num: '2', title: 'Barcode Scan', desc: 'Driver scans ticket QR directly at gate kiosk in <0.2s.' },
+          { num: '3', title: 'Rapid Ingress', desc: 'High-speed barrier raises instantly for continuous vehicle flow.' }
+        ]
+      }
+    };
+
+    function selectIndustry(indKey, btn) {
+      document.querySelectorAll('.ind-chip-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const ind = industryData[indKey];
+      if (!ind) return;
+
+      const card = document.getElementById('ind-deepdive-card');
+      card.style.borderLeftColor = ind.color;
+
+      document.getElementById('ind-tag').innerText = ind.tag;
+      document.getElementById('ind-tag').style.color = ind.color;
+      document.getElementById('ind-title').innerText = ind.title;
+      document.getElementById('ind-tagline').innerText = ind.tagline;
+      document.getElementById('ind-summary').innerText = ind.summary;
+
+      // Render Benefits
+      document.getElementById('ind-benefits').innerHTML = ind.benefits.map(b => `
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+          <span style="color: #10b981; font-weight: 900;">✓</span>
+          <span>${b}</span>
+        </div>
+      `).join('');
+
+      // Render Steps
+      document.getElementById('ind-steps').innerHTML = ind.steps.map(s => `
+        <div style="display: flex; gap: 12px; align-items: flex-start;">
+          <div style="width: 28px; height: 28px; border-radius: 50%; background: ${ind.color}; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.78rem; flex-shrink: 0;">${s.num}</div>
+          <div>
+            <div style="font-size: 0.84rem; font-weight: 800;">${s.title}</div>
+            <div style="font-size: 0.76rem; color: var(--text-muted);">${s.desc}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Barrier Simulator Logic
+    let barrierBusy = false;
+
+    function updateSimPlate(val) {
+      const clean = val.trim().toUpperCase() || 'BH-84920';
+      document.getElementById('sim-plate-tag').innerText = clean;
+    }
+
+    function triggerSimulatedEntry() {
+      if (barrierBusy) return;
+      barrierBusy = true;
+
+      const arm = document.getElementById('boom-arm');
+      const light = document.getElementById('barrier-light');
+      const log = document.getElementById('sim-log');
+      const badge = document.getElementById('barrier-state-badge');
+      const btn = document.getElementById('sim-trigger-btn');
+      const plate = document.getElementById('sim-plate-tag').innerText;
+      const vtype = document.getElementById('custom-vehicle-type').value;
+
+      btn.disabled = true;
+      badge.innerText = 'SCANNING ANPR...';
+      badge.style.color = '#f59e0b';
+      badge.style.background = 'rgba(245,158,11,0.15)';
+      light.style.background = '#f59e0b';
+      light.style.boxShadow = '0 0 10px #f59e0b';
+
+      log.innerHTML = `&gt; [${new Date().toLocaleTimeString()}] Vehicle Detected over Ground Loop Detector. Triggering ANPR OCR...`;
+
+      setTimeout(() => {
+        const sess = 'SESS-' + Math.floor(100000 + Math.random() * 900000);
+        log.innerHTML += `<br>&gt; [${new Date().toLocaleTimeString()}] Plate: "${plate}" (${vtype}) Verified (99.8% Match) &rarr; Actuating Barrier Motor...`;
+        
+        badge.innerText = 'OPENING GATE...';
+        badge.style.color = '#10b981';
+        badge.style.background = 'rgba(16,185,129,0.15)';
+        light.style.background = '#10b981';
+        light.style.boxShadow = '0 0 12px #10b981';
+        arm.style.transform = 'rotate(-75deg)';
+
+        setTimeout(() => {
+          badge.innerText = 'BARRIER OPEN';
+          log.innerHTML += `<br>&gt; [${new Date().toLocaleTimeString()}] Barrier raised. Session ${sess} active. Vehicle clearing gate...`;
+
+          setTimeout(() => {
+            badge.innerText = 'CLOSING ARM...';
+            badge.style.color = '#f59e0b';
+            light.style.background = '#f59e0b';
+            log.innerHTML += `<br>&gt; [${new Date().toLocaleTimeString()}] Safety beam cleared &rarr; Lowering boom arm...`;
+            arm.style.transform = 'rotate(0deg)';
+
+            setTimeout(() => {
+              badge.innerText = 'ARMED / CLOSED';
+              badge.style.color = '#ef4444';
+              badge.style.background = 'rgba(239,68,68,0.15)';
+              light.style.background = '#ef4444';
+              light.style.boxShadow = '0 0 10px #ef4444';
+              log.innerHTML += `<br>&gt; Gate 01 [Entry]: ARMED & READY.`;
+              log.scrollTop = log.scrollHeight;
+              barrierBusy = false;
+              btn.disabled = false;
+            }, 800);
+
+          }, 2400);
+
+        }, 600);
+
+      }, 700);
+    }
+
+    // Floor Totem Sliders
+    function updateFloor(floor, val) {
+      val = parseInt(val, 10);
+      if (floor === 1) {
+        const el = document.getElementById('p1-val');
+        el.innerText = val > 0 ? `${val < 10 ? '0' + val : val} VACANT` : 'FULL';
+        el.style.color = val > 0 ? '#10b981' : '#ef4444';
+      } else if (floor === 2) {
+        const el = document.getElementById('p2-val');
+        el.innerText = val > 0 ? `${val < 10 ? '0' + val : val} VACANT` : 'FULL';
+        el.style.color = val > 0 ? '#10b981' : '#ef4444';
+      } else if (floor === 3) {
+        const el = document.getElementById('p3-val');
+        el.innerText = val > 0 ? `${val < 10 ? '0' + val : val} VACANT` : 'FULL';
+        el.style.color = val > 0 ? '#10b981' : '#ef4444';
+      } else if (floor === 'vip') {
+        const el = document.getElementById('vip-val');
+        el.innerText = val > 0 ? `${val < 10 ? '0' + val : val} RESERVED` : 'FULL';
+        el.style.color = val > 0 ? '#38bdf8' : '#ef4444';
+      }
+    }
+
+    // QR Slip Generator
+    function updateQrSlip() {
+      const name = document.getElementById('qr-in-name').value || 'Visitor';
+      const dept = document.getElementById('qr-in-dept').value || 'General Entry';
+      const dur = document.getElementById('qr-in-dur').value || '2 Hours Free';
+
+      document.getElementById('qr-name-disp').innerText = name;
+      document.getElementById('qr-dept-disp').innerText = dept;
+      document.getElementById('qr-dur-disp').innerText = dur;
+    }
+
+    function generateNewQrToken() {
+      const randToken = 'KIMS-2026-' + Math.floor(10000 + Math.random() * 90000);
+      document.getElementById('qr-token-disp').innerText = randToken;
+      updateQrSlip();
+    }
+
+    // Lightbox Modal
+    function openLightbox(imgSrc) {
+      const modal = document.getElementById('lightbox');
+      const img = document.getElementById('lightbox-img');
+      img.src = imgSrc;
+      modal.classList.add('active');
     }
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('active');
     }
 
+    // SaNDS Modal
     function openSandsModal() {
       document.getElementById('sands-modal').classList.add('active');
     }
@@ -490,45 +1363,13 @@
       document.getElementById('sands-modal').classList.remove('active');
     }
 
-    let isMoving = false;
-    function triggerSimulatedEntry() {
-      if (isMoving) return;
-      isMoving = true;
-      const log = document.getElementById('sim-log');
-      const arm = document.getElementById('boom-arm');
-      const light = document.getElementById('barrier-light');
-      
-      log.innerText = '> ANPR: Plate BH-84920 recognized (Confidence 99.8%) -> Opening Barrier...';
-      light.style.background = '#10b981';
-      light.style.boxShadow = '0 0 10px #10b981';
-      arm.style.transform = 'rotate(-65deg)';
-
-      setTimeout(() => {
-        log.innerText = '> Vehicle passing loop detector...';
-        setTimeout(() => {
-          log.innerText = '> Vehicle cleared -> Lowering Barrier Arm...';
-          arm.style.transform = 'rotate(0deg)';
-          light.style.background = '#ef4444';
-          light.style.boxShadow = '0 0 8px #ef4444';
-          setTimeout(() => {
-            log.innerText = '> Gate 01 [Entry]: ARMED & READY.';
-            isMoving = false;
-          }, 600);
-        }, 2000);
-      }, 1000);
-    }
-
-    function updateFloor(lvl, val) {
-      const el = document.getElementById('p' + lvl + '-val');
-      const num = parseInt(val, 10);
-      if (num > 0) {
-        el.innerText = num + ' VACANT';
-        el.style.color = '#10b981';
-      } else {
-        el.innerText = 'FULL';
-        el.style.color = '#ef4444';
+    // Keyboard support for ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeLightbox();
+        closeSandsModal();
       }
-    }
+    });
   </script>
 </body>
 </html>
