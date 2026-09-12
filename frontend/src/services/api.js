@@ -86,6 +86,10 @@ export const api = {
   resolveManualReview: (id, data) => request(`/sessions/${id}/manual-review`, { method: 'POST', body: data }),
 
   // Visitor Validation
+  getValidationCandidates: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/validation/candidates${qs ? '?' + qs : ''}`);
+  },
   validateByQr: (payload) => request('/validation/qr', { method: 'POST', body: payload }),
   validateByReception: (payload) => request('/validation/reception', { method: 'POST', body: payload }),
   createValidationToken: (payload) => request('/validation/token', { method: 'POST', body: payload }),

@@ -15,6 +15,7 @@ class VisitorValidationController extends Controller {
         $input = $this->getJsonInput();
         $rawToken = trim($input['qr_token'] ?? $input['token'] ?? '');
         $plate = strtoupper(trim($input['plate_number'] ?? ''));
+        $sessionId = (int)($input['session_id'] ?? 0);
 
         if (!$rawToken) {
             $this->error('QR token is required for validation', 400);
@@ -50,9 +51,16 @@ class VisitorValidationController extends Controller {
         $targetPlate = $plate ?: $registeredPlate;
         $session = null;
 
-        if ($targetPlate) {
-            $stmtSess = $db->prepare("SELECT * FROM parking_sessions WHERE plate_number = ? AND exit_time IS NULL AND status IN ('VALIDATION_PENDING', 'CHARGING') ORDER BY id DESC LIMIT 1");
-            $stmtSess->execute([$targetPlate]);
+        if ($sessionId > 0) {
+            $stmtSess = $db->prepare("SELECT * FROM parking_sessions WHERE id = ? AND exit_time IS NULL LIMIT 1");
+            $stmtSess->execute([$sessionId]);
+            $session = $stmtSess->fetch();
+        }
+
+        if (!$session && $targetPlate) {
+            $cleanPlate = preg_replace('/[^A-Za-z0-9]/', '', $targetPlate);
+            $stmtSess = $db->prepare("SELECT * FROM parking_sessions WHERE (plate_number = ? OR REPLACE(plate_number, ' ', '') = ?) AND exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED') ORDER BY id DESC LIMIT 1");
+            $stmtSess->execute([$targetPlate, $cleanPlate]);
             $session = $stmtSess->fetch();
         }
 
@@ -244,5 +252,90 @@ class VisitorValidationController extends Controller {
 
         $appointments = $stmt->fetchAll();
         $this->success(['appointments' => $appointments]);
+    }
+
+    /**
+     * GET /api/v1/validation/candidates
+     * Returns parked vehicles currently inside the lot awaiting validation,
+     * with ANPR snapshot photos, plate numbers, gate, and arrival elapsed time.
+     * Supports:
+     * - ?q= (partial plate search or clean plate)
+     * - ?time_filter= (5min, 10min, 20min, 30min, 1hr, 2hr, 3hr_plus, all)
+     */
+    public function getActiveCandidates(): void {
+        $db = Database::getInstance();
+        $params = $this->getQueryParams();
+        $q = trim($params['q'] ?? '');
+        $timeFilter = trim($params['time_filter'] ?? 'all');
+
+        $where = ["s.exit_time IS NULL", "s.status NOT IN ('EXIT_COMPLETED', 'CANCELLED')"];
+        $bindings = [];
+
+        if ($q !== '') {
+            $cleanQ = preg_replace('/[^A-Za-z0-9]/', '', $q);
+            $where[] = "(s.plate_number LIKE ? OR REPLACE(s.plate_number, ' ', '') LIKE ?)";
+            $bindings[] = "%{$q}%";
+            $bindings[] = "%{$cleanQ}%";
+        }
+
+        if ($timeFilter === '5min') {
+            $where[] = "s.entry_time >= DATE_SUB(NOW(), INTERVAL 5 MINUTE)";
+        } elseif ($timeFilter === '10min') {
+            $where[] = "s.entry_time >= DATE_SUB(NOW(), INTERVAL 10 MINUTE)";
+        } elseif ($timeFilter === '20min') {
+            $where[] = "s.entry_time >= DATE_SUB(NOW(), INTERVAL 20 MINUTE)";
+        } elseif ($timeFilter === '30min') {
+            $where[] = "s.entry_time >= DATE_SUB(NOW(), INTERVAL 30 MINUTE)";
+        } elseif ($timeFilter === '1hr') {
+            $where[] = "s.entry_time >= DATE_SUB(NOW(), INTERVAL 1 HOUR)";
+        } elseif ($timeFilter === '2hr') {
+            $where[] = "s.entry_time >= DATE_SUB(NOW(), INTERVAL 2 HOUR)";
+        } elseif ($timeFilter === '3hr_plus') {
+            $where[] = "s.entry_time < DATE_SUB(NOW(), INTERVAL 3 HOUR)";
+        }
+
+        $sql = "SELECT s.*, v.vehicle_type, v.owner_name, v.category
+                FROM parking_sessions s
+                LEFT JOIN vehicles v ON s.plate_number = v.plate_number
+                WHERE " . implode(' AND ', $where) . "
+                ORDER BY s.entry_time DESC
+                LIMIT 60";
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($bindings);
+        $sessions = $stmt->fetchAll();
+
+        $candidates = array_map(function($sess) {
+            $entryTs = strtotime($sess['entry_time']);
+            $nowTs = time();
+            $elapsedMins = max(0, round(($nowTs - $entryTs) / 60));
+
+            $durationFormatted = $elapsedMins < 60 
+                ? "{$elapsedMins} mins ago" 
+                : floor($elapsedMins / 60) . "h " . ($elapsedMins % 60) . "m ago";
+
+            return [
+                'id'                 => (int)$sess['id'],
+                'session_code'       => $sess['session_code'],
+                'plate_number'       => $sess['plate_number'],
+                'entry_time'         => $sess['entry_time'],
+                'entry_time_display' => date('h:i A', $entryTs),
+                'elapsed_minutes'    => $elapsedMins,
+                'duration_formatted' => $durationFormatted,
+                'entry_image_url'    => $sess['entry_image_url'] ?: null,
+                'entry_gate_id'      => $sess['entry_gate_id'] ?: 'GATE-IN-01',
+                'status'             => $sess['status'],
+                'validation_status'  => $sess['status'] === 'VALIDATED' ? 'VALIDATED' : 'PENDING',
+                'vehicle_type'       => $sess['vehicle_type'] ?: 'Car',
+                'owner_name'         => $sess['owner_name'] ?: null,
+                'category'           => $sess['category'] ?: 'general'
+            ];
+        }, $sessions);
+
+        $this->success([
+            'candidates' => $candidates,
+            'total'      => count($candidates),
+            'time_filter'=> $timeFilter
+        ]);
     }
 }

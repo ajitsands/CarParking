@@ -155,6 +155,7 @@ $router->post('/api/v1/sessions/{id}/complete-exit', [ParkingSessionController::
 $router->post('/api/v1/sessions/{id}/manual-review', [ParkingSessionController::class, 'resolveManualReview'], [AuthMiddleware::class]);
 
 // ── Visitor Validation ─────────────────────────────────────────
+$router->get('/api/v1/validation/candidates', [VisitorValidationController::class, 'getActiveCandidates'], [AuthMiddleware::class]);
 $router->post('/api/v1/validation/qr', [VisitorValidationController::class, 'validateByQr'], [AuthMiddleware::class]);
 $router->post('/api/v1/validation/reception', [VisitorValidationController::class, 'validateByReception'], [AuthMiddleware::class]);
 $router->post('/api/v1/validation/token', [VisitorValidationController::class, 'createToken'], [AuthMiddleware::class]);

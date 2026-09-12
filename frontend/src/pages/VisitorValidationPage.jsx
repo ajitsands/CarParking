@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { QrCode, Search, CheckCircle2, UserCheck, MessageSquare, Car, RefreshCw } from 'lucide-react';
+import { QrCode, Search, CheckCircle2, UserCheck, MessageSquare, Car, RefreshCw, Camera, Clock } from 'lucide-react';
 import { api } from '../services/api';
 import DataTable from '../components/common/DataTable';
 import QrScannerModal from '../components/validation/QrScannerModal';
+import VisualVehiclePickerModal from '../components/validation/VisualVehiclePickerModal';
 
 export default function VisitorValidationPage() {
   const [activeTab, setActiveTab] = useState('reception');
@@ -13,6 +14,7 @@ export default function VisitorValidationPage() {
   const [visitorName, setVisitorName] = useState('');
   const [validationSuccessMsg, setValidationSuccessMsg] = useState('');
   const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [visualPickerOpen, setVisualPickerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -64,22 +66,32 @@ export default function VisitorValidationPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.2 }}>
             Hospital Visitor & Patient Validation Portal
           </h2>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-            Validate patient and visitor parking sessions through appointment QR, reception counter, or automatic HIS match
+            Validate patient and visitor parking sessions through visual car photos, appointment QR, or reception desk
           </p>
         </div>
 
-        <button 
-          className="btn btn-primary btn-sm"
-          onClick={() => setQrModalOpen(true)}
-        >
-          <QrCode size={14} /> Scan Appointment QR
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button 
+            className="btn btn-primary btn-sm"
+            onClick={() => setVisualPickerOpen(true)}
+            style={{ background: 'linear-gradient(135deg, #0284c7 0%, #6366f1 100%)', border: 'none' }}
+          >
+            <Camera size={14} /> 🚗 Visual Vehicle Picker (Car Photos)
+          </button>
+
+          <button 
+            className="btn btn-outline btn-sm"
+            onClick={() => setQrModalOpen(true)}
+          >
+            <QrCode size={14} /> Scan Appointment QR
+          </button>
+        </div>
       </div>
 
       {validationSuccessMsg && (
@@ -127,7 +139,27 @@ export default function VisitorValidationPage() {
 
             <form onSubmit={handleReceptionValidate}>
               <div className="form-group">
-                <label className="form-label">Vehicle Plate Number *</label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <label className="form-label" style={{ margin: 0 }}>Vehicle Plate Number *</label>
+                  <button
+                    type="button"
+                    onClick={() => setVisualPickerOpen(true)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--primary-color)',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: 0
+                    }}
+                  >
+                    <Camera size={13} /> Don't know plate? Pick by Car Photo
+                  </button>
+                </div>
                 <input
                   type="text"
                   className="form-input"
@@ -252,6 +284,17 @@ export default function VisitorValidationPage() {
         onClose={() => setQrModalOpen(false)}
         onValidationSuccess={(data) => {
           setValidationSuccessMsg(`Visit validated successfully! Vehicle ${data.plate_number} is authorized.`);
+        }}
+      />
+
+      <VisualVehiclePickerModal
+        isOpen={visualPickerOpen}
+        onClose={() => setVisualPickerOpen(false)}
+        patientMrn={patientMrn}
+        visitorName={visitorName}
+        onValidationSuccess={(data) => {
+          setValidationSuccessMsg(`Vehicle ${data.plate_number} verified and validated! 3 hours free parking granted.`);
+          loadAppointments();
         }}
       />
     </div>
