@@ -347,7 +347,7 @@ export default function DataTable({
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {loading && paginatedData.length === 0 ? (
               <tr>
                 <td colSpan={columns.length + (expandableRowRender ? 1 : 0)} style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem' }}>

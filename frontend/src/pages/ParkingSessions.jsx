@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Car, Search, Filter, RefreshCw, Eye, CheckCircle2, CreditCard, 
   AlertCircle, ArrowRightCircle, Calendar, ShieldCheck, Building2, 
@@ -16,6 +16,7 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
   const [sessions, setSessions] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const isInitialLoad = useRef(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [search, setSearch] = useState('');
@@ -25,7 +26,7 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
   const [toastMsg, setToastMsg] = useState(null);
 
   // Date Filter State
-  const [datePreset, setDatePreset] = useState('all'); // 'all', 'today', 'yesterday', 'custom'
+  const [datePreset, setDatePreset] = useState('today'); // 'all', 'today', 'yesterday', 'custom'
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
@@ -50,8 +51,10 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
 
   const isInsideTab = ['CHARGING', 'INSIDE', 'ACTIVE'].includes(statusFilter);
 
-  const loadSessions = async () => {
-    setLoading(true);
+  const loadSessions = async (isBackground = false) => {
+    if (!isBackground && isInitialLoad.current) {
+      setLoading(true);
+    }
     setError('');
     try {
       const params = {
@@ -78,6 +81,7 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
         if (res.data.inside_counts) {
           setInsideCounts(res.data.inside_counts);
         }
+        isInitialLoad.current = false;
       }
     } catch (err) {
       setError(err.message || 'Failed to load parking sessions');
@@ -87,11 +91,11 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
   };
 
   useEffect(() => {
-    loadSessions();
+    loadSessions(false);
     const interval = setInterval(() => {
-      loadSessions();
-    }, 8000);
-    const handleSim = () => loadSessions();
+      loadSessions(true);
+    }, 3000);
+    const handleSim = () => loadSessions(true);
     window.addEventListener('anpr-event-simulated', handleSim);
     return () => {
       clearInterval(interval);
@@ -101,7 +105,7 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    loadSessions();
+    loadSessions(false);
   };
 
   const handleDatePresetChange = (preset) => {
