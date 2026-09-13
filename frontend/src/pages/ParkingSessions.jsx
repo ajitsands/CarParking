@@ -13,6 +13,21 @@ import { useSettings } from '../context/SettingsContext';
 
 export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
   const { formatCurrency } = useSettings();
+
+  const formatDurationDetailed = (mins) => {
+    if (mins === null || mins === undefined || isNaN(mins)) return '0 mins';
+    const m = Math.max(0, parseInt(mins, 10));
+    if (m < 60) {
+      return `${m} mins`;
+    }
+    const hrs = Math.floor(m / 60);
+    const rem = m % 60;
+    if (rem === 0) {
+      return `${hrs} ${hrs === 1 ? 'Hour' : 'Hours'} (${m} mins)`;
+    }
+    return `${hrs}h ${rem}m (${m} mins)`;
+  };
+
   const [sessions, setSessions] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -924,7 +939,7 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
               <div>
                 <span className="stat-label">Current Parked Duration</span>
                 <div style={{ fontWeight: 700, color: '#2563eb', fontFamily: 'var(--font-mono)' }}>
-                  {selectedSession.session?.total_duration_minutes || 0} minutes {!selectedSession.session?.exit_time ? '(Live)' : ''}
+                  {formatDurationDetailed(selectedSession.session?.total_duration_minutes || 0)} {!selectedSession.session?.exit_time ? '(Live Counter)' : ''}
                 </div>
               </div>
               <div>
@@ -935,45 +950,45 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
 
             {/* Parking Allowance & Time Counter Set Box */}
             <div style={{
-              padding: '12px 14px',
+              padding: '14px 16px',
               background: selectedSession.session?.status === 'VALIDATED' ? 'var(--status-green-bg)' : selectedSession.session?.status === 'CHARGING' ? 'var(--status-amber-bg, rgba(245,158,11,0.08))' : 'var(--status-blue-bg)',
               border: `1px solid ${selectedSession.session?.status === 'VALIDATED' ? 'var(--status-green-border)' : selectedSession.session?.status === 'CHARGING' ? 'var(--status-amber-border, #fcd34d)' : 'var(--status-blue-border)'}`,
               borderRadius: 'var(--radius-sm)',
               marginBottom: '14px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <strong style={{ fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
-                  <Clock size={15} color="var(--accent)" />
-                  Parking Allowance & Duration Counter
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <strong style={{ fontSize: '0.84rem', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
+                  <Clock size={16} color="var(--accent)" />
+                  Allowed Parking Duration & Time Counter
                 </strong>
-                <span className={`badge ${selectedSession.session?.status === 'VALIDATED' ? 'badge-green' : selectedSession.session?.status === 'CHARGING' ? 'badge-amber' : 'badge-blue'}`}>
-                  {selectedSession.session?.status === 'VALIDATED' ? 'Fee Waived' : selectedSession.session?.status === 'CHARGING' ? 'Paid Parking Active' : 'Free Grace Period'}
+                <span className={`badge ${selectedSession.session?.status === 'VALIDATED' ? 'badge-green' : selectedSession.session?.status === 'CHARGING' ? 'badge-amber' : 'badge-blue'}`} style={{ fontWeight: 800, fontSize: '0.72rem' }}>
+                  {selectedSession.session?.allowed_hours_label || (selectedSession.session?.status === 'VALIDATED' ? 'Fee Waived' : selectedSession.session?.status === 'CHARGING' ? 'Paid Parking' : 'Free Grace')}
                 </span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.74rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.75rem' }}>
                 <div>
-                  <span style={{ color: 'var(--text-muted)' }}>Configured Allowed Duration:</span>
-                  <div style={{ fontWeight: 700, marginTop: '2px', color: 'var(--text-primary)' }}>
-                    {selectedSession.session?.allowed_duration_label || `${selectedSession.session?.admin_grace_minutes || 5} mins (Grace Counter)`}
+                  <span style={{ color: 'var(--text-muted)' }}>Allowed Free Parking (Min / Hrs):</span>
+                  <div style={{ fontWeight: 800, marginTop: '2px', fontSize: '0.84rem', color: 'var(--brand-primary, #2563eb)' }}>
+                    {selectedSession.session?.allowed_duration_label || `${formatDurationDetailed(selectedSession.session?.admin_grace_minutes || 5)} (Grace Limit)`}
                   </div>
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)' }}>Current Parked Duration:</span>
                   <div style={{ fontWeight: 700, marginTop: '2px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
-                    {selectedSession.session?.total_duration_minutes || 0} minutes Live
+                    {formatDurationDetailed(selectedSession.session?.total_duration_minutes || 0)} {!selectedSession.session?.exit_time ? '(Live)' : ''}
                   </div>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)' }}>Validation Deadline:</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Validation / Free Deadline:</span>
                   <div style={{ fontWeight: 600, marginTop: '2px' }}>
                     {selectedSession.session?.validation_deadline || '—'}
                   </div>
                 </div>
                 <div>
-                  <span style={{ color: 'var(--text-muted)' }}>Allowance Status:</span>
+                  <span style={{ color: 'var(--text-muted)' }}>Time Allowance Status:</span>
                   <div style={{ fontWeight: 700, marginTop: '2px', color: selectedSession.session?.status === 'CHARGING' ? 'var(--status-amber)' : 'var(--status-green)' }}>
                     {selectedSession.session?.status === 'VALIDATED' 
-                      ? '✓ Free Parking Granted (Waived)'
+                      ? '✓ Free Parking (Hospital Validated)'
                       : selectedSession.session?.status === 'CHARGING'
                       ? '⚠️ Grace Limit Expired (Chargeable)'
                       : `${selectedSession.session?.remaining_free_minutes || 0} mins remaining free`}

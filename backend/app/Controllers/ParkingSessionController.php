@@ -157,11 +157,35 @@ class ParkingSessionController extends Controller {
             }
         } catch (\Throwable $e) {}
 
+        // Preload validations for active sessions
+        $sessionIds = array_filter(array_column($sessions, 'id'));
+        $validationsMap = [];
+        if (!empty($sessionIds)) {
+            $inIds = implode(',', array_map('intval', $sessionIds));
+            try {
+                $valStmt = $db->query("SELECT session_id, free_minutes_granted, discount_percent, validation_type FROM visitor_validations WHERE session_id IN ({$inIds})");
+                while ($vRow = $valStmt->fetch()) {
+                    $validationsMap[(int)$vRow['session_id']] = $vRow;
+                }
+            } catch (\Throwable $e) {}
+        }
+
         // Dynamically compute current duration and tariff for active sessions
         \App\Helpers\TimezoneHelper::init();
         $adminGraceMinutes = TariffCalculator::getAdminGraceMinutes();
         $nowStr = \App\Helpers\TimezoneHelper::now();
         $nowTs = strtotime($nowStr);
+
+        $formatDurationString = function(int $mins) {
+            if ($mins <= 0) return "0 mins";
+            if ($mins < 60) return "{$mins} mins";
+            $hrs = floor($mins / 60);
+            $rem = $mins % 60;
+            if ($rem === 0) {
+                return $hrs == 1 ? "1 hr ({$mins} mins)" : "{$hrs} hrs ({$mins} mins)";
+            }
+            return "{$hrs}h {$rem}m ({$mins} mins)";
+        };
 
         foreach ($sessions as &$sess) {
             $cleanPlate = strtoupper(trim($sess['plate_number']));
@@ -231,26 +255,42 @@ class ParkingSessionController extends Controller {
                 $sess['total_duration_minutes'] = max(1, (int)round(($exitTs - $entryTs) / 60));
             }
 
+            $valInfo = $validationsMap[(int)$sess['id']] ?? null;
+            $freeMinutesGranted = $valInfo ? (int)$valInfo['free_minutes_granted'] : null;
+
             $deadlineTs = !empty($sess['validation_deadline']) ? strtotime($sess['validation_deadline']) : ($entryTs + ($adminGraceMinutes * 60));
             $remainingFreeMinutes = max(0, (int)round(($deadlineTs - $nowTs) / 60));
 
-            $allowedDurationLabel = "{$adminGraceMinutes} mins (Grace Counter)";
+            $allowedFormatted = $formatDurationString($adminGraceMinutes);
+            $allowedDurationLabel = "{$allowedFormatted} (Grace Counter)";
+            $allowedHoursLabel = ($adminGraceMinutes >= 60) ? (round($adminGraceMinutes / 60, 1) . ' hrs') : ($adminGraceMinutes . ' mins');
+
             if ($sess['status'] === 'VALIDATED') {
                 if (!empty($sess['validation_method']) && in_array($sess['validation_method'], ['whitelisted', 'emergency'])) {
                     $allowedDurationLabel = "Unlimited Free (Authorized/Staff)";
+                    $allowedHoursLabel = "Unlimited Hours";
                     $remainingFreeMinutes = 9999;
+                } elseif ($freeMinutesGranted && $freeMinutesGranted > 0) {
+                    $valFormatted = $formatDurationString($freeMinutesGranted);
+                    $allowedDurationLabel = "{$valFormatted} (Hospital Validated)";
+                    $allowedHoursLabel = ($freeMinutesGranted >= 60) ? (round($freeMinutesGranted / 60, 1) . ' hrs') : ($freeMinutesGranted . ' mins');
                 } else {
-                    $allowedDurationLabel = "Hospital Validated Visit";
+                    $allowedDurationLabel = "Hospital Validated Visit (Fee Waived)";
+                    $allowedHoursLabel = "Fee Waived";
                 }
             } elseif ($sess['status'] === 'CHARGING') {
-                $allowedDurationLabel = "Grace expired ({$adminGraceMinutes}m limit)";
+                $allowedDurationLabel = "Grace expired ({$allowedFormatted} limit)";
+                $allowedHoursLabel = "{$adminGraceMinutes} mins limit (Expired)";
                 $remainingFreeMinutes = 0;
             } elseif ($sess['status'] === 'VALIDATION_PENDING') {
-                $allowedDurationLabel = "{$adminGraceMinutes} mins counter limit";
+                $allowedDurationLabel = "{$allowedFormatted} counter limit";
+                $allowedHoursLabel = ($adminGraceMinutes >= 60) ? (round($adminGraceMinutes / 60, 1) . ' hrs') : ($adminGraceMinutes . ' mins');
             }
 
             $sess['admin_grace_minutes'] = $adminGraceMinutes;
+            $sess['allowed_duration_minutes'] = ($sess['status'] === 'VALIDATED' && $freeMinutesGranted) ? $freeMinutesGranted : $adminGraceMinutes;
             $sess['allowed_duration_label'] = $allowedDurationLabel;
+            $sess['allowed_hours_label'] = $allowedHoursLabel;
             $sess['remaining_free_minutes'] = $remainingFreeMinutes;
         }
 
@@ -281,25 +321,55 @@ class ParkingSessionController extends Controller {
         $elapsedMinutes = max(0, (int)round(($exitTs - $entryTs) / 60));
         $session['total_duration_minutes'] = $elapsedMinutes;
 
+        // Fetch Validation
+        $stmtVal = $db->prepare("SELECT * FROM visitor_validations WHERE session_id = ? ORDER BY id DESC LIMIT 1");
+        $stmtVal->execute([$id]);
+        $validation = $stmtVal->fetch();
+
         $adminGraceMinutes = TariffCalculator::getAdminGraceMinutes();
+        $freeMinutesGranted = $validation ? (int)($validation['free_minutes_granted'] ?? 0) : null;
+
+        $formatDurationString = function(int $mins) {
+            if ($mins <= 0) return "0 Minutes";
+            if ($mins < 60) return "{$mins} Minutes";
+            $hrs = floor($mins / 60);
+            $rem = $mins % 60;
+            if ($rem === 0) {
+                return $hrs == 1 ? "1 Hour ({$mins} mins)" : "{$hrs} Hours ({$mins} mins)";
+            }
+            return "{$hrs} Hours {$rem} Mins ({$mins} mins)";
+        };
+
+        $allowedFormatted = $formatDurationString($adminGraceMinutes);
+        $allowedDurationLabel = "{$allowedFormatted} (Configured Grace Period Counter)";
+        $allowedHoursLabel = ($adminGraceMinutes >= 60) ? (round($adminGraceMinutes / 60, 1) . ' Hours') : ($adminGraceMinutes . ' Minutes');
+
         $deadlineTs = !empty($session['validation_deadline']) ? strtotime($session['validation_deadline']) : ($entryTs + ($adminGraceMinutes * 60));
         $remainingFreeMinutes = max(0, (int)round(($deadlineTs - $nowTs) / 60));
 
-        $allowedDurationLabel = "{$adminGraceMinutes} minutes (Configured Grace Period Counter)";
         if ($session['status'] === 'VALIDATED') {
             if (!empty($session['validation_method']) && in_array($session['validation_method'], ['whitelisted', 'emergency'])) {
-                $allowedDurationLabel = "Unlimited Free (Authorized / Whitelisted)";
+                $allowedDurationLabel = "Unlimited Free Parking (Authorized / Whitelisted)";
+                $allowedHoursLabel = "Unlimited Hours";
                 $remainingFreeMinutes = 9999;
+            } elseif ($freeMinutesGranted && $freeMinutesGranted > 0) {
+                $valFormatted = $formatDurationString($freeMinutesGranted);
+                $allowedDurationLabel = "{$valFormatted} (Hospital Validated Parking)";
+                $allowedHoursLabel = ($freeMinutesGranted >= 60) ? (round($freeMinutesGranted / 60, 1) . ' Hours') : ($freeMinutesGranted . ' Minutes');
             } else {
-                $allowedDurationLabel = "Hospital Validated (Fee Waived)";
+                $allowedDurationLabel = "Hospital Validated (Fee Waived / Free)";
+                $allowedHoursLabel = "Free Parking";
             }
         } elseif ($session['status'] === 'CHARGING') {
-            $allowedDurationLabel = "Grace period expired ({$adminGraceMinutes} min limit)";
+            $allowedDurationLabel = "Grace period expired ({$allowedFormatted} limit)";
+            $allowedHoursLabel = "{$adminGraceMinutes} Minutes Limit (Expired)";
             $remainingFreeMinutes = 0;
         }
 
         $session['admin_grace_minutes'] = $adminGraceMinutes;
+        $session['allowed_duration_minutes'] = ($session['status'] === 'VALIDATED' && $freeMinutesGranted) ? $freeMinutesGranted : $adminGraceMinutes;
         $session['allowed_duration_label'] = $allowedDurationLabel;
+        $session['allowed_hours_label'] = $allowedHoursLabel;
         $session['remaining_free_minutes'] = $remainingFreeMinutes;
 
         // Live calculation
@@ -309,11 +379,6 @@ class ParkingSessionController extends Controller {
         $stmtEvents = $db->prepare("SELECT * FROM anpr_events WHERE session_id = ? ORDER BY id ASC");
         $stmtEvents->execute([$id]);
         $anprEvents = $stmtEvents->fetchAll();
-
-        // Fetch Validation
-        $stmtVal = $db->prepare("SELECT * FROM visitor_validations WHERE session_id = ? ORDER BY id DESC LIMIT 1");
-        $stmtVal->execute([$id]);
-        $validation = $stmtVal->fetch();
 
         // Fetch Payments
         $stmtPay = $db->prepare("SELECT * FROM payments WHERE session_id = ? ORDER BY id ASC");
