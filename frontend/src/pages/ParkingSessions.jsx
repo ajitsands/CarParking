@@ -698,24 +698,85 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
           },
           {
             key: 'validation_deadline',
-            label: 'Validation Deadline',
-            render: (sess) => (
-              <span style={{ fontSize: '0.72rem', color: sess.status === 'VALIDATION_PENDING' ? 'var(--status-amber)' : 'var(--text-muted)' }}>
-                {sess.status === 'VALIDATION_PENDING' ? (sess.validation_deadline || '-') : (sess.validated_at || '-')}
-              </span>
-            )
+            label: 'Allowance & Deadline',
+            render: (sess) => {
+              const graceLimit = sess.admin_grace_minutes || 5;
+              const isVal = sess.status === 'VALIDATED';
+              const isCharging = sess.status === 'CHARGING';
+              const isExit = sess.status === 'EXIT_COMPLETED' || sess.status === 'COMPLETED';
+
+              if (isVal) {
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--status-green)' }}>
+                      ✓ Fee Waived
+                    </span>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                      {sess.allowed_duration_label || 'Hospital Validated'}
+                    </span>
+                  </div>
+                );
+              }
+
+              if (isCharging) {
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--status-amber)' }}>
+                      Charging Active
+                    </span>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                      Exceeded {graceLimit}m Limit
+                    </span>
+                  </div>
+                );
+              }
+
+              if (isExit) {
+                return (
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    Completed ({sess.total_duration_minutes || 0}m parked)
+                  </span>
+                );
+              }
+
+              // Active / Validation Pending:
+              const remaining = sess.remaining_free_minutes !== undefined ? sess.remaining_free_minutes : Math.max(0, graceLimit - (sess.total_duration_minutes || 0));
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <Clock size={12} color={remaining <= 1 ? '#ef4444' : '#22c55e'} />
+                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: remaining <= 1 ? '#ef4444' : 'var(--text-primary)' }}>
+                      {remaining > 0 ? `${remaining}m remaining` : 'Expiring now'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                    Counter Set: {graceLimit}m (Until {sess.validation_deadline ? sess.validation_deadline.substring(11, 19) : '-'})
+                  </span>
+                </div>
+              );
+            }
           },
           {
             key: 'total_duration_minutes',
-            label: 'Duration',
-            render: (sess) => (
-              <span style={{ fontSize: '0.78rem', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
-                {sess.total_duration_minutes >= 60 
-                  ? `${Math.floor(sess.total_duration_minutes / 60)}h ${sess.total_duration_minutes % 60}m`
-                  : `${sess.total_duration_minutes || 0}m`
-                }
-              </span>
-            )
+            label: 'Parked Duration',
+            render: (sess) => {
+              const mins = sess.total_duration_minutes || 0;
+              const formatted = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
+              const isInside = !sess.exit_time && sess.status !== 'EXIT_COMPLETED' && sess.status !== 'COMPLETED';
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 800, fontFamily: 'var(--font-mono)', color: isInside ? '#2563eb' : 'var(--text-primary)' }}>
+                    {formatted}
+                  </span>
+                  {isInside && (
+                    <span style={{ fontSize: '0.65rem', color: '#2563eb', fontWeight: 600 }}>
+                      ● Live counter
+                    </span>
+                  )}
+                </div>
+              );
+            }
           },
           {
             key: 'net_amount',
@@ -861,12 +922,63 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
                 <div style={{ fontWeight: 600 }}>{selectedSession.session?.exit_time || 'Still in parking lot'}</div>
               </div>
               <div>
-                <span className="stat-label">Duration</span>
-                <div style={{ fontWeight: 600 }}>{selectedSession.session?.total_duration_minutes || 0} minutes</div>
+                <span className="stat-label">Current Parked Duration</span>
+                <div style={{ fontWeight: 700, color: '#2563eb', fontFamily: 'var(--font-mono)' }}>
+                  {selectedSession.session?.total_duration_minutes || 0} minutes {!selectedSession.session?.exit_time ? '(Live)' : ''}
+                </div>
               </div>
               <div>
                 <span className="stat-label">Entry Gate / Camera</span>
                 <div style={{ fontWeight: 600 }}>{selectedSession.session?.entry_gate_id || 'GATE-IN-01'}</div>
+              </div>
+            </div>
+
+            {/* Parking Allowance & Time Counter Set Box */}
+            <div style={{
+              padding: '12px 14px',
+              background: selectedSession.session?.status === 'VALIDATED' ? 'var(--status-green-bg)' : selectedSession.session?.status === 'CHARGING' ? 'var(--status-amber-bg, rgba(245,158,11,0.08))' : 'var(--status-blue-bg)',
+              border: `1px solid ${selectedSession.session?.status === 'VALIDATED' ? 'var(--status-green-border)' : selectedSession.session?.status === 'CHARGING' ? 'var(--status-amber-border, #fcd34d)' : 'var(--status-blue-border)'}`,
+              borderRadius: 'var(--radius-sm)',
+              marginBottom: '14px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <strong style={{ fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
+                  <Clock size={15} color="var(--accent)" />
+                  Parking Allowance & Duration Counter
+                </strong>
+                <span className={`badge ${selectedSession.session?.status === 'VALIDATED' ? 'badge-green' : selectedSession.session?.status === 'CHARGING' ? 'badge-amber' : 'badge-blue'}`}>
+                  {selectedSession.session?.status === 'VALIDATED' ? 'Fee Waived' : selectedSession.session?.status === 'CHARGING' ? 'Paid Parking Active' : 'Free Grace Period'}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.74rem' }}>
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Configured Allowed Duration:</span>
+                  <div style={{ fontWeight: 700, marginTop: '2px', color: 'var(--text-primary)' }}>
+                    {selectedSession.session?.allowed_duration_label || `${selectedSession.session?.admin_grace_minutes || 5} mins (Grace Counter)`}
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Current Parked Duration:</span>
+                  <div style={{ fontWeight: 700, marginTop: '2px', fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>
+                    {selectedSession.session?.total_duration_minutes || 0} minutes Live
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Validation Deadline:</span>
+                  <div style={{ fontWeight: 600, marginTop: '2px' }}>
+                    {selectedSession.session?.validation_deadline || '—'}
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Allowance Status:</span>
+                  <div style={{ fontWeight: 700, marginTop: '2px', color: selectedSession.session?.status === 'CHARGING' ? 'var(--status-amber)' : 'var(--status-green)' }}>
+                    {selectedSession.session?.status === 'VALIDATED' 
+                      ? '✓ Free Parking Granted (Waived)'
+                      : selectedSession.session?.status === 'CHARGING'
+                      ? '⚠️ Grace Limit Expired (Chargeable)'
+                      : `${selectedSession.session?.remaining_free_minutes || 0} mins remaining free`}
+                  </div>
+                </div>
               </div>
             </div>
 

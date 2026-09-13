@@ -230,6 +230,28 @@ class ParkingSessionController extends Controller {
                 // Completed session with exit time
                 $sess['total_duration_minutes'] = max(1, (int)round(($exitTs - $entryTs) / 60));
             }
+
+            $deadlineTs = !empty($sess['validation_deadline']) ? strtotime($sess['validation_deadline']) : ($entryTs + ($adminGraceMinutes * 60));
+            $remainingFreeMinutes = max(0, (int)round(($deadlineTs - $nowTs) / 60));
+
+            $allowedDurationLabel = "{$adminGraceMinutes} mins (Grace Counter)";
+            if ($sess['status'] === 'VALIDATED') {
+                if (!empty($sess['validation_method']) && in_array($sess['validation_method'], ['whitelisted', 'emergency'])) {
+                    $allowedDurationLabel = "Unlimited Free (Authorized/Staff)";
+                    $remainingFreeMinutes = 9999;
+                } else {
+                    $allowedDurationLabel = "Hospital Validated Visit";
+                }
+            } elseif ($sess['status'] === 'CHARGING') {
+                $allowedDurationLabel = "Grace expired ({$adminGraceMinutes}m limit)";
+                $remainingFreeMinutes = 0;
+            } elseif ($sess['status'] === 'VALIDATION_PENDING') {
+                $allowedDurationLabel = "{$adminGraceMinutes} mins counter limit";
+            }
+
+            $sess['admin_grace_minutes'] = $adminGraceMinutes;
+            $sess['allowed_duration_label'] = $allowedDurationLabel;
+            $sess['remaining_free_minutes'] = $remainingFreeMinutes;
         }
 
         $this->success([
@@ -251,6 +273,34 @@ class ParkingSessionController extends Controller {
             $this->error('Session not found', 404);
             return;
         }
+
+        $nowTs = time();
+        $entryTs = strtotime($session['entry_time']);
+        $exitTs = !empty($session['exit_time']) ? strtotime($session['exit_time']) : $nowTs;
+        if ($exitTs < $entryTs) $exitTs = $entryTs;
+        $elapsedMinutes = max(0, (int)round(($exitTs - $entryTs) / 60));
+        $session['total_duration_minutes'] = $elapsedMinutes;
+
+        $adminGraceMinutes = TariffCalculator::getAdminGraceMinutes();
+        $deadlineTs = !empty($session['validation_deadline']) ? strtotime($session['validation_deadline']) : ($entryTs + ($adminGraceMinutes * 60));
+        $remainingFreeMinutes = max(0, (int)round(($deadlineTs - $nowTs) / 60));
+
+        $allowedDurationLabel = "{$adminGraceMinutes} minutes (Configured Grace Period Counter)";
+        if ($session['status'] === 'VALIDATED') {
+            if (!empty($session['validation_method']) && in_array($session['validation_method'], ['whitelisted', 'emergency'])) {
+                $allowedDurationLabel = "Unlimited Free (Authorized / Whitelisted)";
+                $remainingFreeMinutes = 9999;
+            } else {
+                $allowedDurationLabel = "Hospital Validated (Fee Waived)";
+            }
+        } elseif ($session['status'] === 'CHARGING') {
+            $allowedDurationLabel = "Grace period expired ({$adminGraceMinutes} min limit)";
+            $remainingFreeMinutes = 0;
+        }
+
+        $session['admin_grace_minutes'] = $adminGraceMinutes;
+        $session['allowed_duration_label'] = $allowedDurationLabel;
+        $session['remaining_free_minutes'] = $remainingFreeMinutes;
 
         // Live calculation
         $tariff = TariffCalculator::calculate($session);
