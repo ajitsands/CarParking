@@ -734,14 +734,25 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
               }
 
               if (isCharging) {
-                const isOverstay = Boolean(sess.validation_method && sess.validation_method !== 'none');
+                const isOverstay = Boolean(
+                  (sess.validation_method && sess.validation_method !== 'none') ||
+                  (sess.allowed_duration_minutes && sess.allowed_duration_minutes > graceLimit)
+                );
+                const allowedMins = sess.allowed_duration_minutes || graceLimit;
+                const totalMins = sess.total_duration_minutes || 0;
+                const chargedMins = sess.charged_duration_minutes || Math.max(0, totalMins - allowedMins);
+                const chargedFormatted = chargedMins >= 60 ? `${Math.floor(chargedMins / 60)}h ${chargedMins % 60}m` : `${chargedMins}m`;
+                const allowedFormatted = allowedMins >= 60 ? `${(allowedMins / 60).toFixed(0)}h` : `${allowedMins}m`;
+
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--status-amber)' }}>
-                      {isOverstay ? '⚠️ Overstay Charge' : 'Charging Active'}
+                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: isOverstay ? 'var(--status-amber)' : 'var(--status-amber)' }}>
+                      {isOverstay ? `⚠️ Allowed ${allowedFormatted} Completed` : 'Charging Active'}
                     </span>
-                    <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                      {sess.allowed_duration_label || `Exceeded ${graceLimit}m Limit`}
+                    <span style={{ fontSize: '0.68rem', color: isOverstay ? '#d97706' : 'var(--text-muted)', fontWeight: 600 }}>
+                      {isOverstay 
+                        ? `Balance ${chargedFormatted} (Charged)` 
+                        : (sess.allowed_duration_label || `Exceeded ${graceLimit}m Limit`)}
                     </span>
                   </div>
                 );
@@ -779,6 +790,14 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
               const mins = sess.total_duration_minutes || 0;
               const formatted = mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
               const isInside = !sess.exit_time && sess.status !== 'EXIT_COMPLETED' && sess.status !== 'COMPLETED';
+              const isOverstay = sess.status === 'CHARGING' && (
+                (sess.validation_method && sess.validation_method !== 'none') ||
+                (sess.allowed_duration_minutes && sess.allowed_duration_minutes > (sess.admin_grace_minutes || 5))
+              );
+              const allowedMins = sess.allowed_duration_minutes || 0;
+              const allowedFormatted = allowedMins >= 60 ? `${(allowedMins / 60).toFixed(0)}h` : `${allowedMins}m`;
+              const chargedMins = sess.charged_duration_minutes || Math.max(0, mins - allowedMins);
+              const chargedFormatted = chargedMins >= 60 ? `${Math.floor(chargedMins / 60)}h ${chargedMins % 60}m` : `${chargedMins}m`;
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -786,8 +805,8 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
                     {formatted}
                   </span>
                   {isInside && (
-                    <span style={{ fontSize: '0.65rem', color: '#2563eb', fontWeight: 600 }}>
-                      ● Live counter
+                    <span style={{ fontSize: '0.65rem', color: isOverstay ? '#d97706' : '#2563eb', fontWeight: 600 }}>
+                      {isOverstay ? `(${allowedFormatted} Free + ${chargedFormatted} Overstay)` : '● Live counter'}
                     </span>
                   )}
                 </div>
@@ -797,15 +816,30 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
           {
             key: 'net_amount',
             label: 'Net Fee',
-            render: (sess) => (
-              <span style={{ 
-                fontFamily: 'var(--font-mono)', 
-                fontWeight: 700, 
-                color: parseFloat(sess.net_amount || 0) > 0 ? 'var(--status-amber)' : 'var(--text-primary)'
-              }}>
-                {formatCurrency(sess.net_amount || 0)}
-              </span>
-            )
+            render: (sess) => {
+              const amount = parseFloat(sess.net_amount || 0);
+              const isOverstay = sess.status === 'CHARGING' && (
+                (sess.validation_method && sess.validation_method !== 'none') ||
+                (sess.allowed_duration_minutes && sess.allowed_duration_minutes > (sess.admin_grace_minutes || 5))
+              );
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <span style={{ 
+                    fontFamily: 'var(--font-mono)', 
+                    fontWeight: 800, 
+                    fontSize: '0.84rem',
+                    color: amount > 0 ? 'var(--status-amber)' : 'var(--text-primary)'
+                  }}>
+                    {formatCurrency(amount)}
+                  </span>
+                  {isOverstay && amount > 0 && (
+                    <span style={{ fontSize: '0.64rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                      Charge for balance
+                    </span>
+                  )}
+                </div>
+              );
+            }
           },
           {
             key: 'payment_status',

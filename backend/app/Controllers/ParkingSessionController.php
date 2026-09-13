@@ -283,8 +283,10 @@ class ParkingSessionController extends Controller {
             } elseif ($sess['status'] === 'CHARGING') {
                 if ($isValMethod && $freeMinutesGranted && $freeMinutesGranted > 0) {
                     $valFormatted = $formatDurationString($freeMinutesGranted);
-                    $allowedDurationLabel = "Overstayed ({$valFormatted} free limit exceeded)";
-                    $allowedHoursLabel = ($freeMinutesGranted >= 60) ? (round($freeMinutesGranted / 60, 1) . ' hrs (Overstay)') : ($freeMinutesGranted . ' mins (Overstay)');
+                    $overstayMins = max(0, (int)($sess['charged_duration_minutes'] ?? ($sess['total_duration_minutes'] - $freeMinutesGranted)));
+                    $overstayFormatted = $formatDurationString($overstayMins);
+                    $allowedDurationLabel = "Allowed {$valFormatted} Completed (Balance {$overstayFormatted})";
+                    $allowedHoursLabel = ($freeMinutesGranted >= 60) ? (round($freeMinutesGranted / 60, 1) . ' hrs (Completed)') : ($freeMinutesGranted . ' mins (Completed)');
                 } else {
                     $allowedDurationLabel = "Grace expired ({$allowedFormatted} limit)";
                     $allowedHoursLabel = "{$adminGraceMinutes} mins limit (Expired)";
@@ -387,8 +389,10 @@ class ParkingSessionController extends Controller {
         } elseif ($session['status'] === 'CHARGING') {
             if ($isValMethod && $freeMinutesGranted && $freeMinutesGranted > 0) {
                 $valFormatted = $formatDurationString($freeMinutesGranted);
-                $allowedDurationLabel = "Overstayed ({$valFormatted} Free limit exceeded)";
-                $allowedHoursLabel = ($freeMinutesGranted >= 60) ? (round($freeMinutesGranted / 60, 1) . ' Hours (Overstay)') : ($freeMinutesGranted . ' Minutes (Overstay)');
+                $overstayMins = max(0, (int)($session['charged_duration_minutes'] ?? ($session['total_duration_minutes'] - $freeMinutesGranted)));
+                $overstayFormatted = $formatDurationString($overstayMins);
+                $allowedDurationLabel = "Allowed {$valFormatted} Completed (Balance {$overstayFormatted})";
+                $allowedHoursLabel = ($freeMinutesGranted >= 60) ? (round($freeMinutesGranted / 60, 1) . ' Hours (Completed)') : ($freeMinutesGranted . ' Minutes (Completed)');
             } else {
                 $allowedDurationLabel = "Grace period expired ({$allowedFormatted} limit)";
                 $allowedHoursLabel = "{$adminGraceMinutes} Minutes Limit (Expired)";
