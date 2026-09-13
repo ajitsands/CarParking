@@ -735,23 +735,26 @@ function DownloadApkSection() {
         gap: '16px'
       }}>
         <div style={{ maxWidth: '540px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-            <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '2px 8px', borderRadius: '999px', background: 'rgba(34,197,94,0.2)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.4)' }}>
-              STANDALONE RELEASE v1.0.0
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
+            <span className="badge badge-green" style={{ fontSize: '0.72rem', fontWeight: 800, padding: '3px 10px' }}>
+              STANDALONE RELEASE v1.1.0
+            </span>
+            <span className="badge badge-blue" style={{ fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px' }}>
+              Hospital Brand Logo & Branding
             </span>
             <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Android 8.0+ (Phones, Tablets & Smart Displays)</span>
           </div>
           <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 6px' }}>
-            Parking Display Board App (APK)
+            Parking Display Board App (APK v1.1)
           </h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
-            Install directly on any Android device at exit gates. Built-in setup screen allows configuring Server URL, Gate ID, Brightness, and Display Timers directly on device.
+            Install directly on any Android device at exit gates. Supports live brand logo above scanner, auto QR payments, gate open barrier states, and built-in setup screen.
           </p>
         </div>
 
         <a
           href="/downloads/ParkingDisplayBoard.apk"
-          download="ParkingDisplayBoard.apk"
+          download="ParkingDisplayBoard_v1.1.apk"
           className="btn btn-primary"
           style={{
             padding: '12px 24px',

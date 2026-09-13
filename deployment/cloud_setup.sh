@@ -69,7 +69,10 @@ npm run build
 mkdir -p /var/www/parking/frontend
 cp -r dist/* /var/www/parking/frontend/
 mkdir -p /var/www/parking/frontend/downloads
-if [ -f "${SCRIPT_DIR}/ParkingDisplayBoard_v1.0.apk" ]; then
+if [ -f "${SCRIPT_DIR}/ParkingDisplayBoard_v1.1.apk" ]; then
+    cp "${SCRIPT_DIR}/ParkingDisplayBoard_v1.1.apk" /var/www/parking/frontend/downloads/ParkingDisplayBoard.apk
+    cp "${SCRIPT_DIR}/ParkingDisplayBoard_v1.1.apk" /var/www/parking/frontend/downloads/ParkingDisplayBoard_v1.1.apk
+elif [ -f "${SCRIPT_DIR}/ParkingDisplayBoard_v1.0.apk" ]; then
     cp "${SCRIPT_DIR}/ParkingDisplayBoard_v1.0.apk" /var/www/parking/frontend/downloads/ParkingDisplayBoard.apk
 fi
 

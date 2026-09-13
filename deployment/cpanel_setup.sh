@@ -44,10 +44,14 @@ fi
 # 3. Setup Downloads directory with Standalone APK
 echo "[+] Setting up Downloads Folder for Android Display APK..."
 mkdir -p downloads
-if [ -f "ParkingDisplayBoard_v1.0.apk" ]; then
+if [ -f "ParkingDisplayBoard_v1.1.apk" ]; then
+    cp "ParkingDisplayBoard_v1.1.apk" downloads/ParkingDisplayBoard.apk
+    cp "ParkingDisplayBoard_v1.1.apk" downloads/ParkingDisplayBoard_v1.1.apk
+    echo "    APK v1.1 successfully placed in downloads/ParkingDisplayBoard.apk"
+elif [ -f "ParkingDisplayBoard_v1.0.apk" ]; then
     cp "ParkingDisplayBoard_v1.0.apk" downloads/ParkingDisplayBoard.apk
     cp "ParkingDisplayBoard_v1.0.apk" downloads/ParkingDisplayBoard_v1.0.apk
-    echo "    APK successfully placed in downloads/ParkingDisplayBoard.apk"
+    echo "    APK v1.0 successfully placed in downloads/ParkingDisplayBoard.apk"
 elif [ -f "frontend/dist/downloads/ParkingDisplayBoard.apk" ]; then
     cp frontend/dist/downloads/ParkingDisplayBoard.apk downloads/
     echo "    APK copied from frontend/dist/downloads/ to downloads/"

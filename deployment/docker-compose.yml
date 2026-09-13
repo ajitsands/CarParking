@@ -61,7 +61,8 @@ services:
     depends_on:
       - backend
     volumes:
-      - ../ParkingDisplayBoard_v1.0.apk:/usr/share/nginx/html/downloads/ParkingDisplayBoard.apk:ro
+      - ../ParkingDisplayBoard_v1.1.apk:/usr/share/nginx/html/downloads/ParkingDisplayBoard.apk:ro
+      - ../ParkingDisplayBoard_v1.1.apk:/usr/share/nginx/html/downloads/ParkingDisplayBoard_v1.1.apk:ro
     networks:
       - parking_net
 
