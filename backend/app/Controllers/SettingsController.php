@@ -16,6 +16,9 @@ class SettingsController extends Controller {
         foreach ($rows as $r) {
             $settings[$r['setting_key']] = $r['setting_value'];
         }
+        if (!isset($settings['show_powered_by'])) {
+            $settings['show_powered_by'] = '1';
+        }
 
         $appConfig = require __DIR__ . '/../../config/app.php';
 

@@ -1,11 +1,11 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useSettings } from "../../context/SettingsContext";
 
 export default function Footer() {
   const { settings } = useSettings();
   const [popupOpen, setPopupOpen] = useState(false);
   const companyName = (settings && settings.company_name) ? settings.company_name : "Your Company";
-  const year = new Date().getFullYear();
+  const showPoweredBy = settings?.show_powered_by !== '0' && settings?.show_powered_by !== 'false' && settings?.show_powered_by !== false;
 
   return (
     <>
@@ -13,17 +13,21 @@ export default function Footer() {
         <span className="app-footer__rights">
           &copy; {year} All Rights Reserved &mdash; <strong>{companyName}</strong>
         </span>
-        <span className="app-footer__sep">|</span>
-        <span className="app-footer__powered">
-          Powered by{" "}
-          <button
-            className="app-footer__sands-btn"
-            onClick={() => setPopupOpen(true)}
-            aria-label="About SaNDS Lab"
-          >
-            SaNDS Lab
-          </button>
-        </span>
+        {showPoweredBy && (
+          <>
+            <span className="app-footer__sep">|</span>
+            <span className="app-footer__powered">
+              Powered by{" "}
+              <button
+                className="app-footer__sands-btn"
+                onClick={() => setPopupOpen(true)}
+                aria-label="About SaNDS Lab"
+              >
+                SaNDS Lab
+              </button>
+            </span>
+          </>
+        )}
       </footer>
 
       {popupOpen && (

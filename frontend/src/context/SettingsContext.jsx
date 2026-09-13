@@ -14,6 +14,7 @@ export function SettingsProvider({ children }) {
     currency_symbol: 'BD',
     currency_decimals: '3',
     default_grace_minutes: '30',
+    show_powered_by: '1',
     menu_theme: 'pink_blue',
     menu_color_primary: '#ec4899',
     menu_color_secondary: '#2563eb',

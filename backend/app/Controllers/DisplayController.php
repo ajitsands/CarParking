@@ -99,13 +99,40 @@ class DisplayController extends Controller {
             }
         }
 
+        // ── Fetch Branding & Customization Settings ──
+        $brandingMap = [];
+        try {
+            $brandingStmt = $db->query("SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('company_logo', 'company_name', 'show_powered_by')");
+            if ($brandingStmt) {
+                while ($bRow = $brandingStmt->fetch()) {
+                    $brandingMap[$bRow['setting_key']] = $bRow['setting_value'];
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        $rawLogo = $brandingMap['company_logo'] ?? '';
+        $companyLogo = '';
+        if (!empty($rawLogo)) {
+            if (str_starts_with($rawLogo, 'http://') || str_starts_with($rawLogo, 'https://')) {
+                $companyLogo = $rawLogo;
+            } else {
+                $companyLogo = rtrim($baseUrl, '/') . '/' . ltrim($rawLogo, '/');
+            }
+        }
+
+        $companyName = $brandingMap['company_name'] ?? 'Car Parking Solution';
+        $showPoweredBy = !isset($brandingMap['show_powered_by']) || $brandingMap['show_powered_by'] === '1' || $brandingMap['show_powered_by'] === 'true' || $brandingMap['show_powered_by'] === true;
+
         // ── No vehicle at gate ──
         if (!$session) {
             $this->success([
-                'has_vehicle'   => false,
-                'gate_id'       => $gateId,
-                'display_state' => 'IDLE',
-                'message'       => 'No vehicle detected at exit gate'
+                'has_vehicle'     => false,
+                'gate_id'         => $gateId,
+                'display_state'   => 'IDLE',
+                'company_logo'    => $companyLogo,
+                'company_name'    => $companyName,
+                'show_powered_by' => $showPoweredBy,
+                'message'         => 'No vehicle detected at exit gate'
             ]);
             return;
         }
@@ -178,6 +205,9 @@ class DisplayController extends Controller {
             'qr_payload'        => $qrPayload,
             'barrier_state'     => $barrierState,
             'tariff_reason'     => $tariff['reason'] ?? '',
+            'company_logo'      => $companyLogo,
+            'company_name'      => $companyName,
+            'show_powered_by'   => $showPoweredBy,
             'server_time'       => $nowStr,
         ]);
     }

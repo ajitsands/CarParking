@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   Animated,
@@ -62,7 +63,7 @@ function LiveClock({ isPortrait }) {
 
 // ── IDLE Screen ──────────────────────────────────────────────────────────────
 
-function IdleScreen({ error, isConnected, gateId }) {
+function IdleScreen({ error, isConnected, gateId, companyLogo, companyName, showPoweredBy }) {
   const { width, height } = useWindowDimensions();
   const isPortrait = height > width;
 
@@ -94,16 +95,31 @@ function IdleScreen({ error, isConnected, gateId }) {
       <View style={styles.orb2} />
 
       <View style={styles.idleContent}>
-        {/* Logo / Icon */}
+        {/* Hospital / Company Logo on Top Above Scanning Icon */}
+        {companyLogo ? (
+          <View style={styles.topBrandLogoContainer}>
+            <Image
+              source={{ uri: companyLogo }}
+              style={[styles.topBrandLogo, isPortrait && styles.topBrandLogoPortrait]}
+              resizeMode="contain"
+            />
+          </View>
+        ) : companyName ? (
+          <View style={styles.topBrandLogoContainer}>
+            <Text style={[styles.topBrandName, isPortrait && { fontSize: 18 }]}>{companyName}</Text>
+          </View>
+        ) : null}
+
+        {/* Scanning Icon */}
         <Animated.View style={{ transform: [{ scale: pulse }] }}>
-          <View style={[styles.idleIconWrapper, isPortrait && { width: 130, height: 130, borderRadius: 65 }]}>
-            <Text style={[styles.idleIcon, isPortrait && { fontSize: 56 }]}>🚗</Text>
+          <View style={[styles.idleIconWrapper, isPortrait && { width: 120, height: 120, borderRadius: 60 }]}>
+            <Text style={[styles.idleIcon, isPortrait && { fontSize: 50 }]}>🚗</Text>
             {/* Scan line animation */}
             <Animated.View style={[styles.scanLine, { transform: [{ translateY: scanY }] }]} />
           </View>
         </Animated.View>
 
-        <Text style={[styles.idleTitle, isPortrait && { fontSize: 24 }]}>DRIVE THROUGH TO EXIT</Text>
+        <Text style={[styles.idleTitle, isPortrait && { fontSize: 22 }]}>DRIVE THROUGH TO EXIT</Text>
         <Text style={[styles.idleSub, isPortrait && { fontSize: 13 }]}>Automatic Number Plate Recognition Active</Text>
 
         <View style={styles.idleStatusRow}>
@@ -115,13 +131,22 @@ function IdleScreen({ error, isConnected, gateId }) {
       </View>
 
       <LiveClock isPortrait={isPortrait} />
+
+      {/* Powered by SaNDS Lab Footer Branding */}
+      {showPoweredBy !== false && (
+        <View style={styles.footerPoweredBy}>
+          <Text style={styles.footerPoweredByText}>
+            Powered by <Text style={styles.footerPoweredByBrand}>SaNDS Lab</Text>
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
 
 // ── FREE EXIT Screen ─────────────────────────────────────────────────────────
 
-function FreeExitScreen({ data, isPaid }) {
+function FreeExitScreen({ data, isPaid, companyLogo, companyName, showPoweredBy }) {
   const { width, height } = useWindowDimensions();
   const isPortrait = height > width;
 
@@ -155,6 +180,13 @@ function FreeExitScreen({ data, isPaid }) {
       <View style={styles.freeGlow} />
 
       <Animated.View style={[styles.freeContent, { opacity: fadeIn, transform: [{ translateY: slideUp }] }]}>
+        {/* Top Header with Brand Logo & Status Banner */}
+        {companyLogo && (
+          <View style={styles.headerLogoWrap}>
+            <Image source={{ uri: companyLogo }} style={styles.headerLogoImg} resizeMode="contain" />
+          </View>
+        )}
+
         {/* Top status bar */}
         <Animated.View style={[styles.statusBanner, { backgroundColor: gateColor }]}>
           <Text style={[styles.statusBannerText, isPortrait && { fontSize: 16 }]}>{statusMsg}</Text>
@@ -219,13 +251,22 @@ function FreeExitScreen({ data, isPaid }) {
           </View>
         </ScrollView>
       </Animated.View>
+
+      {/* Powered by SaNDS Lab Footer Branding */}
+      {showPoweredBy !== false && (
+        <View style={styles.footerPoweredBy}>
+          <Text style={styles.footerPoweredByText}>
+            Powered by <Text style={styles.footerPoweredByBrand}>SaNDS Lab</Text>
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
 
 // ── PAYMENT REQUIRED Screen ──────────────────────────────────────────────────
 
-function PaymentScreen({ data, backendUrl }) {
+function PaymentScreen({ data, backendUrl, companyLogo, companyName, showPoweredBy }) {
   const { width, height } = useWindowDimensions();
   const isPortrait = height > width;
 
@@ -261,6 +302,13 @@ function PaymentScreen({ data, backendUrl }) {
       <View style={styles.payGlow} />
 
       <Animated.View style={[styles.payContent, { opacity: fadeIn }]}>
+        {/* Top Header with Brand Logo if available */}
+        {companyLogo && (
+          <View style={styles.headerLogoWrap}>
+            <Image source={{ uri: companyLogo }} style={styles.headerLogoImg} resizeMode="contain" />
+          </View>
+        )}
+
         {/* Top alert bar */}
         <Animated.View style={[styles.payAlertBar, { transform: [{ scale: alertPulse }] }]}>
           <Text style={[styles.payAlertText, isPortrait && { fontSize: 13 }]}>
@@ -355,6 +403,15 @@ function PaymentScreen({ data, backendUrl }) {
           </View>
         </ScrollView>
       </Animated.View>
+
+      {/* Powered by SaNDS Lab Footer Branding */}
+      {showPoweredBy !== false && (
+        <View style={styles.footerPoweredBy}>
+          <Text style={styles.footerPoweredByText}>
+            Powered by <Text style={styles.footerPoweredByBrand}>SaNDS Lab</Text>
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -445,21 +502,45 @@ export default function KioskScreen({ navigation, route }) {
   };
 
   const isPaid = displayData?.payment_status === 'paid' || displayData?.status === 'PAID';
+  const companyLogo = data?.company_logo || displayData?.company_logo || null;
+  const companyName = data?.company_name || displayData?.company_name || null;
+  const showPoweredBy = data?.show_powered_by !== undefined 
+    ? data.show_powered_by 
+    : (displayData?.show_powered_by !== undefined ? displayData.show_powered_by : true);
 
   return (
     <TouchableOpacity style={styles.root} onPress={handleScreenTap} activeOpacity={1}>
       <StatusBar hidden />
 
       {displayState === 'IDLE' && (
-        <IdleScreen error={error} isConnected={isConnected} gateId={gateId} />
+        <IdleScreen
+          error={error}
+          isConnected={isConnected}
+          gateId={gateId}
+          companyLogo={companyLogo}
+          companyName={companyName}
+          showPoweredBy={showPoweredBy}
+        />
       )}
 
       {displayState === 'FREE_EXIT' && displayData && (
-        <FreeExitScreen data={displayData} isPaid={isPaid} />
+        <FreeExitScreen
+          data={displayData}
+          isPaid={isPaid}
+          companyLogo={companyLogo}
+          companyName={companyName}
+          showPoweredBy={showPoweredBy}
+        />
       )}
 
       {displayState === 'PAYMENT_REQUIRED' && displayData && (
-        <PaymentScreen data={displayData} backendUrl={backendUrl} />
+        <PaymentScreen
+          data={displayData}
+          backendUrl={backendUrl}
+          companyLogo={companyLogo}
+          companyName={companyName}
+          showPoweredBy={showPoweredBy}
+        />
       )}
 
       {/* Connection indicator pill */}
@@ -507,7 +588,7 @@ const styles = StyleSheet.create({
     bottom: 'auto',
     right: 'auto',
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 14,
   },
   clockTime: {
     color: 'rgba(255,255,255,0.7)',
@@ -525,6 +606,69 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  // Brand Logo on Top of Scanning Icon
+  topBrandLogoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+    maxWidth: 260,
+    height: 60,
+  },
+  topBrandLogo: {
+    width: 220,
+    height: 56,
+  },
+  topBrandLogoPortrait: {
+    width: 170,
+    height: 48,
+  },
+  topBrandName: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    textAlign: 'center',
+    textShadowColor: 'rgba(37,99,235,0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
+
+  // Header Logo in Active Screens
+  headerLogoWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  headerLogoImg: {
+    width: 160,
+    height: 40,
+  },
+
+  // Footer "Powered By SaNDS Lab"
+  footerPoweredBy: {
+    position: 'absolute',
+    bottom: 10,
+    alignSelf: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    zIndex: 90,
+  },
+  footerPoweredByText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 10,
+    letterSpacing: 0.6,
+    fontWeight: '500',
+  },
+  footerPoweredByBrand: {
+    color: '#60a5fa',
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+
   // IDLE
   idleScreen: { backgroundColor: '#050b18', justifyContent: 'center', alignItems: 'center', padding: 20 },
   orb1: {
@@ -537,15 +681,15 @@ const styles = StyleSheet.create({
     borderRadius: 150, backgroundColor: 'rgba(139,92,246,0.05)',
     bottom: -80, right: -80,
   },
-  idleContent: { alignItems: 'center', gap: 16 },
+  idleContent: { alignItems: 'center', gap: 12 },
   idleIconWrapper: {
-    width: 160, height: 160, borderRadius: 80,
+    width: 150, height: 150, borderRadius: 75,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 2, borderColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center', alignItems: 'center',
     overflow: 'hidden',
   },
-  idleIcon: { fontSize: 72 },
+  idleIcon: { fontSize: 64 },
   scanLine: {
     position: 'absolute',
     left: 0, right: 0, height: 2,
@@ -554,7 +698,7 @@ const styles = StyleSheet.create({
   },
   idleTitle: {
     color: '#e2e8f0',
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: '900',
     letterSpacing: 3,
     textAlign: 'center',
@@ -565,7 +709,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.5,
   },
-  idleStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  idleStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
   idleStatus: { fontSize: 13, fontWeight: '600' },
 
@@ -576,7 +720,7 @@ const styles = StyleSheet.create({
     top: -200, left: -200, right: -200, bottom: -200,
     backgroundColor: 'rgba(22,163,74,0.04)',
   },
-  freeContent: { flex: 1, padding: 16 },
+  freeContent: { flex: 1, padding: 14 },
   statusBanner: {
     padding: 12,
     borderRadius: 12,

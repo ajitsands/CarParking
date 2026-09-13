@@ -6,14 +6,17 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import GateManagementSection from '../components/gate/GateManagementSection';
 
 export default function SettingsPage() {
   const { refreshSettings } = useSettings();
+  const { isSuperadmin, user } = useAuth();
   const [formData, setFormData] = useState({
     company_name: '',
     company_subtitle: '',
     company_logo: '',
+    show_powered_by: '1',
     timezone: 'Asia/Bahrain',
     date_format: 'DD/MM/YYYY',
     currency_code: 'BHD',
@@ -1961,10 +1964,72 @@ export default function SettingsPage() {
                       <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoUpload} />
                     </label>
                     <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                      PNG, JPG, or SVG recommended
+                      PNG, JPG, or SVG recommended (Used in Mobile Kiosk & Web App)
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Super Admin "Powered by SaNDS Lab" Toggle */}
+              <div className="form-group" style={{
+                marginTop: '16px',
+                padding: '12px 14px',
+                background: 'var(--bg-input, #f8fafc)',
+                border: '1px solid var(--border-color, #e2e8f0)',
+                borderRadius: '8px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <label className="form-label" style={{ marginBottom: 0, fontWeight: 700, fontSize: '0.82rem' }}>
+                        "Powered By SaNDS Lab" Footer Branding
+                      </label>
+                      <span className="badge badge-purple" style={{ fontSize: '0.65rem', padding: '1px 6px' }}>
+                        Super Admin Option
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '3px' }}>
+                      Enable or hide the "Powered By SaNDS Lab" attribution in the Web Footer and Mobile Display Board app.
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      type="button"
+                      disabled={!isSuperadmin}
+                      onClick={() => {
+                        const currentVal = formData.show_powered_by !== '0' && formData.show_powered_by !== 'false' && formData.show_powered_by !== false;
+                        setFormData({ ...formData, show_powered_by: currentVal ? '0' : '1' });
+                      }}
+                      style={{
+                        padding: '6px 14px',
+                        fontSize: '0.76rem',
+                        fontWeight: 700,
+                        borderRadius: '6px',
+                        border: '1px solid var(--border-color)',
+                        cursor: isSuperadmin ? 'pointer' : 'not-allowed',
+                        background: (formData.show_powered_by !== '0' && formData.show_powered_by !== 'false' && formData.show_powered_by !== false) ? '#22c55e' : '#64748b',
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                      }}
+                    >
+                      {(formData.show_powered_by !== '0' && formData.show_powered_by !== 'false' && formData.show_powered_by !== false) ? (
+                        <>✓ Shown (Enabled)</>
+                      ) : (
+                        <>✕ Hidden (Disabled)</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+                {!isSuperadmin && (
+                  <div style={{ fontSize: '0.68rem', color: 'var(--status-amber, #d97706)', marginTop: '6px' }}>
+                    * Log in as Super Admin to toggle this branding option on or off.
+                  </div>
+                )}
               </div>
             </div>
           </div>
