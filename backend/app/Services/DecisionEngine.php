@@ -100,41 +100,21 @@ class DecisionEngine {
         $status = $session['status'];
         $plate = $session['plate_number'];
 
-        if ($status === 'VALIDATED' || $status === 'VALIDATED_FREE') {
-            return [
-                'action'       => 'ALLOW_EXIT',
-                'decision'     => 'VALIDATED_FREE',
-                'barrier_open' => true,
-                'amount_due'   => 0.000,
-                'message'      => 'Visit Validated: Free Parking. Have a safe journey!'
-            ];
-        }
-
-        if ($status === 'PAID') {
-            return [
-                'action'       => 'ALLOW_EXIT',
-                'decision'     => 'PAYMENT_CONFIRMED',
-                'barrier_open' => true,
-                'amount_due'   => 0.000,
-                'message'      => 'Payment Confirmed: Thank you. Barrier opening.'
-            ];
-        }
-
-        // Check if vehicle is Whitelisted
+        // 1. Check if vehicle is Whitelisted / Staff / Emergency
         $db = Database::getInstance();
         $stmt = $db->prepare("SELECT * FROM vehicles WHERE plate_number = ? AND access_status = 'whitelisted' LIMIT 1");
         $stmt->execute([$plate]);
-        if ($stmt->fetch()) {
+        if ($stmt->fetch() || ($session['validation_method'] ?? '') === 'whitelisted' || ($session['validation_method'] ?? '') === 'emergency') {
             return [
                 'action'       => 'ALLOW_EXIT',
                 'decision'     => 'WHITELIST_EXIT',
                 'barrier_open' => true,
                 'amount_due'   => 0.000,
-                'message'      => 'Whitelisted Vehicle: Authorized exit.'
+                'message'      => 'Authorized / Whitelisted Vehicle: Authorized exit.'
             ];
         }
 
-        // Check if vehicle has an active Prepaid Pass
+        // 2. Check if vehicle has an active Prepaid Pass
         $prepaidPass = \App\Services\PrepaidPassService::getActivePassForPlate($plate);
         if ($prepaidPass) {
             return [
@@ -146,26 +126,42 @@ class DecisionEngine {
             ];
         }
 
-        // Calculate latest tariff
-        $calc = TariffCalculator::calculate($session);
-        if ($calc['net_amount'] <= 0.000) {
+        // 3. Paid Sessions (Overstay fee or regular fee paid)
+        if ($status === 'PAID' || ($session['payment_status'] ?? '') === 'paid') {
             return [
                 'action'       => 'ALLOW_EXIT',
-                'decision'     => 'WITHIN_GRACE_PERIOD',
+                'decision'     => 'PAYMENT_CONFIRMED',
                 'barrier_open' => true,
                 'amount_due'   => 0.000,
-                'message'      => 'Exiting within free grace period. No payment required.'
+                'message'      => 'Payment Confirmed: Thank you. Barrier opening.'
             ];
         }
 
-        // Requires payment
+        // 4. Calculate Live Tariff (respects validation free allowance vs overstay)
+        $calc = TariffCalculator::calculate($session);
+        if ($calc['net_amount'] <= 0.000) {
+            $isVal = ($status === 'VALIDATED' || !empty($session['validation_method']) && $session['validation_method'] !== 'none');
+            return [
+                'action'       => 'ALLOW_EXIT',
+                'decision'     => $isVal ? 'VALIDATED_FREE' : 'WITHIN_GRACE_PERIOD',
+                'barrier_open' => true,
+                'amount_due'   => 0.000,
+                'message'      => $isVal ? 'Visit Validated: Free Parking. Have a safe journey!' : 'Exiting within free grace period. No payment required.'
+            ];
+        }
+
+        // 5. Payment Required (Grace expired or Validated free time exceeded)
+        $msg = !empty($calc['is_overstay']) 
+            ? "Payment required for parking beyond validated free allowance. Amount due: {$calc['formatted_net']}"
+            : "Payment required before exit. Amount due: {$calc['formatted_net']}";
+
         return [
             'action'       => 'PAYMENT_REQUIRED',
             'decision'     => 'CHARGING',
             'barrier_open' => false,
             'amount_due'   => $calc['net_amount'],
             'tariff_data'  => $calc,
-            'message'      => 'Payment required before exit. Please scan QR on display or pay cashier.'
+            'message'      => $msg
         ];
     }
 }

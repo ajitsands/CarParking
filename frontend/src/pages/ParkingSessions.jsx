@@ -734,13 +734,14 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
               }
 
               if (isCharging) {
+                const isOverstay = Boolean(sess.validation_method && sess.validation_method !== 'none');
                 return (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--status-amber)' }}>
-                      Charging Active
+                      {isOverstay ? '⚠️ Overstay Charge' : 'Charging Active'}
                     </span>
                     <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                      Exceeded {graceLimit}m Limit
+                      {sess.allowed_duration_label || `Exceeded ${graceLimit}m Limit`}
                     </span>
                   </div>
                 );
@@ -990,7 +991,9 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
                     {selectedSession.session?.status === 'VALIDATED' 
                       ? '✓ Free Parking (Hospital Validated)'
                       : selectedSession.session?.status === 'CHARGING'
-                      ? '⚠️ Grace Limit Expired (Chargeable)'
+                      ? (selectedSession.session?.validation_method && selectedSession.session?.validation_method !== 'none'
+                          ? `⚠️ Validated Free Period Exceeded (${selectedSession.session?.charged_duration_minutes || 0}m Chargeable)`
+                          : '⚠️ Grace Limit Expired (Chargeable)')
                       : `${selectedSession.session?.remaining_free_minutes || 0} mins remaining free`}
                   </div>
                 </div>

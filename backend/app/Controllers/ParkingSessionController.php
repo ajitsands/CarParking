@@ -216,39 +216,38 @@ class ParkingSessionController extends Controller {
 
             // If session is still active (no exit time)
             if (empty($sess['exit_time'])) {
+                $calc = TariffCalculator::calculate($sess);
+                $sess['total_duration_minutes'] = $calc['total_minutes'];
+                $sess['charged_duration_minutes'] = $calc['chargeable_minutes'];
+                $sess['net_amount'] = $calc['net_amount'];
+                $sess['formatted_amount'] = $calc['formatted_net'];
+
                 // If VALIDATION_PENDING: check if duration has exceeded admin grace minutes OR deadline passed
                 if ($sess['status'] === 'VALIDATION_PENDING') {
                     $deadlineTs = !empty($sess['validation_deadline']) ? strtotime($sess['validation_deadline']) : ($entryTs + ($adminGraceMinutes * 60));
-                    if ($elapsedMinutes >= $adminGraceMinutes || $nowTs >= $deadlineTs) {
+                    if ($elapsedMinutes >= $adminGraceMinutes || $nowTs >= $deadlineTs || $calc['chargeable_minutes'] > 0) {
                         // Grace period expired without validation -> flip to CHARGING!
                         $sess['status'] = 'CHARGING';
-                        $calc = TariffCalculator::calculate($sess);
-                        $sess['total_duration_minutes'] = $calc['total_minutes'];
-                        $sess['charged_duration_minutes'] = $calc['chargeable_minutes'];
-                        $sess['net_amount'] = $calc['net_amount'];
-                        $sess['formatted_amount'] = $calc['formatted_net'];
-
                         $db->prepare("UPDATE parking_sessions SET status = 'CHARGING', total_duration_minutes = ?, charged_duration_minutes = ?, net_amount = ? WHERE id = ?")
                            ->execute([$calc['total_minutes'], $calc['chargeable_minutes'], $calc['net_amount'], $sess['id']]);
                     } else {
-                        // Still within free validation grace period
+                        $sess['charged_duration_minutes'] = 0;
+                        $sess['net_amount'] = 0.000;
+                    }
+                } elseif ($sess['status'] === 'VALIDATED') {
+                    if ($calc['chargeable_minutes'] > 0 && $calc['net_amount'] > 0) {
+                        // Validated free time exceeded -> flip to CHARGING (Overstay)!
+                        $sess['status'] = 'CHARGING';
+                        $db->prepare("UPDATE parking_sessions SET status = 'CHARGING', total_duration_minutes = ?, charged_duration_minutes = ?, net_amount = ? WHERE id = ?")
+                           ->execute([$calc['total_minutes'], $calc['chargeable_minutes'], $calc['net_amount'], $sess['id']]);
+                    } else {
+                        // Still within validated free time
                         $sess['charged_duration_minutes'] = 0;
                         $sess['net_amount'] = 0.000;
                     }
                 } elseif ($sess['status'] === 'CHARGING') {
-                    $calc = TariffCalculator::calculate($sess);
-                    $sess['total_duration_minutes'] = $calc['total_minutes'];
-                    $sess['charged_duration_minutes'] = $calc['chargeable_minutes'];
-                    $sess['net_amount'] = $calc['net_amount'];
-                    $sess['formatted_amount'] = $calc['formatted_net'];
-
-                    // Update DB with latest minutes & fee
                     $db->prepare("UPDATE parking_sessions SET total_duration_minutes = ?, charged_duration_minutes = ?, net_amount = ? WHERE id = ?")
                        ->execute([$calc['total_minutes'], $calc['chargeable_minutes'], $calc['net_amount'], $sess['id']]);
-                } elseif ($sess['status'] === 'VALIDATED') {
-                    // Validated patient / visitor: Duration is tracked, but fee is waived 0.000
-                    $sess['charged_duration_minutes'] = 0;
-                    $sess['net_amount'] = 0.000;
                 }
             } else {
                 // Completed session with exit time
@@ -256,14 +255,17 @@ class ParkingSessionController extends Controller {
             }
 
             $valInfo = $validationsMap[(int)$sess['id']] ?? null;
-            $freeMinutesGranted = $valInfo ? (int)$valInfo['free_minutes_granted'] : null;
+            $freeMinutesGranted = $valInfo ? (int)$valInfo['free_minutes_granted'] : (!empty($sess['grace_period_minutes']) ? (int)$sess['grace_period_minutes'] : null);
+            $effectiveFree = ($freeMinutesGranted && $freeMinutesGranted > 0) ? $freeMinutesGranted : $adminGraceMinutes;
 
-            $deadlineTs = !empty($sess['validation_deadline']) ? strtotime($sess['validation_deadline']) : ($entryTs + ($adminGraceMinutes * 60));
+            $deadlineTs = !empty($sess['validation_deadline']) ? strtotime($sess['validation_deadline']) : ($entryTs + ($effectiveFree * 60));
             $remainingFreeMinutes = max(0, (int)round(($deadlineTs - $nowTs) / 60));
 
-            $allowedFormatted = $formatDurationString($adminGraceMinutes);
+            $allowedFormatted = $formatDurationString($effectiveFree);
             $allowedDurationLabel = "{$allowedFormatted} (Grace Counter)";
-            $allowedHoursLabel = ($adminGraceMinutes >= 60) ? (round($adminGraceMinutes / 60, 1) . ' hrs') : ($adminGraceMinutes . ' mins');
+            $allowedHoursLabel = ($effectiveFree >= 60) ? (round($effectiveFree / 60, 1) . ' hrs') : ($effectiveFree . ' mins');
+
+            $isValMethod = !empty($sess['validation_method']) && $sess['validation_method'] !== 'none';
 
             if ($sess['status'] === 'VALIDATED') {
                 if (!empty($sess['validation_method']) && in_array($sess['validation_method'], ['whitelisted', 'emergency'])) {
@@ -279,8 +281,14 @@ class ParkingSessionController extends Controller {
                     $allowedHoursLabel = "Fee Waived";
                 }
             } elseif ($sess['status'] === 'CHARGING') {
-                $allowedDurationLabel = "Grace expired ({$allowedFormatted} limit)";
-                $allowedHoursLabel = "{$adminGraceMinutes} mins limit (Expired)";
+                if ($isValMethod && $freeMinutesGranted && $freeMinutesGranted > 0) {
+                    $valFormatted = $formatDurationString($freeMinutesGranted);
+                    $allowedDurationLabel = "Overstayed ({$valFormatted} free limit exceeded)";
+                    $allowedHoursLabel = ($freeMinutesGranted >= 60) ? (round($freeMinutesGranted / 60, 1) . ' hrs (Overstay)') : ($freeMinutesGranted . ' mins (Overstay)');
+                } else {
+                    $allowedDurationLabel = "Grace expired ({$allowedFormatted} limit)";
+                    $allowedHoursLabel = "{$adminGraceMinutes} mins limit (Expired)";
+                }
                 $remainingFreeMinutes = 0;
             } elseif ($sess['status'] === 'VALIDATION_PENDING') {
                 $allowedDurationLabel = "{$allowedFormatted} counter limit";
@@ -288,7 +296,7 @@ class ParkingSessionController extends Controller {
             }
 
             $sess['admin_grace_minutes'] = $adminGraceMinutes;
-            $sess['allowed_duration_minutes'] = ($sess['status'] === 'VALIDATED' && $freeMinutesGranted) ? $freeMinutesGranted : $adminGraceMinutes;
+            $sess['allowed_duration_minutes'] = $effectiveFree;
             $sess['allowed_duration_label'] = $allowedDurationLabel;
             $sess['allowed_hours_label'] = $allowedHoursLabel;
             $sess['remaining_free_minutes'] = $remainingFreeMinutes;
@@ -327,7 +335,8 @@ class ParkingSessionController extends Controller {
         $validation = $stmtVal->fetch();
 
         $adminGraceMinutes = TariffCalculator::getAdminGraceMinutes();
-        $freeMinutesGranted = $validation ? (int)($validation['free_minutes_granted'] ?? 0) : null;
+        $freeMinutesGranted = $validation ? (int)($validation['free_minutes_granted'] ?? 0) : (!empty($session['grace_period_minutes']) ? (int)$session['grace_period_minutes'] : null);
+        $effectiveFree = ($freeMinutesGranted && $freeMinutesGranted > 0) ? $freeMinutesGranted : $adminGraceMinutes;
 
         $formatDurationString = function(int $mins) {
             if ($mins <= 0) return "0 Minutes";
@@ -340,12 +349,27 @@ class ParkingSessionController extends Controller {
             return "{$hrs} Hours {$rem} Mins ({$mins} mins)";
         };
 
-        $allowedFormatted = $formatDurationString($adminGraceMinutes);
+        $allowedFormatted = $formatDurationString($effectiveFree);
         $allowedDurationLabel = "{$allowedFormatted} (Configured Grace Period Counter)";
-        $allowedHoursLabel = ($adminGraceMinutes >= 60) ? (round($adminGraceMinutes / 60, 1) . ' Hours') : ($adminGraceMinutes . ' Minutes');
+        $allowedHoursLabel = ($effectiveFree >= 60) ? (round($effectiveFree / 60, 1) . ' Hours') : ($effectiveFree . ' Minutes');
 
-        $deadlineTs = !empty($session['validation_deadline']) ? strtotime($session['validation_deadline']) : ($entryTs + ($adminGraceMinutes * 60));
+        $deadlineTs = !empty($session['validation_deadline']) ? strtotime($session['validation_deadline']) : ($entryTs + ($effectiveFree * 60));
         $remainingFreeMinutes = max(0, (int)round(($deadlineTs - $nowTs) / 60));
+
+        // Live calculation
+        $tariff = TariffCalculator::calculate($session);
+        if ($tariff['chargeable_minutes'] > 0 && $tariff['net_amount'] > 0 && empty($session['exit_time'])) {
+            if ($session['status'] === 'VALIDATED' || $session['status'] === 'VALIDATION_PENDING') {
+                $session['status'] = 'CHARGING';
+                $db->prepare("UPDATE parking_sessions SET status = 'CHARGING', total_duration_minutes = ?, charged_duration_minutes = ?, net_amount = ? WHERE id = ?")
+                   ->execute([$tariff['total_minutes'], $tariff['chargeable_minutes'], $tariff['net_amount'], $session['id']]);
+            }
+        }
+
+        $session['charged_duration_minutes'] = $tariff['chargeable_minutes'];
+        $session['net_amount'] = $tariff['net_amount'];
+
+        $isValMethod = !empty($session['validation_method']) && $session['validation_method'] !== 'none';
 
         if ($session['status'] === 'VALIDATED') {
             if (!empty($session['validation_method']) && in_array($session['validation_method'], ['whitelisted', 'emergency'])) {
@@ -361,13 +385,19 @@ class ParkingSessionController extends Controller {
                 $allowedHoursLabel = "Free Parking";
             }
         } elseif ($session['status'] === 'CHARGING') {
-            $allowedDurationLabel = "Grace period expired ({$allowedFormatted} limit)";
-            $allowedHoursLabel = "{$adminGraceMinutes} Minutes Limit (Expired)";
+            if ($isValMethod && $freeMinutesGranted && $freeMinutesGranted > 0) {
+                $valFormatted = $formatDurationString($freeMinutesGranted);
+                $allowedDurationLabel = "Overstayed ({$valFormatted} Free limit exceeded)";
+                $allowedHoursLabel = ($freeMinutesGranted >= 60) ? (round($freeMinutesGranted / 60, 1) . ' Hours (Overstay)') : ($freeMinutesGranted . ' Minutes (Overstay)');
+            } else {
+                $allowedDurationLabel = "Grace period expired ({$allowedFormatted} limit)";
+                $allowedHoursLabel = "{$adminGraceMinutes} Minutes Limit (Expired)";
+            }
             $remainingFreeMinutes = 0;
         }
 
         $session['admin_grace_minutes'] = $adminGraceMinutes;
-        $session['allowed_duration_minutes'] = ($session['status'] === 'VALIDATED' && $freeMinutesGranted) ? $freeMinutesGranted : $adminGraceMinutes;
+        $session['allowed_duration_minutes'] = $effectiveFree;
         $session['allowed_duration_label'] = $allowedDurationLabel;
         $session['allowed_hours_label'] = $allowedHoursLabel;
         $session['remaining_free_minutes'] = $remainingFreeMinutes;

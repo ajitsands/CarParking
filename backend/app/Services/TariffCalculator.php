@@ -21,7 +21,7 @@ class TariffCalculator {
         \App\Helpers\TimezoneHelper::init();
         $adminGraceMinutes = self::getAdminGraceMinutes();
 
-        $entryTs = strtotime($session['entry_time']);
+        $entryTs = strtotime($session['entry_time'] ?? 'now');
         $exitTs = $exitTimeStr ? strtotime($exitTimeStr) : strtotime(\App\Helpers\TimezoneHelper::now());
 
         if ($exitTs < $entryTs) {
@@ -30,16 +30,14 @@ class TariffCalculator {
 
         $totalMinutes = max(0, (int)round(($exitTs - $entryTs) / 60));
 
-        // For active sessions, always use active admin-configured grace period
-        $graceMinutes = empty($session['exit_time']) 
-            ? $adminGraceMinutes 
-            : (isset($session['grace_period_minutes']) && $session['grace_period_minutes'] > 0 ? (int)$session['grace_period_minutes'] : $adminGraceMinutes);
+        $valMethod = $session['validation_method'] ?? 'none';
+        $plate = $session['plate_number'] ?? '';
 
-        // If session is already validated or whitelisted, rate is 0
-        if ($session['status'] === 'VALIDATED') {
+        // 1. Unlimited Free: Whitelisted Vehicles or Emergency
+        if ($valMethod === 'whitelisted' || $valMethod === 'emergency' || ($session['access_status'] ?? '') === 'whitelisted') {
             return [
                 'total_minutes'     => $totalMinutes,
-                'grace_minutes'     => $graceMinutes,
+                'grace_minutes'     => $totalMinutes,
                 'chargeable_minutes'=> 0,
                 'slots'             => 0,
                 'rate_per_slot'     => 0.000,
@@ -49,16 +47,67 @@ class TariffCalculator {
                 'formatted_net'     => CurrencyHelper::format(0.000),
                 'currency'          => CurrencyHelper::getConfig()['code'],
                 'is_free'           => true,
-                'reason'            => 'Visitor / Patient appointment validated'
+                'reason'            => ($valMethod === 'emergency') ? 'Emergency vehicle authorized (100% Free)' : 'Whitelisted vehicle authorized (100% Free)'
             ];
         }
 
-        // Check if vehicle has an active Prepaid Parking Pass
-        $activePass = \App\Services\PrepaidPassService::getActivePassForPlate($session['plate_number'] ?? '');
-        if ($activePass) {
+        // 2. Active Prepaid Parking Pass
+        if ($plate) {
+            $activePass = \App\Services\PrepaidPassService::getActivePassForPlate($plate);
+            if ($activePass) {
+                return [
+                    'total_minutes'     => $totalMinutes,
+                    'grace_minutes'     => $totalMinutes,
+                    'chargeable_minutes'=> 0,
+                    'slots'             => 0,
+                    'rate_per_slot'     => 0.000,
+                    'gross_amount'      => 0.000,
+                    'discount'          => 0.000,
+                    'net_amount'        => 0.000,
+                    'formatted_net'     => CurrencyHelper::format(0.000),
+                    'currency'          => CurrencyHelper::getConfig()['code'],
+                    'is_free'           => true,
+                    'is_prepaid'        => true,
+                    'pass_code'         => $activePass['pass_code'],
+                    'reason'            => "Active Prepaid Parking Pass ({$activePass['pass_code']})"
+                ];
+            }
+        }
+
+        // 3. Determine Granted Free Allowance Minutes (Grace / Validation)
+        $freeMinutes = 0;
+        $isValidated = ($session['status'] === 'VALIDATED') || (!empty($valMethod) && $valMethod !== 'none');
+
+        if (!empty($session['grace_period_minutes']) && (int)$session['grace_period_minutes'] > 0) {
+            $freeMinutes = (int)$session['grace_period_minutes'];
+        } elseif (!empty($session['free_minutes_granted']) && (int)$session['free_minutes_granted'] > 0) {
+            $freeMinutes = (int)$session['free_minutes_granted'];
+        } elseif ($isValidated && !empty($session['id'])) {
+            try {
+                $db = Database::getInstance();
+                $stmtVal = $db->prepare("SELECT free_minutes_granted FROM visitor_validations WHERE session_id = ? ORDER BY id DESC LIMIT 1");
+                $stmtVal->execute([(int)$session['id']]);
+                $valMins = $stmtVal->fetchColumn();
+                if ($valMins !== false && (int)$valMins > 0) {
+                    $freeMinutes = (int)$valMins;
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        // If no custom validation minutes found, fallback to system grace period
+        if ($freeMinutes <= 0) {
+            $freeMinutes = $adminGraceMinutes;
+        }
+
+        // 4. If within granted free minutes (e.g. 5 hours / 300 mins or 30 mins grace), parking is 100% Free!
+        if ($totalMinutes <= $freeMinutes) {
+            $label = $isValidated 
+                ? "Within hospital validated free period ({$freeMinutes} mins)" 
+                : "Within grace period ({$freeMinutes} mins)";
+
             return [
                 'total_minutes'     => $totalMinutes,
-                'grace_minutes'     => $graceMinutes,
+                'grace_minutes'     => $freeMinutes,
                 'chargeable_minutes'=> 0,
                 'slots'             => 0,
                 'rate_per_slot'     => 0.000,
@@ -68,43 +117,25 @@ class TariffCalculator {
                 'formatted_net'     => CurrencyHelper::format(0.000),
                 'currency'          => CurrencyHelper::getConfig()['code'],
                 'is_free'           => true,
-                'is_prepaid'        => true,
-                'pass_code'         => $activePass['pass_code'],
-                'reason'            => "Active Prepaid Parking Pass ({$activePass['pass_code']})"
+                'reason'            => $label
             ];
         }
 
-        // If vehicle leaves within the grace period (e.g. 5m, 10m, 30m), parking is 100% free!
-        if ($totalMinutes <= $graceMinutes) {
-            return [
-                'total_minutes'     => $totalMinutes,
-                'grace_minutes'     => $graceMinutes,
-                'chargeable_minutes'=> 0,
-                'slots'             => 0,
-                'rate_per_slot'     => 0.000,
-                'gross_amount'      => 0.000,
-                'discount'          => 0.000,
-                'net_amount'        => 0.000,
-                'formatted_net'     => CurrencyHelper::format(0.000),
-                'currency'          => CurrencyHelper::getConfig()['code'],
-                'is_free'           => true,
-                'reason'            => "Within grace period ({$graceMinutes} mins)"
-            ];
-        }
+        // 5. Exceeded Free Duration -> Chargeable Overstay Minutes!
+        $chargeableMinutes = $totalMinutes - $freeMinutes;
 
-        // Fetch configured tariff rates from system settings
+        // Fetch configured tariff rates
         $rates = \App\Services\PrepaidPassService::getTariffRates();
         $ratePerMinute = (float)($rates['rate_per_minute'] ?? 0.005);
         $ratePerHour   = (float)($rates['rate_per_hour'] ?? 0.200);
         $ratePerDay    = (float)($rates['rate_per_day'] ?? 2.000);
         $tariffMode    = $rates['tariff_mode'] ?? 'hourly_daily_cap';
 
-        // Chargeable duration begins after grace period
-        $chargeableMinutes = $totalMinutes - $graceMinutes;
-
         if ($tariffMode === 'per_minute') {
             $gross = round($chargeableMinutes * $ratePerMinute, 3);
-            $reason = "Per-minute billing: {$chargeableMinutes} mins @ " . CurrencyHelper::format($ratePerMinute) . "/min";
+            $reason = $isValidated 
+                ? "Validated for {$freeMinutes} mins. Overstay billing: {$chargeableMinutes} mins @ " . CurrencyHelper::format($ratePerMinute) . "/min"
+                : "Per-minute billing: {$chargeableMinutes} mins @ " . CurrencyHelper::format($ratePerMinute) . "/min";
         } else {
             // Standard Hourly Billing with 24-hour Daily Cap
             $days = (int)floor($chargeableMinutes / 1440);
@@ -115,10 +146,15 @@ class TariffCalculator {
             $hourCharge = ($hours * $ratePerHour > $ratePerDay) ? $ratePerDay : ($hours * $ratePerHour);
             $gross = round($dayCharge + $hourCharge, 3);
 
-            if ($days > 0) {
-                $reason = "Multi-day billing: {$days} days + {$hours} hrs";
+            if ($isValidated) {
+                $valHrs = round($freeMinutes / 60, 1);
+                $reason = "Validated for {$valHrs} hrs free. Overstay fee: " . ($days > 0 ? "{$days} days + {$hours} hrs" : "{$hours} hrs @ " . CurrencyHelper::format($ratePerHour) . "/hr");
             } else {
-                $reason = "Hourly billing: {$hours} hrs @ " . CurrencyHelper::format($ratePerHour) . "/hr (Daily cap: " . CurrencyHelper::format($ratePerDay) . ")";
+                if ($days > 0) {
+                    $reason = "Multi-day billing: {$days} days + {$hours} hrs";
+                } else {
+                    $reason = "Hourly billing: {$hours} hrs @ " . CurrencyHelper::format($ratePerHour) . "/hr (Daily cap: " . CurrencyHelper::format($ratePerDay) . ")";
+                }
             }
         }
 
@@ -127,7 +163,7 @@ class TariffCalculator {
 
         return [
             'total_minutes'     => $totalMinutes,
-            'grace_minutes'     => $graceMinutes,
+            'grace_minutes'     => $freeMinutes,
             'chargeable_minutes'=> $chargeableMinutes,
             'rate_per_minute'   => $ratePerMinute,
             'rate_per_hour'     => $ratePerHour,
@@ -138,6 +174,7 @@ class TariffCalculator {
             'formatted_net'     => CurrencyHelper::format($net),
             'currency'          => CurrencyHelper::getConfig()['code'],
             'is_free'           => false,
+            'is_overstay'       => $isValidated,
             'reason'            => $reason
         ];
     }
