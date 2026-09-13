@@ -23,9 +23,13 @@ export default function StatusBadge({ status }) {
 
     case 'CHARGING':
     case 'PAYMENT_PENDING':
-    case 'BLACKLISTED':
       badgeClass = 'badge-red';
       label = norm === 'CHARGING' ? 'Charging' : norm;
+      break;
+
+    case 'BLACKLISTED':
+      badgeClass = 'badge-red';
+      label = '⛔ Access Denied (Blacklisted)';
       break;
 
     case 'WHITELISTED':

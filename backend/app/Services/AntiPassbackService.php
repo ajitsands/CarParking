@@ -25,7 +25,7 @@ class AntiPassbackService {
         $stmt = $db->prepare("SELECT * FROM parking_sessions 
             WHERE (plate_number = ? OR REPLACE(plate_number, ' ', '') = ?)
             AND exit_time IS NULL 
-            AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED')
+            AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED')
             ORDER BY id ASC");
         $stmt->execute([$plate, $cleanPlate]);
         $activeSessions = $stmt->fetchAll(PDO::FETCH_ASSOC);

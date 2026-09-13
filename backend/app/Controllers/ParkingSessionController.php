@@ -59,7 +59,7 @@ class ParkingSessionController extends Controller {
         // Status Lifecycle Filtering
         if ($status) {
             if ($status === 'CHARGING' || $status === 'INSIDE' || $status === 'ACTIVE') {
-                $where[] = "exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED')";
+                $where[] = "exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED')";
                 if ($status === 'CHARGING' && $insideType === 'charging_only') {
                     $where[] = "(status = 'CHARGING' OR (net_amount > 0 AND payment_status != 'paid'))";
                 }
@@ -131,7 +131,7 @@ class ParkingSessionController extends Controller {
         ];
 
         try {
-            $activeStmt = $db->query("SELECT id, plate_number, status, payment_status, net_amount, entry_time FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED')");
+            $activeStmt = $db->query("SELECT id, plate_number, status, payment_status, net_amount, entry_time FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED')");
             $activeSessions = $activeStmt->fetchAll();
             $insideCounts['total_inside'] = count($activeSessions);
 

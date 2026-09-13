@@ -190,7 +190,7 @@ class HisIntegrationController extends Controller {
         }
 
         // Current real-time occupied count
-        $occupied = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED')")->fetchColumn();
+        $occupied = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED')")->fetchColumn();
         $pending = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status = 'VALIDATION_PENDING'")->fetchColumn();
         $validated = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status IN ('VALIDATED', 'VALIDATED_FREE')")->fetchColumn();
         $charging = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status IN ('CHARGING', 'PAYMENT_PENDING')")->fetchColumn();

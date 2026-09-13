@@ -59,7 +59,7 @@ class VisitorValidationController extends Controller {
 
         if (!$session && $targetPlate) {
             $cleanPlate = preg_replace('/[^A-Za-z0-9]/', '', $targetPlate);
-            $stmtSess = $db->prepare("SELECT * FROM parking_sessions WHERE (plate_number = ? OR REPLACE(plate_number, ' ', '') = ?) AND exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED') ORDER BY id DESC LIMIT 1");
+            $stmtSess = $db->prepare("SELECT * FROM parking_sessions WHERE (plate_number = ? OR REPLACE(plate_number, ' ', '') = ?) AND exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED') ORDER BY id DESC LIMIT 1");
             $stmtSess->execute([$targetPlate, $cleanPlate]);
             $session = $stmtSess->fetch();
         }
@@ -198,7 +198,7 @@ class VisitorValidationController extends Controller {
             $stmt = $db->prepare("SELECT * FROM parking_sessions 
                 WHERE (plate_number = ? OR REPLACE(plate_number, ' ', '') = ? OR REPLACE(plate_number, ' ', '') LIKE ?) 
                 AND exit_time IS NULL 
-                AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED') 
+                AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED') 
                 ORDER BY id DESC LIMIT 1");
             $stmt->execute([$plate, $cleanPlate, "%{$cleanPlate}%"]);
             $session = $stmt->fetch();
@@ -338,7 +338,7 @@ class VisitorValidationController extends Controller {
         $q = trim($params['q'] ?? '');
         $timeFilter = trim($params['time_filter'] ?? 'all');
 
-        $where = ["s.exit_time IS NULL", "s.status NOT IN ('EXIT_COMPLETED', 'CANCELLED')"];
+        $where = ["s.exit_time IS NULL", "s.status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED')"];
         $bindings = [];
 
         if ($q !== '') {

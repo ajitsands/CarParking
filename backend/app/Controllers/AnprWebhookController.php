@@ -69,12 +69,20 @@ class AnprWebhookController extends Controller {
 
             // If Blacklisted -> Deny & keep barrier closed
             if ($decision['action'] === 'DENY') {
-                $sessionCode = 'PARK-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-                $stmtSess = $db->prepare("INSERT INTO parking_sessions (session_code, plate_number, entry_time, entry_gate_id, entry_image_url, entry_confidence, status, validation_deadline, manual_review_reason) VALUES (?, ?, NOW(), ?, ?, ?, 'BLACKLISTED', NOW(), ?)");
+                $sessionCode = 'DENIED-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
+                $stmtSess = $db->prepare("INSERT INTO parking_sessions (session_code, plate_number, entry_time, exit_time, entry_gate_id, entry_image_url, entry_confidence, status, validation_deadline, manual_review_reason) VALUES (?, ?, NOW(), NOW(), ?, ?, ?, 'BLACKLISTED', NOW(), ?)");
                 $stmtSess->execute([$sessionCode, $plate, $gateId, $overviewImage ?: $plateImage, $confidence, $decision['reason']]);
                 $sessId = (int)$db->lastInsertId();
 
                 $db->prepare("UPDATE anpr_events SET session_id = ?, status = 'manual_review' WHERE id = ?")->execute([$sessId, $eventId]);
+
+                // Record Security Audit Log
+                try {
+                    $stmtAudit = $db->prepare("INSERT INTO audit_logs (user_id, username, action, plate_number, start_time, end_time, duration_minutes, entity_type, entity_id, details, ip_address) VALUES (NULL, 'System Security', 'BLACKLIST_ACCESS_DENIED', ?, NOW(), NOW(), 0, 'parking_sessions', ?, ?, ?)");
+                    $clientIp = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+                    $auditDetails = "Access denied for blacklisted vehicle | Gate: {$gateId} | Camera: {$cameraId} | Reason: {$decision['reason']}";
+                    $stmtAudit->execute([$plate, $sessId, $auditDetails, $clientIp]);
+                } catch (\Throwable $e) {}
 
                 $this->success([
                     'barrier_open'    => false,

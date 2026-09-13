@@ -11,8 +11,8 @@ class DashboardController extends Controller {
     public function getMetrics(): void {
         $db = Database::getInstance();
 
-        // 1. Total inside
-        $inside = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED')")->fetchColumn();
+        // 1. Total inside (Physically parked vehicles)
+        $inside = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED')")->fetchColumn();
 
         // 2. Pending validation
         $pending = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status = 'VALIDATION_PENDING'")->fetchColumn();
@@ -98,7 +98,7 @@ class DashboardController extends Controller {
         $recentEvents = $stmtEvents->fetchAll();
 
         // 9. Active sessions (latest 10)
-        $stmtSessions = $db->query("SELECT * FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED') ORDER BY id DESC LIMIT 10");
+        $stmtSessions = $db->query("SELECT * FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED') ORDER BY id DESC LIMIT 10");
         $activeSessions = $stmtSessions->fetchAll();
         $nowTs = time();
         $adminGraceMinutes = \App\Services\TariffCalculator::getAdminGraceMinutes();

@@ -23,7 +23,7 @@ class ReportsController extends Controller {
 
         // 4. Overall Totals
         $totalSessions = (int)$db->query("SELECT COUNT(*) FROM parking_sessions")->fetchColumn();
-        $activeParked = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED')")->fetchColumn();
+        $activeParked = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED')")->fetchColumn();
         $completedSessions = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NOT NULL OR status IN ('EXIT_COMPLETED', 'COMPLETED')")->fetchColumn();
         $totalRevenue = (float)$db->query("SELECT COALESCE(SUM(amount), 0) FROM payments")->fetchColumn();
         $totalValidated = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE status IN ('VALIDATED', 'EXIT_COMPLETED') AND validation_method != 'none'")->fetchColumn();
@@ -122,7 +122,7 @@ class ReportsController extends Controller {
             $isCurrentlyInside = false;
             if ($matchedSession) {
                 $sessStatus = $matchedSession['status'] ?? '';
-                $isCompleted = in_array($sessStatus, ['EXIT_COMPLETED', 'COMPLETED', 'CANCELLED'], true) || !empty($matchedSession['exit_time']);
+                $isCompleted = in_array($sessStatus, ['EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED'], true) || !empty($matchedSession['exit_time']);
                 if (!$isCompleted && !$isExitEvent) {
                     $isCurrentlyInside = true;
                 }
@@ -203,7 +203,7 @@ class ReportsController extends Controller {
         foreach ($rawSessionsReport as $s) {
             $eTs = strtotime($s['entry_time'] ?? '');
             $xTs = !empty($s['exit_time']) ? strtotime($s['exit_time']) : null;
-            $isInside = (empty($s['exit_time']) && !in_array($s['status'] ?? '', ['EXIT_COMPLETED', 'COMPLETED', 'CANCELLED'], true));
+            $isInside = (empty($s['exit_time']) && !in_array($s['status'] ?? '', ['EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED'], true));
             $dur = !empty($s['total_duration_minutes']) 
                 ? (int)$s['total_duration_minutes'] 
                 : ($eTs && $xTs ? max(1, (int)round(($xTs - $eTs) / 60)) : ($isInside && $eTs ? max(0, (int)round((time() - $eTs) / 60)) : null));
@@ -229,20 +229,76 @@ class ReportsController extends Controller {
             ];
         }
 
+        // 6. Blacklist Breach / Denied Entry Security Incidents Report
+        $blWhereClauses = ["(s.status = 'BLACKLISTED' OR v.access_status = 'blacklisted')"];
+        $blQueryParams = [];
+        if (!empty($startDate)) {
+            $blWhereClauses[] = "DATE(s.entry_time) >= :bl_start";
+            $blQueryParams[':bl_start'] = $startDate;
+        }
+        if (!empty($endDate)) {
+            $blWhereClauses[] = "DATE(s.entry_time) <= :bl_end";
+            $blQueryParams[':bl_end'] = $endDate;
+        }
+        $blWhereSql = "WHERE " . implode(" AND ", $blWhereClauses);
+
+        $stmtBlacklist = $db->prepare("SELECT 
+                s.id, 
+                s.session_code, 
+                s.plate_number, 
+                s.entry_time as attempt_time, 
+                s.entry_gate_id as gate_id, 
+                s.entry_image_url as image_url, 
+                s.entry_confidence as confidence, 
+                s.manual_review_reason as reason, 
+                s.status, 
+                v.category, 
+                v.owner_name, 
+                v.block_reason, 
+                v.notes 
+            FROM parking_sessions s 
+            LEFT JOIN vehicles v ON (v.plate_number = s.plate_number OR REPLACE(v.plate_number, ' ', '') = REPLACE(s.plate_number, ' ', ''))
+            {$blWhereSql}
+            ORDER BY s.id DESC LIMIT 200");
+        $stmtBlacklist->execute($blQueryParams);
+        $rawBlacklist = $stmtBlacklist->fetchAll();
+
+        $blacklistAttempts = [];
+        foreach ($rawBlacklist as $bl) {
+            $blacklistAttempts[] = [
+                'id'              => (int)$bl['id'],
+                'session_code'    => $bl['session_code'],
+                'plate_number'    => $bl['plate_number'],
+                'attempt_time'    => $bl['attempt_time'],
+                'gate_id'         => $bl['gate_id'] ?: 'GATE-IN-01',
+                'camera_id'       => 'ANPR-CAM-01',
+                'confidence'      => (float)($bl['confidence'] ?? 99.0),
+                'image_url'       => $bl['image_url'],
+                'reason'          => $bl['reason'] ?: ($bl['block_reason'] ?: 'Blacklisted vehicle security rule'),
+                'security_action' => 'ACCESS_DENIED',
+                'barrier_status'  => 'LOCKED_CLOSED',
+                'category'        => $bl['category'] ?: 'general',
+                'owner_name'      => $bl['owner_name'] ?: 'Unknown / Commercial',
+                'notes'           => $bl['notes']
+            ];
+        }
+
         $this->success([
             'totals' => [
-                'total_sessions'     => $totalSessions,
-                'active_parked'      => $activeParked,
-                'completed_sessions' => $completedSessions,
-                'total_revenue'      => $totalRevenue,
-                'formatted_revenue'  => CurrencyHelper::formatWithSymbol($totalRevenue),
-                'total_validated'    => $totalValidated
+                'total_sessions'       => $totalSessions,
+                'active_parked'        => $activeParked,
+                'completed_sessions'   => $completedSessions,
+                'total_revenue'        => $totalRevenue,
+                'formatted_revenue'    => CurrencyHelper::formatWithSymbol($totalRevenue),
+                'total_validated'      => $totalValidated,
+                'blacklist_attempts'   => count($blacklistAttempts)
             ],
-            'payment_methods'   => $methods,
-            'validation_stats'  => $validationStats,
-            'hourly_traffic'    => $hourlyTraffic,
-            'sessions_report'   => $sessionsReport,
-            'audit_logs'        => $auditLogs
+            'payment_methods'      => $methods,
+            'validation_stats'     => $validationStats,
+            'hourly_traffic'       => $hourlyTraffic,
+            'sessions_report'      => $sessionsReport,
+            'blacklist_attempts'   => $blacklistAttempts,
+            'audit_logs'           => $auditLogs
         ]);
     }
 }

@@ -340,7 +340,7 @@ class DisplayController extends Controller {
         $stmtActive = $db->prepare("SELECT * FROM parking_sessions
             WHERE (plate_number = ? OR REPLACE(plate_number, ' ', '') = ? OR REPLACE(plate_number, ' ', '') LIKE ?)
             AND exit_time IS NULL
-            AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED')
+            AND status NOT IN ('EXIT_COMPLETED', 'COMPLETED', 'CANCELLED', 'BLACKLISTED')
             ORDER BY id DESC LIMIT 1");
         $stmtActive->execute([$plate, $cleanPlate, "%{$cleanPlate}%"]);
         $session = $stmtActive->fetch();

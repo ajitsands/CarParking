@@ -199,6 +199,18 @@ export default function ReportsPage() {
             <CheckCircle2 size={20} />
           </div>
         </div>
+
+        <div className="stat-card" style={{ borderLeft: (totals.blacklist_attempts || 0) > 0 ? '3px solid var(--status-red, #ef4444)' : 'none' }}>
+          <div>
+            <div className="stat-label">Blacklist Breach Attempts</div>
+            <div className="stat-value" style={{ color: (totals.blacklist_attempts || 0) > 0 ? 'var(--status-red, #ef4444)' : 'var(--text-primary)' }}>
+              {totals.blacklist_attempts ?? 0}
+            </div>
+          </div>
+          <div className="stat-icon-wrap" style={{ background: 'rgba(239, 68, 68, 0.12)', color: 'var(--status-red, #ef4444)' }}>
+            <ShieldAlert size={20} />
+          </div>
+        </div>
       </div>
 
       {/* Revenue and Validation Split */}
@@ -389,11 +401,27 @@ export default function ReportsPage() {
           </button>
           <button
             type="button"
+            className={`btn btn-sm ${activeReportTab === 'blacklist' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setActiveReportTab('blacklist')}
+            style={{ 
+              fontSize: '0.78rem', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px', 
+              padding: '6px 14px',
+              color: activeReportTab === 'blacklist' ? '#ffffff' : (report?.blacklist_attempts || []).length > 0 ? '#ef4444' : 'inherit'
+            }}
+          >
+            <ShieldAlert size={14} />
+            🚨 Blacklist Breach Attempts ({(report?.blacklist_attempts || []).length})
+          </button>
+          <button
+            type="button"
             className={`btn btn-sm ${activeReportTab === 'audit' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => setActiveReportTab('audit')}
             style={{ fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 14px' }}
           >
-            <ShieldAlert size={14} />
+            <ShieldCheck size={14} />
             Security & Barrier Audit Logs ({(report?.audit_logs || []).length})
           </button>
         </div>
@@ -547,6 +575,143 @@ export default function ReportsPage() {
           exportFileName="parking_sessions_report"
           searchPlaceholder="Search vehicle sessions by plate, session code, or status..."
           emptyMessage="No parking sessions found for the selected period."
+        />
+      ) : activeReportTab === 'blacklist' ? (
+        /* Dedicated Blacklisted Vehicle Access Attempts Report */
+        <DataTable
+          title="🚨 Blacklisted Vehicle Access Attempts (Security Incidents)"
+          subtitle={`Total denied access attempts: ${(report?.blacklist_attempts || []).length}. All incidents were physically blocked at the boom barrier.`}
+          icon={ShieldAlert}
+          columns={[
+            {
+              key: 'plate_number',
+              label: 'Vehicle Plate',
+              width: '140px',
+              render: (b) => (
+                <div style={{
+                  display: 'inline-block',
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  background: 'rgba(239, 68, 68, 0.08)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  fontFamily: 'var(--font-mono)',
+                  fontWeight: 800,
+                  fontSize: '0.82rem',
+                  color: 'var(--status-red, #ef4444)'
+                }}>
+                  {b.plate_number}
+                </div>
+              )
+            },
+            {
+              key: 'attempt_time',
+              label: 'Attempted At',
+              width: '155px',
+              render: (b) => (
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+                  {b.attempt_time}
+                </span>
+              )
+            },
+            {
+              key: 'gate_id',
+              label: 'Gate / Location',
+              width: '130px',
+              render: (b) => (
+                <span className="badge badge-gray" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem' }}>
+                  {b.gate_id}
+                </span>
+              )
+            },
+            {
+              key: 'confidence',
+              label: 'ANPR Confidence',
+              width: '120px',
+              render: (b) => (
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.76rem', fontWeight: 700, color: 'var(--status-green)' }}>
+                  {b.confidence}%
+                </span>
+              )
+            },
+            {
+              key: 'reason',
+              label: 'Blacklist Reason & Violation Notes',
+              render: (b) => (
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  {b.reason}
+                </span>
+              )
+            },
+            {
+              key: 'security_action',
+              label: 'Access Outcome',
+              width: '160px',
+              render: () => (
+                <span className="badge badge-red" style={{ fontSize: '0.68rem', fontWeight: 800 }}>
+                  ⛔ ACCESS DENIED
+                </span>
+              )
+            },
+            {
+              key: 'barrier_status',
+              label: 'Barrier State',
+              width: '140px',
+              render: () => (
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#dc2626', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  🔒 LOCKED CLOSED
+                </span>
+              )
+            }
+          ]}
+          data={report?.blacklist_attempts || []}
+          loading={loading}
+          exportable={true}
+          exportFileName="blacklist_security_incident_report"
+          searchPlaceholder="Search blacklist incidents by plate, reason, or gate..."
+          emptyMessage="No blacklisted vehicle breach attempts recorded for this period."
+          expandableRowRender={(b) => (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              padding: '10px 14px',
+              background: 'rgba(239, 68, 68, 0.04)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              borderRadius: '6px'
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                <div>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase' }}>Vehicle & Incident Details</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.5 }}>
+                    <div><strong>Owner / Profile:</strong> {b.owner_name}</div>
+                    <div><strong>Category:</strong> {b.category}</div>
+                    <div><strong>Incident Reference:</strong> <span style={{ fontFamily: 'var(--font-mono)' }}>{b.session_code}</span></div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase' }}>Enforcement & Hardware Action</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-primary)', marginTop: '4px', lineHeight: 1.5 }}>
+                    <div><strong>Barrier Relay:</strong> Pulse Blocked (No signal sent)</div>
+                    <div><strong>Boom Barrier:</strong> Held in Down / Locked Position</div>
+                    <div><strong>Slot Impact:</strong> 0 Slots allocated (Vehicle turned away)</div>
+                  </div>
+                </div>
+                {b.notes && (
+                  <div>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase' }}>Security Instructions</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: 1.5 }}>
+                      {b.notes}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          headerActions={
+            <button className="btn btn-outline btn-sm" onClick={() => loadReport()} title="Refresh blacklist report">
+              <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
+            </button>
+          }
         />
       ) : (
         /* Modern DataTable for Security Audit Trail with Expandable Child Rows */
