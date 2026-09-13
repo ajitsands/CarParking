@@ -49,7 +49,12 @@ export default function Sidebar({ activeTab, setActiveTab, onOpenSimulator }) {
     <aside className="sidebar">
       <div className="sidebar-header">
         {settings.company_logo ? (
-          <img src={settings.company_logo} alt="Logo" className="sidebar-brand-logo" />
+          <img 
+            src={settings.company_logo} 
+            alt="Logo" 
+            className="sidebar-brand-logo" 
+            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          />
         ) : (
           <div style={{
             width: '32px',

@@ -150,11 +150,19 @@ class SettingsController extends Controller {
 
             $uploadDir = __DIR__ . '/../../storage/uploads/logo';
             if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
+                @mkdir($uploadDir, 0777, true);
+            }
+
+            $rootUploadDir = __DIR__ . '/../../../storage/uploads/logo';
+            if (!is_dir($rootUploadDir)) {
+                @mkdir($rootUploadDir, 0777, true);
             }
 
             $filename = 'hospital_logo_' . time() . '.' . $ext;
-            file_put_contents($uploadDir . '/' . $filename, $decoded);
+            @file_put_contents($uploadDir . '/' . $filename, $decoded);
+            if (is_dir($rootUploadDir)) {
+                @file_put_contents($rootUploadDir . '/' . $filename, $decoded);
+            }
             $logoUrl = '/storage/uploads/logo/' . $filename;
 
             // Save in settings

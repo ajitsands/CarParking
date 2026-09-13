@@ -63,6 +63,7 @@ export default function LoginPage({ onExploreFeatures }) {
               src={settings.company_logo} 
               alt="Logo" 
               style={{ height: '44px', width: 'auto', margin: '0 auto 10px', display: 'block' }} 
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           ) : (
             <div style={{

@@ -6,8 +6,9 @@
     RewriteRule ^api/(.*)$ backend/public/index.php [QSA,L]
     RewriteRule ^api$ backend/public/index.php [QSA,L]
 
-    # 2. Allow Direct File Downloads
+    # 2. Allow Direct File Downloads & Storage Uploads
     RewriteRule ^downloads/(.*)$ downloads/$1 [L]
+    RewriteRule ^storage/(.*)$ backend/storage/$1 [L]
 
     # 3. Serve existing static files & directories directly
     RewriteCond %{REQUEST_FILENAME} -f [OR]

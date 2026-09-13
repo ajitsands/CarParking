@@ -39,7 +39,12 @@ export default function Navbar({ onOpenPasswordModal }) {
       <div className="topbar-left">
         <div className="topbar-title">
           {settings.company_logo ? (
-            <img src={settings.company_logo} alt="Logo" style={{ height: '28px', width: 'auto', borderRadius: '4px' }} />
+            <img 
+              src={settings.company_logo} 
+              alt="Logo" 
+              style={{ height: '28px', width: 'auto', borderRadius: '4px' }} 
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            />
           ) : (
             <div style={{
               width: '28px',

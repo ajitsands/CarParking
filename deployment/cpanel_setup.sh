@@ -124,8 +124,10 @@ fi
 
 # 6. Ensure Storage & Logs Directories exist with proper permissions
 echo "[+] Setting up writable storage directories..."
-mkdir -p backend/storage/logs backend/storage/security backend/storage/cache
-chmod -R 755 backend/storage 2>/dev/null || true
+mkdir -p backend/storage/logs backend/storage/security backend/storage/cache backend/storage/uploads/logo backend/storage/uploads/anpr_snapshots
+mkdir -p storage/uploads/logo storage/uploads/anpr_snapshots
+chmod -R 777 backend/storage 2>/dev/null || chmod -R 755 backend/storage 2>/dev/null || true
+chmod -R 777 storage 2>/dev/null || chmod -R 755 storage 2>/dev/null || true
 
 # 7. Test Database Connectivity via PHP
 echo "[+] Testing Database Connectivity via PHP..."

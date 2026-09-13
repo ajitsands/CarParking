@@ -1951,6 +1951,7 @@ export default function SettingsPage() {
                       src={formData.company_logo}
                       alt="Logo"
                       style={{ height: '48px', width: 'auto', border: '1px solid var(--border-color)', borderRadius: '6px', padding: '4px' }}
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                   ) : (
                     <div style={{ width: '48px', height: '48px', background: 'var(--bg-input)', border: '1px dashed var(--border-color)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'var(--text-muted)' }}>
