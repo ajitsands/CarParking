@@ -70,6 +70,9 @@ function IdleScreen({ error, isConnected, gateId, companyLogo, companyName, show
   const pulse = useRef(new Animated.Value(1)).current;
   const scanAnim = useRef(new Animated.Value(0)).current;
 
+  const hasValidLogo = Boolean(companyLogo && typeof companyLogo === 'string' && companyLogo.trim().length > 0 && companyLogo.startsWith('http'));
+  const hasValidName = Boolean(!hasValidLogo && companyName && typeof companyName === 'string' && companyName.trim().length > 0);
+
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -96,15 +99,15 @@ function IdleScreen({ error, isConnected, gateId, companyLogo, companyName, show
 
       <View style={styles.idleContent}>
         {/* Hospital / Company Logo on Top Above Scanning Icon */}
-        {companyLogo ? (
+        {hasValidLogo ? (
           <View style={styles.topBrandLogoContainer}>
             <Image
-              source={{ uri: companyLogo }}
+              source={{ uri: companyLogo.trim() }}
               style={[styles.topBrandLogo, isPortrait && styles.topBrandLogoPortrait]}
               resizeMode="contain"
             />
           </View>
-        ) : companyName ? (
+        ) : hasValidName ? (
           <View style={styles.topBrandLogoContainer}>
             <Text style={[styles.topBrandName, isPortrait && { fontSize: 18 }]}>{companyName}</Text>
           </View>
@@ -133,13 +136,13 @@ function IdleScreen({ error, isConnected, gateId, companyLogo, companyName, show
       <LiveClock isPortrait={isPortrait} />
 
       {/* Powered by SaNDS Lab Footer Branding */}
-      {showPoweredBy !== false && (
+      {showPoweredBy !== false ? (
         <View style={styles.footerPoweredBy}>
           <Text style={styles.footerPoweredByText}>
             Powered by <Text style={styles.footerPoweredByBrand}>SaNDS Lab</Text>
           </Text>
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -149,6 +152,8 @@ function IdleScreen({ error, isConnected, gateId, companyLogo, companyName, show
 function FreeExitScreen({ data, isPaid, companyLogo, companyName, showPoweredBy }) {
   const { width, height } = useWindowDimensions();
   const isPortrait = height > width;
+
+  const hasValidLogo = Boolean(companyLogo && typeof companyLogo === 'string' && companyLogo.trim().length > 0 && companyLogo.startsWith('http'));
 
   const fadeIn = useRef(new Animated.Value(0)).current;
   const slideUp = useRef(new Animated.Value(60)).current;
@@ -181,11 +186,11 @@ function FreeExitScreen({ data, isPaid, companyLogo, companyName, showPoweredBy 
 
       <Animated.View style={[styles.freeContent, { opacity: fadeIn, transform: [{ translateY: slideUp }] }]}>
         {/* Top Header with Brand Logo & Status Banner */}
-        {companyLogo && (
+        {hasValidLogo ? (
           <View style={styles.headerLogoWrap}>
-            <Image source={{ uri: companyLogo }} style={styles.headerLogoImg} resizeMode="contain" />
+            <Image source={{ uri: companyLogo.trim() }} style={styles.headerLogoImg} resizeMode="contain" />
           </View>
-        )}
+        ) : null}
 
         {/* Top status bar */}
         <Animated.View style={[styles.statusBanner, { backgroundColor: gateColor }]}>
@@ -235,9 +240,9 @@ function FreeExitScreen({ data, isPaid, companyLogo, companyName, showPoweredBy 
             <View style={styles.amountCard}>
               <Text style={styles.amountLabel}>{amountLabel}</Text>
               <Text style={[styles.amountFree, isPortrait && { fontSize: 42 }]}>{amountDisplay}</Text>
-              {data.tariff_reason && (
+              {Boolean(data?.tariff_reason) ? (
                 <Text style={styles.tariffReason}>{data.tariff_reason}</Text>
-              )}
+              ) : null}
             </View>
 
             {/* Gate graphic */}
@@ -253,13 +258,13 @@ function FreeExitScreen({ data, isPaid, companyLogo, companyName, showPoweredBy 
       </Animated.View>
 
       {/* Powered by SaNDS Lab Footer Branding */}
-      {showPoweredBy !== false && (
+      {showPoweredBy !== false ? (
         <View style={styles.footerPoweredBy}>
           <Text style={styles.footerPoweredByText}>
             Powered by <Text style={styles.footerPoweredByBrand}>SaNDS Lab</Text>
           </Text>
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -269,6 +274,8 @@ function FreeExitScreen({ data, isPaid, companyLogo, companyName, showPoweredBy 
 function PaymentScreen({ data, backendUrl, companyLogo, companyName, showPoweredBy }) {
   const { width, height } = useWindowDimensions();
   const isPortrait = height > width;
+
+  const hasValidLogo = Boolean(companyLogo && typeof companyLogo === 'string' && companyLogo.trim().length > 0 && companyLogo.startsWith('http'));
 
   const fadeIn = useRef(new Animated.Value(0)).current;
   const qrScale = useRef(new Animated.Value(0.8)).current;
@@ -303,11 +310,11 @@ function PaymentScreen({ data, backendUrl, companyLogo, companyName, showPowered
 
       <Animated.View style={[styles.payContent, { opacity: fadeIn }]}>
         {/* Top Header with Brand Logo if available */}
-        {companyLogo && (
+        {hasValidLogo ? (
           <View style={styles.headerLogoWrap}>
-            <Image source={{ uri: companyLogo }} style={styles.headerLogoImg} resizeMode="contain" />
+            <Image source={{ uri: companyLogo.trim() }} style={styles.headerLogoImg} resizeMode="contain" />
           </View>
-        )}
+        ) : null}
 
         {/* Top alert bar */}
         <Animated.View style={[styles.payAlertBar, { transform: [{ scale: alertPulse }] }]}>
@@ -352,7 +359,7 @@ function PaymentScreen({ data, backendUrl, companyLogo, companyName, showPowered
               <Text style={[styles.amountDueValue, isPortrait && { fontSize: 38 }]}>
                 {data.formatted_amount || `${data.currency_symbol || 'BD'} ${Number(data.amount_due || 0).toFixed(3)}`}
               </Text>
-              {data.tariff_reason ? (
+              {Boolean(data?.tariff_reason) ? (
                 <Text style={styles.amountDueReason}>{data.tariff_reason}</Text>
               ) : null}
             </View>
@@ -405,13 +412,13 @@ function PaymentScreen({ data, backendUrl, companyLogo, companyName, showPowered
       </Animated.View>
 
       {/* Powered by SaNDS Lab Footer Branding */}
-      {showPoweredBy !== false && (
+      {showPoweredBy !== false ? (
         <View style={styles.footerPoweredBy}>
           <Text style={styles.footerPoweredByText}>
             Powered by <Text style={styles.footerPoweredByBrand}>SaNDS Lab</Text>
           </Text>
         </View>
-      )}
+      ) : null}
     </View>
   );
 }
@@ -718,7 +725,7 @@ const styles = StyleSheet.create({
   freeGlow: {
     position: 'absolute',
     top: -200, left: -200, right: -200, bottom: -200,
-    backgroundColor: 'rgba(22,163,74,0.04)',
+    backgroundColor: 'rgba(220,38,38,0.03)',
   },
   freeContent: { flex: 1, padding: 14 },
   statusBanner: {
