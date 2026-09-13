@@ -197,6 +197,16 @@ function FreeExitScreen({ data, isPaid, companyLogo, companyName, showPoweredBy 
           <Text style={[styles.statusBannerText, isPortrait && { fontSize: 16 }]}>{statusMsg}</Text>
         </Animated.View>
 
+        {/* Dynamic System Message Banner (e.g. Exiting within free grace period) */}
+        {Boolean(data?.message || data?.display_message || data?.tariff_reason) ? (
+          <View style={styles.kioskNoticeCard}>
+            <Text style={styles.kioskNoticeIcon}>ℹ️</Text>
+            <Text style={[styles.kioskNoticeText, isPortrait && { fontSize: 13 }]}>
+              {data.message || data.display_message || data.tariff_reason}
+            </Text>
+          </View>
+        ) : null}
+
         <ScrollView
           contentContainerStyle={[styles.infoGrid, isPortrait && styles.infoGridPortrait]}
           showsVerticalScrollIndicator={false}
@@ -322,6 +332,16 @@ function PaymentScreen({ data, backendUrl, companyLogo, companyName, showPowered
             ⚠️  PAYMENT REQUIRED — PLEASE SCAN QR CODE TO PAY
           </Text>
         </Animated.View>
+
+        {/* Dynamic Payment / Overstay Reason Message */}
+        {Boolean(data?.message || data?.display_message || data?.tariff_reason) ? (
+          <View style={styles.kioskPayNoticeCard}>
+            <Text style={styles.kioskPayNoticeIcon}>🔔</Text>
+            <Text style={[styles.kioskPayNoticeText, isPortrait && { fontSize: 13 }]}>
+              {data.message || data.display_message || data.tariff_reason}
+            </Text>
+          </View>
+        ) : null}
 
         <ScrollView
           contentContainerStyle={[styles.payGrid, isPortrait && styles.payGridPortrait]}
@@ -739,6 +759,50 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
     letterSpacing: 1.5,
+    textAlign: 'center',
+  },
+  kioskNoticeCard: {
+    backgroundColor: 'rgba(34,197,94,0.15)',
+    borderColor: 'rgba(74,222,128,0.4)',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  kioskNoticeIcon: {
+    fontSize: 18,
+  },
+  kioskNoticeText: {
+    color: '#86efac',
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  kioskPayNoticeCard: {
+    backgroundColor: 'rgba(239,68,68,0.15)',
+    borderColor: 'rgba(248,113,113,0.4)',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  kioskPayNoticeIcon: {
+    fontSize: 18,
+  },
+  kioskPayNoticeText: {
+    color: '#fca5a5',
+    fontSize: 14,
+    fontWeight: '700',
     textAlign: 'center',
   },
   infoGrid: { flexDirection: 'row', gap: 16 },

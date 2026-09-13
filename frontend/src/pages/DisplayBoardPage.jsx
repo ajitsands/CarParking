@@ -413,31 +413,52 @@ function LiveKioskMonitor({ gateId }) {
 
       {/* Vehicle Details (if any) */}
       {status?.has_vehicle && (
-        <div style={{
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '12px',
-          padding: '16px',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: '12px',
-          marginBottom: '14px'
-        }}>
-          {[
-            { label: 'Plate', value: status.plate_number, icon: Car },
-            { label: 'Entry', value: formatDateTime(status.entry_time), icon: Clock },
-            { label: 'Duration', value: formatDuration(status.duration_minutes), icon: Activity },
-            { label: 'Amount', value: status.formatted_amount || `${status.currency_symbol || 'BD'} ${Number(status.amount_due || 0).toFixed(3)}`, icon: DollarSign },
-          ].map(({ label, value, icon: Icon }) => (
-            <div key={label}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
-                <Icon size={12} color="var(--text-muted)" />
-                <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
-              </div>
-              <div style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{value || '—'}</div>
+        <>
+          {Boolean(status.message || status.display_message || status.tariff_reason) && (
+            <div style={{
+              padding: '10px 14px',
+              borderRadius: '8px',
+              marginBottom: '12px',
+              background: status.is_free ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+              border: `1px solid ${status.is_free ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+              color: status.is_free ? '#16a34a' : '#ef4444',
+              fontSize: '0.84rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span>{status.is_free ? 'ℹ️' : '🔔'}</span>
+              <span>{status.message || status.display_message || status.tariff_reason}</span>
             </div>
-          ))}
-        </div>
+          )}
+
+          <div style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '12px',
+            padding: '16px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: '12px',
+            marginBottom: '14px'
+          }}>
+            {[
+              { label: 'Plate', value: status.plate_number, icon: Car },
+              { label: 'Entry', value: formatDateTime(status.entry_time), icon: Clock },
+              { label: 'Duration', value: formatDuration(status.duration_minutes), icon: Activity },
+              { label: 'Amount', value: status.formatted_amount || `${status.currency_symbol || 'BD'} ${Number(status.amount_due || 0).toFixed(3)}`, icon: DollarSign },
+            ].map(({ label, value, icon: Icon }) => (
+              <div key={label}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
+                  <Icon size={12} color="var(--text-muted)" />
+                  <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{label}</span>
+                </div>
+                <div style={{ fontSize: '0.88rem', color: 'var(--text-primary)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{value || '—'}</div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Always Visible Counter Payment & Cashier Override Module */}

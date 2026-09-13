@@ -140,8 +140,9 @@ class DisplayController extends Controller {
         $nowStr = TimezoneHelper::now();
         $nowTs  = strtotime($nowStr);
 
-        // ── Compute real-time tariff ──
+        // ── Compute real-time tariff & exit decision ──
         $tariff = TariffCalculator::calculate($session, empty($session['exit_time']) ? $nowStr : $session['exit_time']);
+        $exitDecision = DecisionEngine::evaluateExit($session);
 
         // ── Determine display state ──
         $displayState = 'IDLE';
@@ -152,7 +153,7 @@ class DisplayController extends Controller {
 
         $status = $session['status'] ?? '';
 
-        if (in_array($status, ['VALIDATED', 'VALIDATED_FREE', 'EXIT_COMPLETED']) || $tariff['is_free'] ?? false) {
+        if (in_array($status, ['VALIDATED', 'VALIDATED_FREE', 'EXIT_COMPLETED']) || ($tariff['is_free'] ?? false)) {
             $displayState = 'FREE_EXIT';
             $isFree       = true;
             $amountDue    = 0.000;
@@ -177,6 +178,8 @@ class DisplayController extends Controller {
             $amountDue    = 0.000;
             $barrierState = 'open';
         }
+
+        $displayMessage = $exitDecision['message'] ?? ($tariff['reason'] ?? 'Visit Validated: Free Parking. Have a safe journey!');
 
         // ── Duration calculation ──
         $entryTs     = strtotime($session['entry_time']);
@@ -204,7 +207,9 @@ class DisplayController extends Controller {
             'status'            => $status,
             'qr_payload'        => $qrPayload,
             'barrier_state'     => $barrierState,
-            'tariff_reason'     => $tariff['reason'] ?? '',
+            'message'           => $displayMessage,
+            'display_message'   => $displayMessage,
+            'tariff_reason'     => $tariff['reason'] ?? $displayMessage,
             'company_logo'      => $companyLogo,
             'company_name'      => $companyName,
             'show_powered_by'   => $showPoweredBy,
