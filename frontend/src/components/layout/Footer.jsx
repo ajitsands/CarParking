@@ -5,6 +5,7 @@ export default function Footer() {
   const { settings } = useSettings();
   const [popupOpen, setPopupOpen] = useState(false);
   const companyName = (settings && settings.company_name) ? settings.company_name : "Your Company";
+  const year = new Date().getFullYear();
   const showPoweredBy = settings?.show_powered_by !== '0' && settings?.show_powered_by !== 'false' && settings?.show_powered_by !== false;
 
   return (
