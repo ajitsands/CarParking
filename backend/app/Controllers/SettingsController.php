@@ -90,6 +90,22 @@ class SettingsController extends Controller {
             $input['default_grace_minutes'] = (string)max(1, (int)$input['default_grace_minutes']);
         }
 
+        // Auto-calculate and synchronize parking_total_capacity from floor slots breakdown
+        if (isset($input['parking_floor_slots_json'])) {
+            $rawFloors = is_array($input['parking_floor_slots_json']) 
+                ? $input['parking_floor_slots_json'] 
+                : json_decode((string)$input['parking_floor_slots_json'], true);
+            if (is_array($rawFloors) && !empty($rawFloors)) {
+                $floorsSum = 0;
+                foreach ($rawFloors as $fl) {
+                    $floorsSum += (int)($fl['capacity'] ?? 0);
+                }
+                if ($floorsSum > 0) {
+                    $input['parking_total_capacity'] = (string)$floorsSum;
+                }
+            }
+        }
+
         $stmt = $db->prepare("INSERT INTO system_settings (setting_key, setting_value, category) 
             VALUES (?, ?, ?) 
             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");

@@ -61,14 +61,11 @@ export default function Dashboard({ onNavigate, onOpenPayment, onOpenValidation 
 
   const metrics = data?.metrics || {};
   const floorBreakdown = data?.floor_breakdown || [];
-  const totalCapacity = metrics.total_parking_capacity || 500;
+  const floorsTotalSum = floorBreakdown.reduce((acc, f) => acc + (parseInt(f.total_capacity) || 0), 0);
+  const totalCapacity = floorsTotalSum > 0 ? floorsTotalSum : (metrics.total_parking_capacity || 500);
   const occupiedCount = metrics.inside_count || 0;
-  const availableSlots = metrics.available_parking_slots !== undefined 
-    ? metrics.available_parking_slots 
-    : Math.max(0, totalCapacity - occupiedCount);
-  const occupancyRate = metrics.occupancy_rate_percent !== undefined 
-    ? metrics.occupancy_rate_percent 
-    : Math.round((occupiedCount / totalCapacity) * 100);
+  const availableSlots = Math.max(0, totalCapacity - occupiedCount);
+  const occupancyRate = totalCapacity > 0 ? (Math.round((occupiedCount / totalCapacity) * 1000) / 10) : 0;
 
   return (
     <div>

@@ -51,8 +51,17 @@ class DashboardController extends Controller {
             ];
         }
 
+        // Dynamically compute total capacity as the sum of all floor capacities
+        $floorsSum = 0;
+        foreach ($configuredFloors as $fl) {
+            $floorsSum += (int)($fl['capacity'] ?? 0);
+        }
+        if ($floorsSum > 0) {
+            $totalCapacity = $floorsSum;
+        }
+
         $availableSlots = max(0, $totalCapacity - $inside);
-        $occupancyRate = round(($inside / $totalCapacity) * 100, 1);
+        $occupancyRate = $totalCapacity > 0 ? round(($inside / $totalCapacity) * 100, 1) : 0;
 
         $parkingState = 'AVAILABLE';
         if ($availableSlots === 0) {

@@ -180,6 +180,15 @@ class HisIntegrationController extends Controller {
             ];
         }
 
+        // Dynamically compute total capacity as the sum of all floor capacities
+        $floorsSum = 0;
+        foreach ($configuredFloors as $fl) {
+            $floorsSum += (int)($fl['capacity'] ?? 0);
+        }
+        if ($floorsSum > 0) {
+            $totalCapacity = $floorsSum;
+        }
+
         // Current real-time occupied count
         $occupied = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status NOT IN ('EXIT_COMPLETED', 'CANCELLED')")->fetchColumn();
         $pending = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status = 'VALIDATION_PENDING'")->fetchColumn();
@@ -187,7 +196,7 @@ class HisIntegrationController extends Controller {
         $charging = (int)$db->query("SELECT COUNT(*) FROM parking_sessions WHERE exit_time IS NULL AND status IN ('CHARGING', 'PAYMENT_PENDING')")->fetchColumn();
 
         $availableSlots = max(0, $totalCapacity - $occupied);
-        $occupancyRate = round(($occupied / $totalCapacity) * 100, 1);
+        $occupancyRate = $totalCapacity > 0 ? round(($occupied / $totalCapacity) * 100, 1) : 0;
 
         $parkingState = 'AVAILABLE';
         if ($availableSlots === 0) {

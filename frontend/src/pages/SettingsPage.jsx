@@ -363,10 +363,13 @@ export default function SettingsPage() {
     setError('');
 
     try {
+      const calculatedFloorsSum = floorSlots.reduce((acc, fl) => acc + (parseInt(fl.capacity) || 0), 0);
+      const totalCapacityToSave = calculatedFloorsSum > 0 ? String(calculatedFloorsSum) : (parkingTotalCapacity || '500');
+
       const payload = {
         ...formData,
         qr_token_prefix: qrTokenPrefix,
-        parking_total_capacity: parkingTotalCapacity,
+        parking_total_capacity: totalCapacityToSave,
         parking_floor_slots_json: JSON.stringify(floorSlots),
         anpr_lan_ip: customLanIp,
         anpr_lan_port: customLanPort,
@@ -1473,18 +1476,34 @@ export default function SettingsPage() {
 
                 {/* Floor-by-floor manager */}
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <label className="form-label" style={{ fontWeight: 700, margin: 0 }}>
-                      Floor-Wise Slot Breakdown:
-                    </label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <label className="form-label" style={{ fontWeight: 700, margin: 0 }}>
+                        Floor-Wise Slot Breakdown:
+                      </label>
+                      <span style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 800,
+                        color: '#059669',
+                        background: '#ecfdf5',
+                        border: '1px solid #a7f3d0',
+                        padding: '2px 8px',
+                        borderRadius: '12px'
+                      }}>
+                        Total Sum: {floorSlots.reduce((acc, fl) => acc + (parseInt(fl.capacity) || 0), 0)} Slots
+                      </span>
+                    </div>
                     <button
                       type="button"
                       className="btn btn-outline btn-sm"
                       onClick={() => {
-                        const newId = `FL-${floorSlots.length + 1}`;
-                        setFloorSlots([...floorSlots, { id: newId, name: `Level ${floorSlots.length + 1}`, capacity: 100 }]);
+                        const newId = `B${floorSlots.length}`;
+                        const updated = [...floorSlots, { id: newId, name: `Basement ${floorSlots.length} (Patient & Visitor)`, capacity: 100 }];
+                        setFloorSlots(updated);
+                        const sum = updated.reduce((acc, fl) => acc + (parseInt(fl.capacity) || 0), 0);
+                        setParkingTotalCapacity(String(sum));
                       }}
-                      style={{ fontSize: '0.72rem', padding: '3px 8px' }}
+                      style={{ fontSize: '0.72rem', padding: '3px 10px' }}
                     >
                       + Add Floor / Level
                     </button>
@@ -1543,6 +1562,8 @@ export default function SettingsPage() {
                               const updated = [...floorSlots];
                               updated[idx].capacity = parseInt(e.target.value) || 0;
                               setFloorSlots(updated);
+                              const sum = updated.reduce((acc, f) => acc + (parseInt(f.capacity) || 0), 0);
+                              setParkingTotalCapacity(String(sum));
                             }}
                             placeholder="Slots"
                             style={{ fontSize: '0.78rem', fontFamily: 'var(--font-mono)', padding: '4px 8px' }}
@@ -1554,7 +1575,10 @@ export default function SettingsPage() {
                             <button
                               type="button"
                               onClick={() => {
-                                setFloorSlots(floorSlots.filter((_, i) => i !== idx));
+                                const updated = floorSlots.filter((_, i) => i !== idx);
+                                setFloorSlots(updated);
+                                const sum = updated.reduce((acc, f) => acc + (parseInt(f.capacity) || 0), 0);
+                                setParkingTotalCapacity(String(sum));
                               }}
                               style={{
                                 background: 'transparent',
