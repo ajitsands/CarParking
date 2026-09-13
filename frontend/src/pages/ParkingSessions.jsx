@@ -173,7 +173,6 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
     { id: 'VALIDATED', label: 'Validated (Free)' },
     { id: 'PAID', label: 'Paid' },
     { id: 'EXIT_COMPLETED', label: 'Completed' },
-    { id: 'BLACKLISTED', label: 'Blacklisted' },
     { id: 'MANUAL_REVIEW', label: 'Manual Review' }
   ];
 

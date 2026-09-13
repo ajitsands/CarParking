@@ -230,36 +230,36 @@ class ReportsController extends Controller {
         }
 
         // 6. Blacklist Breach / Denied Entry Security Incidents Report
-        $blWhereClauses = ["(s.status = 'BLACKLISTED' OR v.access_status = 'blacklisted')"];
+        $blWhereClauses = ["(e.status = 'denied' OR v.access_status = 'blacklisted' OR a.action = 'BLACKLIST_ACCESS_DENIED')"];
         $blQueryParams = [];
         if (!empty($startDate)) {
-            $blWhereClauses[] = "DATE(s.entry_time) >= :bl_start";
+            $blWhereClauses[] = "DATE(e.received_at) >= :bl_start";
             $blQueryParams[':bl_start'] = $startDate;
         }
         if (!empty($endDate)) {
-            $blWhereClauses[] = "DATE(s.entry_time) <= :bl_end";
+            $blWhereClauses[] = "DATE(e.received_at) <= :bl_end";
             $blQueryParams[':bl_end'] = $endDate;
         }
         $blWhereSql = "WHERE " . implode(" AND ", $blWhereClauses);
 
         $stmtBlacklist = $db->prepare("SELECT 
-                s.id, 
-                s.session_code, 
-                s.plate_number, 
-                s.entry_time as attempt_time, 
-                s.entry_gate_id as gate_id, 
-                s.entry_image_url as image_url, 
-                s.entry_confidence as confidence, 
-                s.manual_review_reason as reason, 
-                s.status, 
+                e.id, 
+                e.plate_number, 
+                e.received_at as attempt_time, 
+                e.gate_id, 
+                e.camera_id, 
+                e.confidence, 
+                e.plate_image_url as image_url, 
                 v.category, 
                 v.owner_name, 
                 v.block_reason, 
-                v.notes 
-            FROM parking_sessions s 
-            LEFT JOIN vehicles v ON (v.plate_number = s.plate_number OR REPLACE(v.plate_number, ' ', '') = REPLACE(s.plate_number, ' ', ''))
+                v.notes,
+                a.details as audit_details
+            FROM anpr_events e 
+            LEFT JOIN vehicles v ON (v.plate_number = e.plate_number OR REPLACE(v.plate_number, ' ', '') = REPLACE(e.plate_number, ' ', ''))
+            LEFT JOIN audit_logs a ON (a.entity_id = e.id AND a.action = 'BLACKLIST_ACCESS_DENIED')
             {$blWhereSql}
-            ORDER BY s.id DESC LIMIT 200");
+            ORDER BY e.id DESC LIMIT 200");
         $stmtBlacklist->execute($blQueryParams);
         $rawBlacklist = $stmtBlacklist->fetchAll();
 
@@ -267,14 +267,14 @@ class ReportsController extends Controller {
         foreach ($rawBlacklist as $bl) {
             $blacklistAttempts[] = [
                 'id'              => (int)$bl['id'],
-                'session_code'    => $bl['session_code'],
+                'session_code'    => 'SEC-' . date('Ymd', strtotime($bl['attempt_time'])) . '-' . str_pad($bl['id'], 4, '0', STR_PAD_LEFT),
                 'plate_number'    => $bl['plate_number'],
                 'attempt_time'    => $bl['attempt_time'],
                 'gate_id'         => $bl['gate_id'] ?: 'GATE-IN-01',
-                'camera_id'       => 'ANPR-CAM-01',
+                'camera_id'       => $bl['camera_id'] ?: 'ANPR-CAM-01',
                 'confidence'      => (float)($bl['confidence'] ?? 99.0),
                 'image_url'       => $bl['image_url'],
-                'reason'          => $bl['reason'] ?: ($bl['block_reason'] ?: 'Blacklisted vehicle security rule'),
+                'reason'          => $bl['block_reason'] ?: 'Blacklisted vehicle security rule violation',
                 'security_action' => 'ACCESS_DENIED',
                 'barrier_status'  => 'LOCKED_CLOSED',
                 'category'        => $bl['category'] ?: 'general',

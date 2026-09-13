@@ -73,6 +73,8 @@ class ParkingSessionController extends Controller {
                 $where[] = "status = ?";
                 $bindings[] = $status;
             }
+        } else {
+            $where[] = "status != 'BLACKLISTED'";
         }
 
         // Category Filter (if specified)
