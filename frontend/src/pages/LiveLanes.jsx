@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import BoomBarrierVisualizer from '../components/gate/BoomBarrierVisualizer';
 import ManualOverrideModal from '../components/gate/ManualOverrideModal';
+import LiveCameraStreamPlayer from '../components/gate/LiveCameraStreamPlayer';
 import StatusBadge from '../components/common/StatusBadge';
 import SearchableSelect from '../components/common/SearchableSelect';
 import { api } from '../services/api';
@@ -75,7 +76,15 @@ export default function LiveLanes({ onOpenSimulator }) {
       }
 
       if (gatesRes.success) {
-        let allGates = gatesRes.data.gates || [];
+        let rawGates = gatesRes.data.gates || [];
+        let allGates = rawGates.map(g => ({
+          ...g,
+          gate_id: g.gate_code || g.gate_id || 'GATE-IN-01',
+          name: g.gate_name || g.name || g.gate_code || 'Gate Lane',
+          gate_type: (g.gate_type || 'entry').toUpperCase(),
+          barrier_relay_ip: g.relay_ip ? `${g.relay_ip}:${g.relay_port || 8080}` : (g.barrier_relay_ip || '192.168.1.201:8080')
+        }));
+
         // Filter by operator's assigned gates if not ALL and not admin
         const assigned = user?.assigned_gates;
         if (!isAdmin && assigned && assigned !== 'ALL') {
@@ -85,8 +94,8 @@ export default function LiveLanes({ onOpenSimulator }) {
         setGates(allGates);
 
         // Set default active entry & exit gates if not already set
-        const inGates = allGates.filter(g => g.gate_type === 'ENTRY');
-        const outGates = allGates.filter(g => g.gate_type === 'EXIT');
+        const inGates = allGates.filter(g => (g.gate_type || '').toUpperCase() === 'ENTRY');
+        const outGates = allGates.filter(g => (g.gate_type || '').toUpperCase() === 'EXIT');
 
         setActiveEntryGateId(prev => (prev && inGates.some(g => g.gate_id === prev)) ? prev : (inGates[0]?.gate_id || ''));
         setActiveExitGateId(prev => (prev && outGates.some(g => g.gate_id === prev)) ? prev : (outGates[0]?.gate_id || ''));
@@ -310,48 +319,17 @@ export default function LiveLanes({ onOpenSimulator }) {
             </div>
           </div>
 
-          <div className="lane-camera-viewport">
-            <div style={{
-              position: 'absolute',
-              top: 10, left: 10,
-              display: 'flex', alignItems: 'center', gap: '6px',
-              background: 'rgba(0,0,0,0.7)', padding: '2px 8px', borderRadius: '4px',
-              color: '#ef4444', fontSize: '0.68rem', fontWeight: 700
-            }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} />
-              LIVE HD CAM
-            </div>
-
-            <div style={{
-              position: 'absolute',
-              top: 10, right: 10,
-              background: 'rgba(0,0,0,0.7)', padding: '2px 8px', borderRadius: '4px',
-              color: '#38bdf8', fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-mono)'
-            }}>
-              {currentEntryGate?.camera_ip ? `${currentEntryGate.camera_ip}:${currentEntryGate.camera_port || 80}` : 'NO CAM IP'}
-            </div>
-
-            <div style={{ textAlign: 'center', color: '#94a3b8' }}>
-              <Video size={48} style={{ opacity: 0.3, margin: '0 auto 8px' }} />
-              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#e2e8f0' }}>
-                {currentEntryGate?.gate_id || 'GATE-IN-01'} · IP: {currentEntryGate?.camera_ip || '192.168.1.101'}
-              </div>
-              <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>
-                HTTP Webhook / TCP Socket Active (Port {currentEntryGate?.camera_port || 80})
-              </div>
-              {currentEntryGate?.rtsp_url && (
-                <div style={{ fontSize: '0.62rem', color: '#64748b', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
-                  RTSP: {currentEntryGate.rtsp_url}
-                </div>
-              )}
-            </div>
-
-            <div className="lane-anpr-plate-overlay">
-              <span style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>ENTRY SENSOR ({currentEntryGate?.gate_id}):</span>
-              <span>READY</span>
-              <span style={{ fontSize: '0.65rem', color: '#10b981' }}>AUTO-ALLOW</span>
-            </div>
-          </div>
+          {/* ENTRY LANE LIVE CAMERA STREAM VIEWPORT */}
+          <LiveCameraStreamPlayer
+            streamPath="cam_entry"
+            gateCode={currentEntryGate?.gate_id || 'GATE-IN-01'}
+            cameraIp={currentEntryGate?.camera_ip || '192.168.8.200'}
+            cameraPort={currentEntryGate?.camera_port || 80}
+            nvrIp="192.168.8.110"
+            nvrChannel={1}
+            rtspUrl={currentEntryGate?.rtsp_url || ''}
+            isBarrierOpen={Boolean(entryBarrierOpen[currentEntryGate?.gate_id || 'GATE-IN-01'])}
+          />
 
           <div style={{ padding: '12px' }}>
             <BoomBarrierVisualizer
@@ -409,50 +387,17 @@ export default function LiveLanes({ onOpenSimulator }) {
             </div>
           </div>
 
-          <div className="lane-camera-viewport">
-            <div style={{
-              position: 'absolute',
-              top: 10, left: 10,
-              display: 'flex', alignItems: 'center', gap: '6px',
-              background: 'rgba(0,0,0,0.7)', padding: '2px 8px', borderRadius: '4px',
-              color: '#ef4444', fontSize: '0.68rem', fontWeight: 700
-            }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} />
-              LIVE HD CAM
-            </div>
-
-            <div style={{
-              position: 'absolute',
-              top: 10, right: 10,
-              background: 'rgba(0,0,0,0.7)', padding: '2px 8px', borderRadius: '4px',
-              color: '#38bdf8', fontSize: '0.68rem', fontWeight: 700, fontFamily: 'var(--font-mono)'
-            }}>
-              {currentExitGate?.camera_ip ? `${currentExitGate.camera_ip}:${currentExitGate.camera_port || 80}` : 'NO CAM IP'}
-            </div>
-
-            <div style={{ textAlign: 'center', color: '#94a3b8' }}>
-              <Video size={48} style={{ opacity: 0.3, margin: '0 auto 8px' }} />
-              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#e2e8f0' }}>
-                {currentExitGate?.gate_id || 'GATE-OUT-01'} · IP: {currentExitGate?.camera_ip || '192.168.1.102'}
-              </div>
-              <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '2px' }}>
-                Exit Payment & Barrier Interlock (Port {currentExitGate?.camera_port || 80})
-              </div>
-              {currentExitGate?.rtsp_url && (
-                <div style={{ fontSize: '0.62rem', color: '#64748b', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
-                  RTSP: {currentExitGate.rtsp_url}
-                </div>
-              )}
-            </div>
-
-            <div className="lane-anpr-plate-overlay">
-              <span style={{ fontSize: '0.65rem', color: 'var(--gold)' }}>EXIT SENSOR ({currentExitGate?.gate_id}):</span>
-              <span style={{ color: selectedVehicle ? '#fff' : '#64748b' }}>
-                {selectedVehicle ? selectedVehicle.plate_number : 'WAITING...'}
-              </span>
-              <span style={{ fontSize: '0.65rem', color: '#10b981' }}>{activeSessions.length} INSIDE</span>
-            </div>
-          </div>
+          {/* EXIT LANE LIVE CAMERA STREAM VIEWPORT */}
+          <LiveCameraStreamPlayer
+            streamPath={currentExitGate?.rtsp_url ? 'cam_exit' : null}
+            isStandby={!currentExitGate?.rtsp_url}
+            gateCode={currentExitGate?.gate_id || 'GATE-OUT-01'}
+            cameraIp={currentExitGate?.camera_ip || '192.168.1.102'}
+            cameraPort={currentExitGate?.camera_port || 80}
+            rtspUrl={currentExitGate?.rtsp_url || ''}
+            latestPlate={selectedVehicle ? selectedVehicle.plate_number : null}
+            isBarrierOpen={Boolean(exitBarrierOpen[currentExitGate?.gate_id || 'GATE-OUT-01'])}
+          />
 
           {/* Active Vehicle at Exit Gate Panel */}
           <div style={{

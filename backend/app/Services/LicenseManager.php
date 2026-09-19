@@ -256,7 +256,10 @@ class LicenseManager {
             $curHost = explode(':', $cur)[0];
             $licHost = explode(':', $lic)[0];
 
-            $isLocalMatch = in_array($curHost, ['localhost', '127.0.0.1', '::1']) && in_array($licHost, ['localhost', '127.0.0.1', '::1']);
+            $isCurPrivate = in_array($curHost, ['localhost', '127.0.0.1', '::1']) || (filter_var($curHost, FILTER_VALIDATE_IP) && filter_var($curHost, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false);
+            $isLicPrivate = in_array($licHost, ['localhost', '127.0.0.1', '::1']) || (filter_var($licHost, FILTER_VALIDATE_IP) && filter_var($licHost, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false);
+            $isLocalMatch = ($isCurPrivate && $isLicPrivate) || ($isCurPrivate && in_array($licHost, ['localhost', '127.0.0.1']));
+
             if (!$isLocalMatch && $curHost !== $licHost && !str_ends_with($curHost, '.' . $licHost)) {
                 return [
                     'valid' => false,

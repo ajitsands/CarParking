@@ -138,16 +138,57 @@ class AnprPayloadParser {
         TimezoneHelper::init();
         $mapping = self::getMappingConfig();
 
-        // 1. Decode JSON or use POST array
+        // 1. Decode JSON, XML, or use POST array & multipart files
         $data = json_decode($rawBody, true);
-        if (!is_array($data)) {
+        if (!is_array($data) || empty($data)) {
+            if (str_contains($rawBody, '<') && str_contains($rawBody, '>')) {
+                try {
+                    $cleanXml = preg_replace('/xmlns[^=]*="[^"]*"/i', '', $rawBody);
+                    $xmlObj = @simplexml_load_string($cleanXml, 'SimpleXMLElement', LIBXML_NOCDATA);
+                    if ($xmlObj !== false) {
+                        $data = json_decode(json_encode($xmlObj), true);
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+        if (!is_array($data) || empty($data)) {
             $data = $postData;
+            // Check if any POST field contains a JSON string (e.g. $_POST['json'] or $_POST['record'])
+            foreach ($postData as $k => $val) {
+                if (is_string($val) && (str_starts_with(trim($val), '{') || str_starts_with(trim($val), '['))) {
+                    $decoded = json_decode($val, true);
+                    if (is_array($decoded)) {
+                        $data = array_merge($data, $decoded);
+                    }
+                }
+            }
         }
 
-        // 2. Extract Plate Number (Mapping -> Nested -> Auto fallback)
-        $plate = self::extractPlateNumber($data, $mapping['field_plate']);
+        // Check if JSON payload was uploaded as a file attachment in multipart/form-data
+        if ((!is_array($data) || empty($data)) && !empty($filesData)) {
+            foreach ($filesData as $f) {
+                if (isset($f['tmp_name']) && is_uploaded_file($f['tmp_name'])) {
+                    $fContent = @file_get_contents($f['tmp_name']);
+                    if ($fContent && (str_starts_with(trim($fContent), '{') || str_starts_with(trim($fContent), '<'))) {
+                        $decoded = json_decode($fContent, true);
+                        if (is_array($decoded)) {
+                            $data = $decoded;
+                            $rawBody = $fContent;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
-        // 3. Extract Gate / Channel / Lane
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        // 2. Extract Plate Number (Mapping -> Candidate keys -> Recursive Search -> Raw XML/JSON regex)
+        $plate = self::extractPlateNumber($data, $mapping['field_plate'], $rawBody);
+
+        // 3. Extract Gate / Channel / Lane & match with gates_and_cameras
         $gateRaw = self::getNestedValue($data, $mapping['field_gate']) 
                 ?? self::getNestedValue($data, $mapping['field_lane'])
                 ?? self::extractGateFallback($data);
@@ -162,8 +203,11 @@ class AnprPayloadParser {
         $cameraId = (string)(
             self::getNestedValue($data, 'camera_id') 
             ?? self::getNestedValue($data, 'DeviceId') 
+            ?? self::getNestedValue($data, 'deviceId') 
             ?? self::getNestedValue($data, 'deviceNo') 
             ?? self::getNestedValue($data, 'CameraID')
+            ?? self::getNestedValue($data, 'deviceName')
+            ?? self::getNestedValue($data, 'params.deviceName')
             ?? ($direction === 'ENTRY' ? 'ANPR-ENTRY-CAM-01' : 'ANPR-EXIT-CAM-01')
         );
 
@@ -172,6 +216,8 @@ class AnprPayloadParser {
             self::getNestedValue($data, 'confidence') 
             ?? self::getNestedValue($data, 'Confidence') 
             ?? self::getNestedValue($data, 'RecognitionConfidence')
+            ?? self::getNestedValue($data, 'params.passingRecord.confidence')
+            ?? self::getNestedValue($data, 'passingRecord.confidence')
             ?? 98.50
         );
 
@@ -181,13 +227,20 @@ class AnprPayloadParser {
             ?? self::getNestedValue($data, 'VehicleType') 
             ?? self::getNestedValue($data, 'vehicle_type') 
             ?? self::getNestedValue($data, 'CarType') 
+            ?? self::getNestedValue($data, 'carType')
+            ?? self::getNestedValue($data, 'params.passingRecord.carType')
+            ?? self::getNestedValue($data, 'params.passingRecord.vehicleType')
             ?? 'car'
         );
 
         $vehicleColor = (string)(
             self::getNestedValue($data, $mapping['field_color']) 
             ?? self::getNestedValue($data, 'VehicleColor') 
+            ?? self::getNestedValue($data, 'vehicleColor')
             ?? self::getNestedValue($data, 'PlateColor') 
+            ?? self::getNestedValue($data, 'plateColor')
+            ?? self::getNestedValue($data, 'params.passingRecord.plateColor')
+            ?? self::getNestedValue($data, 'params.passingRecord.vehicleColor')
             ?? ''
         );
 
@@ -234,7 +287,9 @@ class AnprPayloadParser {
         $imgRaw = self::getNestedValue($sampleData, $imgField)
                ?? self::getNestedValue($sampleData, 'Image')
                ?? self::getNestedValue($sampleData, 'SnapPicURL')
-               ?? self::getNestedValue($sampleData, 'picture');
+               ?? self::getNestedValue($sampleData, 'picture')
+               ?? self::getNestedValue($sampleData, 'picData')
+               ?? self::getNestedValue($sampleData, 'params.passingRecord.picInfo.0.picData');
         $hasImage = !empty($imgRaw);
         $imageType = 'none';
         if ($hasImage) {
@@ -260,35 +315,120 @@ class AnprPayloadParser {
     /**
      * Extract plate number with smart priority
      */
-    private static function extractPlateNumber(array $data, string $configuredKey = ''): string {
+    private static function extractPlateNumber(array $data, string $configuredKey = '', string $rawBody = ''): string {
         // 1. Check configured key
         if ($configuredKey) {
             $val = self::getNestedValue($data, $configuredKey);
             if ($val !== null && is_scalar($val) && trim((string)$val) !== '') {
-                return strtoupper(trim((string)$val));
+                $clean = strtoupper(trim((string)$val));
+                if (strlen($clean) >= 2 && $clean !== 'NO_PLATE' && $clean !== 'NULL') {
+                    return $clean;
+                }
             }
         }
 
         // 2. Check Dahua / Hikvision / Uniview common fields
         $candidateKeys = [
+            'PlateText',
             'PlateNumber',
             'plateNumber',
+            'plateText',
             'plate_number',
+            'plate_text',
             'licensePlate',
             'LicensePlate',
-            'PlateText',
+            'PlateNo',
+            'plateNo',
+            'Plate',
             'plate',
-            'license_plate',
-            'TrafficCar.PlateNumber',
+            'params.PlateText',
+            'params.plateText',
+            'params.PlateNumber',
+            'params.plateNumber',
+            'params.PlateNo',
+            'params.plateNo',
+            'params.carPlate',
+            'params.licensePlate',
+            'params.passingRecord.PlateText',
+            'params.passingRecord.plateText',
+            'params.passingRecord.PlateNumber',
+            'params.passingRecord.plateNumber',
+            'params.passingRecord.PlateNo',
+            'params.passingRecord.plateNo',
+            'params.passingRecord.licensePlate',
+            'PassingRecord.PlateText',
+            'PassingRecord.PlateNo',
+            'PassingRecord.PlateNumber',
+            'PassingRecord.plateText',
+            'PassingRecord.plateNumber',
+            'passingRecord.PlateText',
+            'passingRecord.plateText',
+            'passingRecord.PlateNumber',
+            'passingRecord.plateNumber',
+            'passingRecord.plateNo',
+            'passing_record.plate_number',
+            'data.PlateText',
+            'data.plateText',
+            'data.PlateNumber',
+            'data.plateNumber',
+            'data.PassingRecord.PlateText',
+            'PlateInfo.PlateText',
+            'PlateInfo.PlateNumber',
+            'PlateInfo.PlateNo',
+            'PlateResult.PlateNumber',
+            'PlateResult.PlateText',
             'PlateResult.license',
+            'PlateResult.plateNumber',
+            'AlarmInfoPlate.result.PlateResult.license',
+            'AlarmInfoPlate.result.PlateResult.plateNumber',
+            'TrafficCar.PlateNumber',
             'PictureInfo.0.PlateNumber',
+            'MotorVehicleListObject.MotorVehicleObject.0.PlateNo',
+            'MotorVehicleListObject.MotorVehicleObject.PlateNo',
+            'MotorVehicleListObject.MotorVehicleObject.0.PlateNumber',
+            'MotorVehicleListObject.MotorVehicleObject.PlateNumber',
+            'MotorVehicleObjectList.MotorVehicleObject.0.PlateNo',
+            'MotorVehicleObjectList.MotorVehicleObject.PlateNo',
+            'MotorVehicleList.MotorVehicle.0.PlateNo',
+            'MotorVehicleList.MotorVehicle.PlateNo',
+            'MotorVehicleObject.0.PlateNo',
+            'MotorVehicleObject.PlateNo',
+            'PlateAttributeInfo.PlateNo',
+            'VehicleInfoList.0.PlateAttributeInfo.PlateNo',
+            'VehicleInfo.PlateAttributeInfo.PlateNo',
+            'PlateAttr.PlateNo',
+            'license_plate',
             'car_number'
         ];
 
         foreach ($candidateKeys as $k) {
             $val = self::getNestedValue($data, $k);
             if ($val !== null && is_scalar($val) && trim((string)$val) !== '') {
-                return strtoupper(trim((string)$val));
+                $clean = strtoupper(trim((string)$val));
+                if (strlen($clean) >= 2 && $clean !== 'NO_PLATE' && $clean !== 'NULL' && $clean !== 'UNKNOWN') {
+                    return $clean;
+                }
+            }
+        }
+
+        // 3. Recursive key search in decoded structure
+        if (!empty($data)) {
+            $found = self::findPlateRecursive($data);
+            if ($found) {
+                return $found;
+            }
+        }
+
+        // 4. Fallback regex on raw body (e.g. UNV XML <Name>Plate Number</Name><Value>347370</Value>)
+        if (!empty($rawBody)) {
+            if (preg_match('/<Name>Plate\s*Number<\/Name>\s*<Value>([^<]+)<\/Value>/i', $rawBody, $m)) {
+                return strtoupper(trim($m[1]));
+            }
+            if (preg_match('/<(?:PlateNumber|PlateText|PlateNo|licensePlate|Plate|plate_number|CarPlate)>([^<]+)<\/(?:PlateNumber|PlateText|PlateNo|licensePlate|Plate|plate_number|CarPlate)>/i', $rawBody, $m)) {
+                return strtoupper(trim($m[1]));
+            }
+            if (preg_match('/"(?:PlateText|plateText|PlateNumber|plateNumber|PlateNo|plateNo|licensePlate|plate_number|carPlate)"\s*:\s*"([^"]+)"/i', $rawBody, $m)) {
+                return strtoupper(trim($m[1]));
             }
         }
 
@@ -296,7 +436,35 @@ class AnprPayloadParser {
     }
 
     /**
-     * Resolve Gate ID from channel or lane
+     * Recursively search for plate keys in arbitrary JSON/array payloads
+     */
+    private static function findPlateRecursive(array $arr, int $depth = 0): ?string {
+        if ($depth > 8) return null;
+        foreach ($arr as $key => $val) {
+            $kLower = strtolower((string)$key);
+            if (is_scalar($val) && (
+                str_contains($kLower, 'plate') ||
+                str_contains($kLower, 'license') ||
+                str_contains($kLower, 'carnum') ||
+                str_contains($kLower, 'vehicle_no')
+            )) {
+                $str = strtoupper(trim((string)$val));
+                // Ensure it's not a boolean/color/type or generic word
+                if (strlen($str) >= 2 && strlen($str) <= 25 && 
+                    !in_array($str, ['TRUE', 'FALSE', 'NULL', 'BLUE', 'WHITE', 'YELLOW', 'GREEN', 'BLACK', 'CAR', 'SUV', 'SEDAN', 'TRUCK', 'BUS', 'UNKNOWN', 'NO_PLATE', '0', '1', '2'])) {
+                    return $str;
+                }
+            }
+            if (is_array($val)) {
+                $nested = self::findPlateRecursive($val, $depth + 1);
+                if ($nested) return $nested;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolve Gate ID from channel, lane, or client IP
      */
     private static function resolveGateId($gateRaw, array $mapping): string {
         $val = trim((string)$gateRaw);
@@ -309,11 +477,25 @@ class AnprPayloadParser {
             return 'GATE-OUT-01';
         }
 
-        if (!$val) {
-            return 'GATE-IN-01';
+        if ($val && $val !== 'GATE-IN-01' && $val !== 'GATE-OUT-01') {
+            return $val;
         }
 
-        return $val;
+        // Check database gates by camera IP
+        $clientIp = $_SERVER['REMOTE_ADDR'] ?? '';
+        if ($clientIp && $clientIp !== '127.0.0.1') {
+            try {
+                $db = Database::getInstance();
+                $stmt = $db->prepare("SELECT gate_code FROM gates_and_cameras WHERE camera_ip = ? LIMIT 1");
+                $stmt->execute([$clientIp]);
+                $gateRow = $stmt->fetch();
+                if ($gateRow && !empty($gateRow['gate_code'])) {
+                    return $gateRow['gate_code'];
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        return 'GATE-IN-01';
     }
 
     /**
@@ -323,9 +505,12 @@ class AnprPayloadParser {
         // Explicit direction key
         $explicit = self::getNestedValue($data, 'direction') 
                  ?? self::getNestedValue($data, 'Direction') 
-                 ?? self::getNestedValue($data, 'PassDirection');
+                 ?? self::getNestedValue($data, 'PassDirection')
+                 ?? self::getNestedValue($data, 'passDirection')
+                 ?? self::getNestedValue($data, 'params.passingRecord.direction')
+                 ?? self::getNestedValue($data, 'passingRecord.direction');
 
-        if ($explicit) {
+        if ($explicit !== null && $explicit !== '') {
             $dir = strtoupper(trim((string)$explicit));
             if ($dir === 'IN' || $dir === 'ENTRY' || $dir === '1') return 'ENTRY';
             if ($dir === 'OUT' || $dir === 'EXIT' || $dir === '2') return 'EXIT';
@@ -344,6 +529,19 @@ class AnprPayloadParser {
             return 'EXIT';
         }
 
+        // Check database gate type for resolved Gate ID
+        if ($gateId) {
+            try {
+                $db = Database::getInstance();
+                $stmt = $db->prepare("SELECT gate_type FROM gates_and_cameras WHERE gate_code = ? LIMIT 1");
+                $stmt->execute([$gateId]);
+                $gateRow = $stmt->fetch();
+                if ($gateRow && !empty($gateRow['gate_type'])) {
+                    return strtoupper($gateRow['gate_type']) === 'EXIT' ? 'EXIT' : 'ENTRY';
+                }
+            } catch (\Throwable $e) {}
+        }
+
         return 'ENTRY';
     }
 
@@ -359,9 +557,12 @@ class AnprPayloadParser {
             'dateTime',
             'captureTime',
             'PassTime',
+            'passTime',
             'timestamp',
             'date_time',
-            'datetime'
+            'datetime',
+            'params.passingRecord.passTime',
+            'passingRecord.passTime'
         ]);
 
         foreach ($keys as $k) {
@@ -395,9 +596,13 @@ class AnprPayloadParser {
         if (!empty($filesData)) {
             foreach ($filesData as $fileItem) {
                 if (isset($fileItem['tmp_name']) && is_uploaded_file($fileItem['tmp_name'])) {
-                    $targetPath = $uploadDir . DIRECTORY_SEPARATOR . $filename;
-                    if (move_uploaded_file($fileItem['tmp_name'], $targetPath)) {
-                        return self::getPublicUrlPath($configuredPath, $filename);
+                    // Make sure it's an image
+                    $mime = mime_content_type($fileItem['tmp_name']) ?: '';
+                    if (str_starts_with($mime, 'image/') || str_ends_with(strtolower($fileItem['name'] ?? ''), '.jpg') || str_ends_with(strtolower($fileItem['name'] ?? ''), '.jpeg') || str_ends_with(strtolower($fileItem['name'] ?? ''), '.png')) {
+                        $targetPath = $uploadDir . DIRECTORY_SEPARATOR . $filename;
+                        if (move_uploaded_file($fileItem['tmp_name'], $targetPath)) {
+                            return self::getPublicUrlPath($configuredPath, $filename);
+                        }
                     }
                 }
             }
@@ -411,6 +616,22 @@ class AnprPayloadParser {
                  ?? self::getNestedValue($data, 'picture')
                  ?? self::getNestedValue($data, 'image_base64')
                  ?? self::getNestedValue($data, 'plate_image')
+                 ?? self::getNestedValue($data, 'picData')
+                 ?? self::getNestedValue($data, 'params.picData')
+                 ?? self::getNestedValue($data, 'params.picInfo.0.picData')
+                 ?? self::getNestedValue($data, 'params.passingRecord.picInfo.0.picData')
+                 ?? self::getNestedValue($data, 'params.passingRecord.picData')
+                 ?? self::getNestedValue($data, 'MotorVehicleListObject.MotorVehicleObject.0.SubImageList.SubImageInfoObject.0.Data')
+                 ?? self::getNestedValue($data, 'MotorVehicleListObject.MotorVehicleObject.SubImageList.SubImageInfoObject.0.Data')
+                 ?? self::getNestedValue($data, 'MotorVehicleListObject.MotorVehicleObject.0.SubImageList.SubImageInfoObject.0.StoragePath')
+                 ?? self::getNestedValue($data, 'MotorVehicleListObject.MotorVehicleObject.SubImageList.SubImageInfoObject.0.StoragePath')
+                 ?? self::getNestedValue($data, 'SubImageList.SubImageInfoObject.0.Data')
+                 ?? self::getNestedValue($data, 'SubImageList.SubImageInfoObject.0.StoragePath')
+                 ?? self::getNestedValue($data, 'SubImageInfoObject.0.Data')
+                 ?? self::getNestedValue($data, 'SubImageInfoObject.0.StoragePath')
+                 ?? self::getNestedValue($data, 'SubImageInfoObject.Data')
+                 ?? self::getNestedValue($data, 'SubImageInfoObject.StoragePath')
+                 ?? self::findImageRecursive($data)
                  ?? '';
 
         if (!$rawImage || !is_string($rawImage)) {
@@ -428,14 +649,39 @@ class AnprPayloadParser {
             $base64Data = substr($rawImage, strpos($rawImage, ',') + 1);
         }
 
-        $decoded = base64_decode($base64Data);
-        if ($decoded !== false && strlen($decoded) > 50) {
+        $decoded = base64_decode($base64Data, true);
+        if ($decoded !== false && strlen($decoded) > 100) {
             $targetPath = $uploadDir . DIRECTORY_SEPARATOR . $filename;
             file_put_contents($targetPath, $decoded);
             return self::getPublicUrlPath($configuredPath, $filename);
         }
 
         return '';
+    }
+
+    /**
+     * Recursively search for base64 image data or image URL
+     */
+    private static function findImageRecursive(array $arr, int $depth = 0): ?string {
+        if ($depth > 8) return null;
+        foreach ($arr as $key => $val) {
+            $kLower = strtolower((string)$key);
+            if (is_string($val) && (
+                str_contains($kLower, 'pic') ||
+                str_contains($kLower, 'image') ||
+                str_contains($kLower, 'photo') ||
+                str_contains($kLower, 'snapshot')
+            )) {
+                if (strlen($val) > 100 || str_starts_with($val, 'http://') || str_starts_with($val, 'https://') || str_starts_with($val, 'data:image')) {
+                    return $val;
+                }
+            }
+            if (is_array($val)) {
+                $nested = self::findImageRecursive($val, $depth + 1);
+                if ($nested) return $nested;
+            }
+        }
+        return null;
     }
 
     /**
@@ -480,7 +726,11 @@ class AnprPayloadParser {
      * Fallback gate extraction
      */
     private static function extractGateFallback(array $data): string {
-        $gateKeys = ['gate_id', 'gate', 'location', 'lane', 'channel', 'camera_number', 'cam_id'];
+        $gateKeys = [
+            'gate_id', 'gate', 'gate_code', 'location', 'lane', 'laneNo', 'lane_no', 'lane_id', 'laneId',
+            'channel', 'channel_id', 'Channel', 'Lane', 'ChannelID', 'TollGateID', 'camera_number', 'cam_id',
+            'params.passingRecord.laneId', 'params.passingRecord.channelId', 'passingRecord.laneId', 'passingRecord.channelId'
+        ];
         foreach ($gateKeys as $k) {
             $v = self::getNestedValue($data, $k);
             if ($v !== null && trim((string)$v) !== '') {

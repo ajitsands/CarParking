@@ -42,8 +42,8 @@ class SuperadminVault {
             return false; // Tampered!
         }
 
-        // Decode encrypted token
-        $payload = JWT::decode($data['token'], self::getSecretKey());
+        // Decode encrypted token (ignoring expiry since vault is a persistent server security store)
+        $payload = JWT::decode($data['token'], self::getSecretKey(), false);
         if (!$payload || !isset($payload['hash'])) {
             return false;
         }

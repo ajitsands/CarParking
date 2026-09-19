@@ -6,15 +6,20 @@ use App\Core\Database;
 use App\Services\DecisionEngine;
 use App\Services\BarrierRelayService;
 use App\Services\TariffCalculator;
+use App\Helpers\TimezoneHelper;
 
 class AnprWebhookController extends Controller {
     public function handle(): void {
+        TimezoneHelper::init();
         $raw = file_get_contents('php://input');
-        $parsed = \App\Services\AnprPayloadParser::parse($raw, $_POST ?? [], $_FILES ?? []);
+        $rawJson = json_decode($raw, true) ?: [];
 
+        $parsed = \App\Services\AnprPayloadParser::parse($raw, $_POST ?? [], $_FILES ?? []);
         $plate = $parsed['plate_number'];
+
+        // 0. Camera Keepalive / Handshake / Heartbeat (e.g. UNV uPark, Dahua, Hikvision) if no plate present
         if (!$plate) {
-            $this->error('License plate number could not be extracted from camera payload. Please verify camera manufacturer profile and field mapping in System Settings.', 400);
+            $this->sendUnvResponse($rawJson);
             return;
         }
 
@@ -26,12 +31,13 @@ class AnprWebhookController extends Controller {
         $overviewImage = $parsed['image_url'];
         $clipUrl = $parsed['clip_url'];
         $timestamp = $parsed['timestamp'];
+        $payloadToLog = $raw ?: ($parsed['raw_payload'] ?? json_encode(array_merge($_POST, ['FILES' => array_keys($_FILES)])));
 
         $db = Database::getInstance();
 
         // 1. Log Raw ANPR Event
-        $stmtEvent = $db->prepare("INSERT INTO anpr_events (camera_id, gate_id, direction, plate_number, confidence, plate_image_url, overview_image_url, clip_url, raw_payload) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmtEvent->execute([$cameraId, $gateId, $direction, $plate, $confidence, $plateImage, $overviewImage, $clipUrl, $raw]);
+        $stmtEvent = $db->prepare("INSERT INTO anpr_events (camera_id, gate_id, direction, plate_number, confidence, plate_image_url, overview_image_url, clip_url, raw_payload, received_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+        $stmtEvent->execute([$cameraId, $gateId, $direction, $plate, $confidence, $plateImage, $overviewImage, $clipUrl, $payloadToLog]);
         $eventId = (int)$db->lastInsertId();
 
         // 2. ENTRY LANE WORKFLOW
@@ -52,7 +58,7 @@ class AnprWebhookController extends Controller {
                 // Link raw event to existing session without generating a duplicate row
                 $db->prepare("UPDATE anpr_events SET session_id = ? WHERE id = ?")->execute([$recentSession['id'], $eventId]);
 
-                $this->success([
+                $this->respondCameraSuccess([
                     'barrier_open'       => true,
                     'barrier_signal'     => 'SIGNAL_ALREADY_SENT',
                     'session_code'       => $recentSession['session_code'],
@@ -79,7 +85,7 @@ class AnprWebhookController extends Controller {
                     $stmtAudit->execute([$plate, $eventId, $auditDetails, $clientIp]);
                 } catch (\Throwable $e) {}
 
-                $this->success([
+                $this->respondCameraSuccess([
                     'barrier_open'    => false,
                     'action'          => 'DENIED',
                     'status'          => 'BLACKLISTED',
@@ -94,7 +100,7 @@ class AnprWebhookController extends Controller {
             $barrierResult = BarrierRelayService::openBarrier($gateId, 'ENTRY', $plate, 'anpr_auto_entry');
 
             // Calculate validation deadline using system timezone
-            $entryTime = \App\Helpers\TimezoneHelper::now();
+            $entryTime = TimezoneHelper::now();
             $graceMinutes = TariffCalculator::getAdminGraceMinutes();
             $deadline = date('Y-m-d H:i:s', strtotime("+{$graceMinutes} minutes", strtotime($entryTime)));
 
@@ -123,7 +129,7 @@ class AnprWebhookController extends Controller {
 
             $db->prepare("UPDATE anpr_events SET session_id = ? WHERE id = ?")->execute([$sessionId, $eventId]);
 
-            $this->success([
+            $this->respondCameraSuccess([
                 'barrier_open'      => true,
                 'barrier_signal'    => 'SIGNAL_SENT_OPEN_BOOM_BARRIER',
                 'relay_info'        => $barrierResult,
@@ -133,7 +139,7 @@ class AnprWebhookController extends Controller {
                 'status'            => $initialStatus,
                 'grace_minutes'     => $graceMinutes,
                 'validation_deadline'=> $deadline,
-                'decision'          => $decision['decision'],
+                'decision'          => $decision['decision'] ?? 'AUTHORIZED',
                 'message'           => 'Vehicle registered on gate. Boom barrier opening signal sent.'
             ], 'ANPR Entry event processed successfully');
             return;
@@ -153,7 +159,7 @@ class AnprWebhookController extends Controller {
 
             if (!$session) {
                 // Session not found -> send to manual review (Never guess!)
-                $exitTime = \App\Helpers\TimezoneHelper::now();
+                $exitTime = TimezoneHelper::now();
                 $sessionCode = 'EXP-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
                 $stmtSess = $db->prepare("INSERT INTO parking_sessions (session_code, plate_number, entry_time, exit_time, exit_gate_id, exit_image_url, status, validation_deadline, manual_review_reason) VALUES (?, ?, ?, ?, ?, ?, 'MANUAL_REVIEW', ?, 'Exit detected without corresponding entry session')");
                 $stmtSess->execute([$sessionCode, $plate, $exitTime, $exitTime, $gateId, $overviewImage ?: $plateImage, $exitTime]);
@@ -161,7 +167,7 @@ class AnprWebhookController extends Controller {
 
                 $db->prepare("UPDATE anpr_events SET session_id = ?, status = 'manual_review' WHERE id = ?")->execute([$sessionId, $eventId]);
 
-                $this->success([
+                $this->respondCameraSuccess([
                     'barrier_open' => false,
                     'action'       => 'MANUAL_REVIEW_REQUIRED',
                     'session_code' => $sessionCode,
@@ -179,12 +185,12 @@ class AnprWebhookController extends Controller {
                 $barrierResult = BarrierRelayService::openBarrier($gateId, 'EXIT', $plate, 'anpr_auto_exit');
 
                 // Mark session completed with real duration
-                $exitTime = \App\Helpers\TimezoneHelper::now();
+                $exitTime = TimezoneHelper::now();
                 $durMin = max(1, (int)round((strtotime($exitTime) - strtotime($session['entry_time'])) / 60));
                 $db->prepare("UPDATE parking_sessions SET exit_time = ?, exit_gate_id = ?, exit_image_url = ?, status = 'EXIT_COMPLETED', total_duration_minutes = ? WHERE id = ?")
                    ->execute([$exitTime, $gateId, $overviewImage ?: $plateImage, $durMin, $session['id']]);
 
-                $this->success([
+                $this->respondCameraSuccess([
                     'barrier_open'   => true,
                     'barrier_signal' => 'SIGNAL_SENT_OPEN_BOOM_BARRIER',
                     'relay_info'     => $barrierResult,
@@ -216,7 +222,7 @@ class AnprWebhookController extends Controller {
                 $session['id']
             ]);
 
-            $this->success([
+            $this->respondCameraSuccess([
                 'barrier_open'      => false,
                 'action'            => 'PAYMENT_PENDING',
                 'session_id'        => $session['id'],
@@ -235,31 +241,152 @@ class AnprWebhookController extends Controller {
         $this->error('Unknown lane direction', 400);
     }
 
-    private function storeImageIfBase64(string $input, string $folder, string $plate): string {
-        if (!$input) return '';
-        if (str_starts_with($input, 'http://') || str_starts_with($input, 'https://') || str_starts_with($input, '/')) {
-            return $input;
+    private function respondCameraSuccess(array $data = [], string $message = 'Success', int $statusCode = 200): void {
+        while (ob_get_level()) {
+            ob_end_clean();
         }
+        $raw = file_get_contents('php://input');
+        $rawJson = json_decode($raw, true) ?: [];
+        $parkId = $rawJson['parkId'] ?? 'park1';
+        $deviceId = $rawJson['deviceId'] ?? 'PKC2640@Z80-IR-P';
+        $serialNum = $rawJson['serialNum'] ?? '210235C81T3258000018';
+        $now = date('Y-m-d H:i:s');
+        $ts = time();
 
-        if (preg_match('/^data:image\/(\w+);base64,/', $input, $matches)) {
-            $ext = $matches[1];
-            $data = base64_decode(substr($input, strpos($input, ',') + 1));
-        } else {
-            $ext = 'jpg';
-            $data = base64_decode($input);
+        $viidDeviceId = $rawJson['RegisterObject']['DeviceID'] 
+                     ?? $rawJson['KeepaliveObject']['DeviceID'] 
+                     ?? $rawJson['MotorVehicleListObject']['MotorVehicleObject'][0]['DeviceID']
+                     ?? $rawJson['MotorVehicleListObject']['MotorVehicleObject']['DeviceID']
+                     ?? $deviceId;
+
+        $viidStatusObj = [
+            'Id' => $viidDeviceId,
+            'LocalTime' => date('YmdHis'),
+            'RequestURL' => parse_url($_SERVER['REQUEST_URI'] ?? '/VIID/MotorVehicles', PHP_URL_PATH),
+            'StatusCode' => 0,
+            'StatusString' => 'OK'
+        ];
+
+        $payload = [
+            'version'   => $rawJson['version'] ?? '1.0',
+            'code'      => 0,
+            'msg'       => 'success',
+            'result'    => 0,
+            'desc'      => 'success',
+            'success'   => true,
+            'message'   => $message,
+            'parkId'    => $parkId,
+            'deviceId'  => $deviceId,
+            'serialNum' => $serialNum,
+            'ResponseStatusObject' => $viidStatusObj,
+            'ResponseStatusListObject' => [
+                'ResponseStatusObject' => [$viidStatusObj]
+            ],
+            'params'    => [
+                'result'      => 0,
+                'desc'        => 'success',
+                'gateControl' => ($data['barrier_open'] ?? true) ? 1 : 0,
+                'passType'    => 1,
+                'time'        => $now,
+                'timestamp'   => $ts
+            ],
+            'data'      => $data
+        ];
+
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        header('HTTP/1.1 ' . ($statusCode === 200 ? '200 OK' : $statusCode));
+        header('Content-Type: application/json; charset=UTF-8');
+        header('Content-Length: ' . strlen($json));
+        header('Connection: close');
+        header('Access-Control-Allow-Origin: *');
+        echo $json;
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
         }
+        exit;
+    }
 
-        if (!$data) return '';
-
-        $dir = __DIR__ . '/../../storage/uploads/' . $folder;
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+    private function sendUnvResponse(array $extraData = []): void {
+        while (ob_get_level()) {
+            ob_end_clean();
         }
+        $now = date('Y-m-d H:i:s');
+        $ts = time();
+        $parkId = $extraData['parkId'] ?? 'park1';
+        $deviceId = $extraData['deviceId'] ?? 'PKC2640@Z80-IR-P';
+        $serialNum = $extraData['serialNum'] ?? '210235C81T3258000018';
 
-        $cleanPlate = preg_replace('/[^A-Za-z0-9]/', '_', $plate);
-        $filename = $cleanPlate . '_' . time() . '.' . $ext;
-        file_put_contents($dir . '/' . $filename, $data);
+        $viidDeviceId = $extraData['RegisterObject']['DeviceID'] 
+                     ?? $extraData['KeepaliveObject']['DeviceID'] 
+                     ?? $deviceId;
 
-        return '/storage/uploads/' . $folder . '/' . $filename;
+        $viidStatusObj = [
+            'Id' => $viidDeviceId,
+            'LocalTime' => date('YmdHis'),
+            'RequestURL' => parse_url($_SERVER['REQUEST_URI'] ?? '/VIID/System/Register', PHP_URL_PATH),
+            'StatusCode' => 0,
+            'StatusString' => 'OK'
+        ];
+
+        $payload = [
+            'version'   => $extraData['version'] ?? '1.0',
+            'code'      => 0,
+            'msg'       => 'success',
+            'result'    => 0,
+            'desc'      => 'success',
+            'success'   => true,
+            'parkId'    => $parkId,
+            'deviceId'  => $deviceId,
+            'serialNum' => $serialNum,
+            'keepalive' => 30,
+            'keepAlive' => 30,
+            'heartbeat' => 30,
+            'time'      => $now,
+            'timestamp' => $ts,
+            'ResponseStatusObject' => $viidStatusObj,
+            'ResponseStatusListObject' => [
+                'ResponseStatusObject' => [$viidStatusObj]
+            ],
+            'params'    => [
+                'result'     => 0,
+                'desc'       => 'success',
+                'keepalive'  => 30,
+                'keepAlive'  => 30,
+                'heartbeat'  => 30,
+                'time'       => $now,
+                'timestamp'  => $ts,
+                'passType'   => 1,
+                'gateControl'=> 1
+            ],
+            'data'      => (object)[
+                'result'     => 0,
+                'desc'       => 'success',
+                'code'       => 0,
+                'msg'        => 'success',
+                'parkId'     => $parkId,
+                'deviceId'   => $deviceId,
+                'serialNum'  => $serialNum,
+                'keepalive'  => 30,
+                'keepAlive'  => 30,
+                'heartbeat'  => 30,
+                'time'       => $now,
+                'timestamp'  => $ts,
+                'passType'   => 1,
+                'gateControl'=> 1
+            ]
+        ];
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+
+        header('HTTP/1.1 200 OK');
+        header('Content-Type: application/json; charset=UTF-8');
+        header('Content-Length: ' . strlen($json));
+        header('Connection: close');
+        header('Access-Control-Allow-Origin: *');
+        echo $json;
+        if (function_exists('fastcgi_finish_request')) {
+            fastcgi_finish_request();
+        }
+        exit;
     }
 }
+

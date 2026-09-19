@@ -162,28 +162,40 @@ export default function LoginPage({ onExploreFeatures }) {
               <Sparkles size={12} color="var(--gold)" />
               Quick Demo Access
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
-                style={{ fontSize: '0.72rem', padding: '6px', fontWeight: 600 }}
+                style={{ fontSize: '0.70rem', padding: '6px 4px', fontWeight: 600, color: 'var(--status-purple, #a855f7)', borderColor: 'var(--status-purple-border, rgba(168, 85, 247, 0.4))' }}
+                onClick={() => setDemoUser('superadmin', 'S@nds1@b')}
+                title="Superadmin: superadmin / S@nds1@b"
+              >
+                Superadmin
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                style={{ fontSize: '0.70rem', padding: '6px 4px', fontWeight: 600 }}
                 onClick={() => setDemoUser('admin', 'Admin@12345')}
+                title="Admin: admin / Admin@12345"
               >
                 Admin
               </button>
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
-                style={{ fontSize: '0.72rem', padding: '6px', fontWeight: 600 }}
-                onClick={() => setDemoUser('operator', 'User@12345')}
+                style={{ fontSize: '0.70rem', padding: '6px 4px', fontWeight: 600 }}
+                onClick={() => setDemoUser('operator', 'operator123')}
+                title="Operator: operator / operator123"
               >
                 Operator
               </button>
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
-                style={{ fontSize: '0.72rem', padding: '6px', fontWeight: 600, color: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' }}
-                onClick={() => setDemoUser('receptionist', 'User@12345')}
+                style={{ fontSize: '0.70rem', padding: '6px 4px', fontWeight: 600, color: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' }}
+                onClick={() => setDemoUser('receptionist', 'operator123')}
+                title="Reception: receptionist / operator123"
               >
                 Reception
               </button>

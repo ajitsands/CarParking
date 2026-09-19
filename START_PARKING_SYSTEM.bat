@@ -42,31 +42,43 @@ if %ERRORLEVEL% EQU 0 (
         net start MySQL >nul 2>&1
         echo [+] MySQL Windows service is running.
     ) else (
-        echo [i] MySQL service check complete (or running via XAMPP / MariaDB).
+        echo [+] MySQL service check complete.
     )
 )
 echo.
 
-:: 3. Kill any lingering existing instances on port 8081 or 5173
-echo [*] Freeing ports 8081 and 5173 if previously bound...
+:: 3. Kill any lingering existing instances on port 8081, 5173, or 8889
+echo [*] Freeing ports 8081, 5173, and 8889 if previously bound...
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8081 ^| findstr LISTENING') do taskkill /F /PID %%a >nul 2>&1
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5173 ^| findstr LISTENING') do taskkill /F /PID %%a >nul 2>&1
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8889 ^| findstr LISTENING') do taskkill /F /PID %%a >nul 2>&1
 
-:: 4. Start PHP Backend Server on 0.0.0.0:8081
+:: 4. Start MediaMTX WebRTC/RTSP Stream Gateway
+echo [*] Starting Live RTSP Video Stream Bridge (MediaMTX Port 8889)...
+if exist "%~dp0tools\mediamtx\mediamtx.exe" (
+    start "SaNDS Parking - Stream Gateway (Port 8889)" cmd /k "cd /d %~dp0tools\mediamtx && mediamtx.exe mediamtx.yml"
+    ping -n 2 127.0.0.1 >nul
+    echo [+] Stream Bridge running at: http://%LOCAL_IP%:8889
+) else (
+    echo [i] Stream Gateway executable not found.
+)
+echo.
+
+:: 5. Start PHP Backend Server on 0.0.0.0:8081
 echo [*] Starting PHP Backend API Server (Port 8081)...
 start "SaNDS Parking - Backend API (Port 8081)" cmd /k "cd /d %~dp0 && php -S 0.0.0.0:8081 backend/public/index.php"
-timeout /t 2 /nobreak >nul
+ping -n 3 127.0.0.1 >nul
 echo [+] PHP Backend API Server running at: http://%LOCAL_IP%:8081
 echo.
 
-:: 5. Start Frontend Web Portal on 0.0.0.0:5173
+:: 6. Start Frontend Web Portal on 0.0.0.0:5173
 echo [*] Starting Frontend Web Portal (Port 5173)...
 start "SaNDS Parking - Frontend Portal (Port 5173)" cmd /k "cd /d %~dp0\frontend && npm run dev -- --host 0.0.0.0 --port 5173"
-timeout /t 3 /nobreak >nul
+ping -n 3 127.0.0.1 >nul
 echo [+] Frontend Web Portal running at: http://%LOCAL_IP%:5173
 echo.
 
-:: 6. Launch Browser to Admin Dashboard
+:: 7. Launch Browser to Admin Dashboard
 echo [*] Opening Web Management Portal in default browser...
 start http://localhost:5173
 
@@ -75,7 +87,7 @@ echo ===========================================================================
 echo                           ALL SERVICES STARTED!
 echo ===============================================================================
 echo.
-echo  [1] Admin & Cashier Portal:   http://localhost:5173
+echo  [1] Admin ^& Cashier Portal:   http://localhost:5173
 echo                                http://%LOCAL_IP%:5173
 echo.
 echo  [2] Mobile / Tablet Display:  http://%LOCAL_IP%:8081

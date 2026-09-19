@@ -19,7 +19,7 @@ class JWT {
         return $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
     }
 
-    public static function decode(string $token, ?string $secret = null): ?array {
+    public static function decode(string $token, ?string $secret = null, bool $checkExpiry = true): ?array {
         $config = require __DIR__ . '/../../config/app.php';
         $key = $secret ?: $config['jwt_secret'];
 
@@ -42,7 +42,7 @@ class JWT {
             return null;
         }
 
-        if (isset($payload['exp']) && $payload['exp'] < time()) {
+        if ($checkExpiry && isset($payload['exp']) && $payload['exp'] < time()) {
             return null; // Expired
         }
 

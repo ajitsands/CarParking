@@ -296,6 +296,11 @@ export default function GateManagementSection({ onGatesUpdated }) {
                   <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
                     IP: <strong>{g.camera_ip}</strong>:{g.camera_port || 80}
                   </div>
+                  {g.rtsp_url && (
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.62rem', color: 'var(--status-blue)', marginTop: '2px', wordBreak: 'break-all' }}>
+                      RTSP: {g.rtsp_url}
+                    </div>
+                  )}
                 </div>
               )
             },
@@ -491,8 +496,24 @@ export default function GateManagementSection({ onGatesUpdated }) {
               className="form-input"
               value={formData.camera_name}
               onChange={(e) => setFormData({ ...formData, camera_name: e.target.value })}
-              placeholder="e.g. Dahua ITC237-PW6M-IRLZF1050 / Hikvision ANPR"
+              placeholder="e.g. UNV PKC2640 (Z-80-IR-P) / Dahua ITC237"
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>RTSP Live Stream URL</span>
+              <span style={{ fontSize: '0.68rem', color: 'var(--status-blue)', fontFamily: 'var(--font-mono)' }}>rtsp://admin:pass@IP:554/media/video1</span>
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}
+              value={formData.rtsp_url}
+              onChange={(e) => setFormData({ ...formData, rtsp_url: e.target.value })}
+              placeholder="e.g. rtsp://admin:admin@123@192.168.1.13:554/media/video1"
+            />
+            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>RTSP stream address for live multi-lane video monitoring</span>
           </div>
 
           {/* Section Divider: Barrier Relay Hardware Settings */}
