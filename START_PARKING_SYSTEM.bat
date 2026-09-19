@@ -5,8 +5,6 @@ cls
 
 :: Change directory to this script's folder
 cd /d "%~dp0"
-set "ROOT_DIR=%~dp0"
-set "ROOT_DIR=%ROOT_DIR:~0,-1%"
 
 echo ===============================================================================
 echo                SaNDS Lab Smart Parking Management System
@@ -16,15 +14,11 @@ echo.
 
 :: 1. Detect Local Network IP Address
 echo [*] Detecting Local Network IPv4 Address...
-for /f "tokens=4 delims= " %%a in ('route print 0.0.0.0 ^| findstr 0.0.0.0 ^| findstr /v "0.0.0.0.*0.0.0.0.*0.0.0.0" ^| findstr /v "Default"') do (
-    set LOCAL_IP=%%a
+set "LOCAL_IP="
+for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /i "IPv4"') do (
+    if not defined LOCAL_IP set "LOCAL_IP=%%a"
 )
-if "%LOCAL_IP%"=="" (
-    for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /i "IPv4" ^| findstr /v "127.0.0.1"') do (
-        set LOCAL_IP=%%a
-    )
-)
-for /f "tokens=* delims= " %%a in ("%LOCAL_IP%") do set LOCAL_IP=%%a
+if defined LOCAL_IP set "LOCAL_IP=%LOCAL_IP: =%"
 if "%LOCAL_IP%"=="" set LOCAL_IP=127.0.0.1
 
 echo [+] Detected Server IP: %LOCAL_IP%
@@ -37,37 +31,26 @@ powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8081,5173,8889 -
 :: 3. Check MySQL Database Service
 echo [*] Checking MySQL Database Service...
 sc query MySQL80 >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    net start MySQL80 >nul 2>&1
-    echo [+] MySQL80 Windows service is active.
-) else (
-    sc query MySQL >nul 2>&1
-    if %ERRORLEVEL% EQU 0 (
-        net start MySQL >nul 2>&1
-        echo [+] MySQL Windows service is active.
-    ) else (
-        echo [+] MySQL check complete.
-    )
-)
+if %ERRORLEVEL% EQU 0 net start MySQL80 >nul 2>&1
+sc query MySQL >nul 2>&1
+if %ERRORLEVEL% EQU 0 net start MySQL >nul 2>&1
+echo [+] MySQL check complete.
 echo.
 
 :: 4. Start Live RTSP Video Stream Bridge in Background (Hidden)
 echo [*] Starting Live RTSP Stream Gateway (Port 8889)...
-if exist "%ROOT_DIR%\tools\mediamtx\mediamtx.exe" (
-    powershell -NoProfile -Command "Start-Process '%ROOT_DIR%\tools\mediamtx\mediamtx.exe' -ArgumentList 'mediamtx.yml' -WorkingDirectory '%ROOT_DIR%\tools\mediamtx' -WindowStyle Hidden" >nul 2>&1
-    echo [+] Stream Bridge running (Hidden Background).
-) else (
-    echo [i] Stream Gateway tool not installed (optional).
-)
+if exist "tools\mediamtx\mediamtx.exe" powershell -NoProfile -Command "Start-Process tools\mediamtx\mediamtx.exe -ArgumentList 'mediamtx.yml' -WorkingDirectory tools\mediamtx -WindowStyle Hidden" >nul 2>&1
+if exist "tools\mediamtx\mediamtx.exe" echo [+] Stream Bridge running (Hidden Background).
+if not exist "tools\mediamtx\mediamtx.exe" echo [i] Stream Gateway tool not installed (optional).
 
 :: 5. Start PHP Backend Server in Background (Hidden)
 echo [*] Starting PHP Backend API Server (Port 8081)...
-powershell -NoProfile -Command "Start-Process php -ArgumentList '-S 0.0.0.0:8081 backend/public/index.php' -WorkingDirectory '%ROOT_DIR%' -WindowStyle Hidden" >nul 2>&1
+powershell -NoProfile -Command "Start-Process php -ArgumentList '-S 0.0.0.0:8081 backend/public/index.php' -WindowStyle Hidden" >nul 2>&1
 echo [+] PHP Backend running on port 8081 (Hidden Background).
 
 :: 6. Start Frontend Web Server in Background (Hidden)
 echo [*] Starting Frontend Web Portal (Port 5173)...
-powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c npm run dev -- --host 0.0.0.0 --port 5173' -WorkingDirectory '%ROOT_DIR%\frontend' -WindowStyle Hidden" >nul 2>&1
+powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c npm run dev -- --host 0.0.0.0 --port 5173' -WorkingDirectory frontend -WindowStyle Hidden" >nul 2>&1
 echo [+] Frontend Portal running on port 5173 (Hidden Background).
 
 :: Wait 3 seconds for services to initialize
@@ -80,7 +63,7 @@ start http://localhost:5173
 cls
 echo ===============================================================================
 echo                SaNDS Lab Smart Parking Management System
-echo                    ONLINE & RUNNING (SINGLE CONSOLE)
+echo                   ONLINE AND RUNNING (SINGLE CONSOLE)
 echo ===============================================================================
 echo.
 echo  [+] PHP Backend API:       http://localhost:8081  ^|  http://%LOCAL_IP%:8081
@@ -112,8 +95,8 @@ if /i "%OPT%"=="2" (
     goto MENU
 )
 if /i "%OPT%"=="3" (
-    if exist "%ROOT_DIR%\backend\storage\logs\anpr_incoming.log" (
-        start notepad "%ROOT_DIR%\backend\storage\logs\anpr_incoming.log"
+    if exist "backend\storage\logs\anpr_incoming.log" (
+        start notepad "backend\storage\logs\anpr_incoming.log"
     ) else (
         echo Log file not created yet.
         pause
@@ -122,7 +105,7 @@ if /i "%OPT%"=="3" (
 )
 if /i "%OPT%"=="4" (
     echo [*] Restarting all services...
-    call "%ROOT_DIR%\STOP_PARKING_SYSTEM.bat"
+    call "%~dp0STOP_PARKING_SYSTEM.bat"
     goto :EOF
 )
 if /i "%OPT%"=="Q" (
