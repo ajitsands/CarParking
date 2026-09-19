@@ -2,12 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Car, Search, Filter, RefreshCw, Eye, CheckCircle2, CreditCard, 
   AlertCircle, ArrowRightCircle, Calendar, ShieldCheck, Building2, 
-  Clock, Zap, Activity, ChevronRight, UserCheck, AlertTriangle
+  Clock, Zap, Activity, ChevronRight, UserCheck, AlertTriangle, Camera
 } from 'lucide-react';
 import { api } from '../services/api';
 import StatusBadge from '../components/common/StatusBadge';
 import Modal from '../components/common/Modal';
 import ConfirmModal from '../components/common/ConfirmModal';
+import VehicleSnapshotModal from '../components/common/VehicleSnapshotModal';
 import DataTable from '../components/common/DataTable';
 import { useSettings } from '../context/SettingsContext';
 
@@ -62,6 +63,12 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
     session: null,
     isCash: false,
     loading: false
+  });
+
+  // Vehicle Snapshot Lightbox state
+  const [snapshotModal, setSnapshotModal] = useState({
+    isOpen: false,
+    session: null
   });
 
   const isInsideTab = ['CHARGING', 'INSIDE', 'ACTIVE'].includes(statusFilter);
@@ -654,17 +661,39 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{
-                      padding: '3px 8px',
-                      borderRadius: '4px',
-                      background: 'var(--bg-surface)',
-                      border: '1px solid var(--border-color)',
-                      fontFamily: 'var(--font-mono)',
-                      fontWeight: 800,
-                      fontSize: '0.84rem'
-                    }}>
-                      {sess.plate_number}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSnapshotModal({ isOpen: true, session: sess })}
+                      title="Click to view full camera snapshot"
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        background: 'var(--bg-surface)',
+                        border: '1px solid var(--border-color)',
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 800,
+                        fontSize: '0.84rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: 'inherit',
+                        transition: 'all 0.15s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#2563eb';
+                        e.currentTarget.style.color = '#2563eb';
+                        e.currentTarget.style.boxShadow = '0 0 0 2px rgba(37,99,235,0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'var(--border-color)';
+                        e.currentTarget.style.color = 'inherit';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <Camera size={13} color="#2563eb" />
+                      <span>{sess.plate_number}</span>
+                    </button>
                     {catBadge && (
                       <span style={{
                         fontSize: '0.65rem',
@@ -683,6 +712,75 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
                     <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>
                       {sess.owner_name} {sess.owner_department ? `(${sess.owner_department})` : ''}
                     </span>
+                  )}
+                </div>
+              );
+            }
+          },
+          {
+            key: 'snapshot',
+            label: 'Snapshot',
+            sortable: false,
+            render: (sess) => {
+              const imgUrl = sess.entry_image_url || sess.exit_image_url;
+              return (
+                <div 
+                  onClick={() => setSnapshotModal({ isOpen: true, session: sess })}
+                  title="Click to view full size ANPR camera snapshot"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {imgUrl ? (
+                    <div style={{
+                      position: 'relative',
+                      width: '46px',
+                      height: '30px',
+                      borderRadius: '5px',
+                      overflow: 'hidden',
+                      border: '1px solid var(--border-color)',
+                      background: '#0f172a',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                    }}>
+                      <img
+                        src={imgUrl.startsWith('http') || imgUrl.startsWith('/') || imgUrl.startsWith('data:') ? imgUrl : `/${imgUrl}`}
+                        alt={sess.plate_number}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                      <div 
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'rgba(0,0,0,0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: 0,
+                          transition: 'opacity 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0'; }}
+                      >
+                        <Eye size={12} color="#fff" />
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      style={{ padding: '2px 6px', fontSize: '0.68rem', gap: '3px' }}
+                      title="View ANPR Capture"
+                    >
+                      <Camera size={11} color="#2563eb" />
+                      <span>Snap</span>
+                    </button>
                   )}
                 </div>
               );
@@ -860,8 +958,18 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
                 <button
                   type="button"
                   className="btn btn-outline btn-sm"
+                  onClick={() => setSnapshotModal({ isOpen: true, session: sess })}
+                  title="View Camera Snapshot"
+                  style={{ color: '#2563eb', borderColor: '#bfdbfe' }}
+                >
+                  <Camera size={13} />
+                </button>
+
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
                   onClick={() => openDetails(sess.id)}
-                  title="View Details"
+                  title="View Full Details"
                 >
                   <Eye size={13} />
                 </button>
@@ -936,6 +1044,16 @@ export default function ParkingSessions({ onOpenPayment, onOpenValidation }) {
           statusColor: exitModal.session.status === 'VALIDATED' ? 'var(--status-green)' : 'var(--status-blue)',
           fee: formatCurrency(exitModal.session.net_amount || 0)
         } : null}
+      />
+
+      {/* Vehicle ANPR Camera Snapshot Lightbox Modal */}
+      <VehicleSnapshotModal
+        isOpen={snapshotModal.isOpen}
+        session={snapshotModal.session}
+        onClose={() => setSnapshotModal({ isOpen: false, session: null })}
+        onOpenValidation={onOpenValidation}
+        onOpenPayment={onOpenPayment}
+        onOpenExit={(sess) => handleOpenExitModal(sess, parseFloat(sess.net_amount || 0) > 0)}
       />
 
       {/* Detailed Session Modal */}

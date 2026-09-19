@@ -98,6 +98,29 @@ if ($uri !== '/' && file_exists(__DIR__ . $uri)) {
     return false;
 }
 
+// Serve uploaded assets (ANPR snapshots, logos, plates)
+if (str_starts_with($uri, '/storage/uploads/')) {
+    $filePath = realpath(__DIR__ . '/../' . ltrim($uri, '/'));
+    $allowedDir = realpath(__DIR__ . '/../storage/uploads');
+    if ($filePath && $allowedDir && str_starts_with($filePath, $allowedDir) && file_exists($filePath)) {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimes = [
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+            'gif'  => 'image/gif',
+            'webp' => 'image/webp',
+            'svg'  => 'image/svg+xml'
+        ];
+        header('Content-Type: ' . ($mimes[$ext] ?? 'application/octet-stream'));
+        header('Content-Length: ' . (string)filesize($filePath));
+        header('Access-Control-Allow-Origin: *');
+        header('Cache-Control: public, max-age=86400');
+        readfile($filePath);
+        exit;
+    }
+}
+
 // Global Exception Handler
 set_exception_handler(function (\Throwable $e) {
     Response::json([
