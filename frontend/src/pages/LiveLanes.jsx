@@ -58,6 +58,9 @@ export default function LiveLanes({ onOpenSimulator }) {
   const [logEndDate, setLogEndDate] = useState(getTodayStr());          // Default to Today's date
   const [activeDatePreset, setActiveDatePreset] = useState('today');   // 'today' | 'yesterday' | 'last7' | 'all' | 'custom'
 
+  const [latestEntryVehicle, setLatestEntryVehicle] = useState(null);
+  const lastProcessedLogIdRef = React.useRef(null);
+
   const loadData = async () => {
     try {
       const logParams = {};
@@ -72,7 +75,27 @@ export default function LiveLanes({ onOpenSimulator }) {
       ]);
 
       if (logsRes.success) {
-        setBarrierLogs(logsRes.data.logs || []);
+        const logs = logsRes.data.logs || [];
+        setBarrierLogs(logs);
+
+        // Check for new real-time ANPR barrier trigger events
+        if (logs.length > 0) {
+          const topLog = logs[0];
+          if (lastProcessedLogIdRef.current !== null && topLog.id > lastProcessedLogIdRef.current) {
+            // New ANPR event detected! Animate barrier arm
+            const gateId = topLog.gate_id || (topLog.direction === 'EXIT' ? 'GATE-OUT-01' : 'GATE-IN-01');
+            if (topLog.direction === 'ENTRY' || (topLog.gate_id && topLog.gate_id.includes('IN'))) {
+              setEntryBarrierOpen(prev => ({ ...prev, [gateId]: true }));
+              setTimeout(() => setEntryBarrierOpen(prev => ({ ...prev, [gateId]: false })), 5000);
+              showToast(`🟢 Vehicle ${topLog.plate_number} detected at Entry (${gateId})! Boom barrier opening.`);
+            } else {
+              setExitBarrierOpen(prev => ({ ...prev, [gateId]: true }));
+              setTimeout(() => setExitBarrierOpen(prev => ({ ...prev, [gateId]: false })), 5000);
+              showToast(`🔵 Vehicle ${topLog.plate_number} detected at Exit (${gateId})!`);
+            }
+          }
+          lastProcessedLogIdRef.current = topLog.id;
+        }
       }
 
       if (gatesRes.success) {
@@ -102,13 +125,19 @@ export default function LiveLanes({ onOpenSimulator }) {
       }
 
       if (sessRes.success) {
-        const inside = (sessRes.data.sessions || []).filter(s => !s.exit_time && s.status !== 'EXIT_COMPLETED');
+        const allSessions = sessRes.data.sessions || [];
+        const inside = allSessions.filter(s => !s.exit_time && s.status !== 'EXIT_COMPLETED');
         setActiveSessions(inside);
 
-        // Keep existing selection if vehicle still inside; otherwise clear — do NOT auto-select first item
+        // Track most recent entry session for display
+        if (inside.length > 0) {
+          setLatestEntryVehicle(inside[0]);
+        }
+
+        // Keep existing selection if vehicle still inside; otherwise auto-select most recent inside vehicle
         setSelectedExitSessionId(prev => {
           if (prev && inside.some(s => s.id === prev)) return prev;
-          return null; // ANPR will set this when a plate is detected
+          return inside[0]?.id || null;
         });
       }
     } catch (e) {}
@@ -331,6 +360,64 @@ export default function LiveLanes({ onOpenSimulator }) {
             isBarrierOpen={Boolean(entryBarrierOpen[currentEntryGate?.gate_id || 'GATE-IN-01'])}
           />
 
+          {/* Active / Latest Vehicle Recognized at Entry Gate */}
+          <div style={{
+            margin: '10px 12px 0',
+            padding: '10px 12px',
+            background: 'var(--bg-input)',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--border-color)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Car size={13} color="var(--status-green)" />
+                Latest Vehicle at Entry Gate:
+              </div>
+              <span className="badge badge-green" style={{ fontSize: '0.65rem' }}>
+                AUTO ANPR ENTRY
+              </span>
+            </div>
+
+            {latestEntryVehicle ? (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{
+                      padding: '4px 10px',
+                      background: '#ffffff',
+                      color: '#000000',
+                      border: '2px solid #000000',
+                      borderRadius: '4px',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 800,
+                      fontSize: '0.95rem',
+                      letterSpacing: '1px',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                    }}>
+                      {latestEntryVehicle.plate_number}
+                    </div>
+                    <StatusBadge status={latestEntryVehicle.status || 'ACTIVE_INSIDE'} />
+                  </div>
+
+                  <div style={{ textAlign: 'right', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                    Gate: <strong style={{ color: 'var(--text-primary)' }}>{latestEntryVehicle.entry_gate_id || currentEntryGate?.gate_id || 'GATE-IN-01'}</strong>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', fontSize: '0.68rem', color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                    <Clock size={11} /> Entry Time: {latestEntryVehicle.entry_time ? latestEntryVehicle.entry_time.slice(11, 19) : 'Just Now'}
+                  </span>
+                  <span>Session: <strong>{latestEntryVehicle.session_code}</strong></span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ padding: '8px 0', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                Waiting for incoming vehicle at ANPR camera...
+              </div>
+            )}
+          </div>
+
           <div style={{ padding: '12px' }}>
             <BoomBarrierVisualizer
               isOpen={Boolean(entryBarrierOpen[currentEntryGate?.gate_id || 'GATE-IN-01'])}
@@ -341,6 +428,7 @@ export default function LiveLanes({ onOpenSimulator }) {
               }}
             />
           </div>
+
 
           <div className="barrier-status-bar">
             <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
