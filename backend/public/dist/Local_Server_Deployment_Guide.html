@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Localhost & Local Server Deployment Guide - SaNDS Lab Smart Parking</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary: #ec4899;
+      --accent: #10b981;
+      --dark: #0f172a;
+      --surface: #1e293b;
+      --card-bg: #ffffff;
+      --text: #334155;
+      --text-dark: #0f172a;
+      --border: #e2e8f0;
+      --highlight: #f8fafc;
+      --code-bg: #0b1120;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.65;
+      color: var(--text);
+      background: #f1f5f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1e3a8a 100%);
+      color: #fff;
+      padding: 36px 24px;
+      border-bottom: 4px solid var(--primary);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+
+    .header-container {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      justifyContent: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-icon {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, #2563eb 0%, #ec4899 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+    }
+
+    .header-title h1 {
+      margin: 0;
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+
+    .header-title p {
+      margin: 4px 0 0;
+      font-size: 0.88rem;
+      color: #94a3b8;
+    }
+
+    .nav-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      font-size: 0.78rem;
+      color: #e2e8f0;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .nav-badge:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+    }
+
+    .main-content {
+      max-width: 1080px;
+      margin: -24px auto 40px;
+      padding: 0 20px;
+      width: 100%;
+      flex: 1;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+    }
+
+    .card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin: 20px 0 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .badge-pink { background: #fce7f3; color: #9d174d; }
+    .badge-purple { background: #ede9fe; color: #5b21b6; }
+    .badge-amber { background: #fef3c7; color: #92400e; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .port-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      position: relative;
+    }
+
+    .port-box.primary {
+      border-left: 4px solid var(--primary);
+    }
+    .port-box.secondary {
+      border-left: 4px solid var(--secondary);
+    }
+    .port-box.accent {
+      border-left: 4px solid var(--accent);
+    }
+
+    .port-number {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text-dark);
+    }
+
+    pre, code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    pre {
+      background: var(--code-bg);
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    code:not(pre code) {
+      background: #e2e8f0;
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.84em;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      margin-right: 8px;
+    }
+
+    .callout {
+      border-left: 4px solid var(--primary);
+      background: #eff6ff;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      font-size: 0.88rem;
+    }
+
+    .callout.success {
+      border-left-color: var(--accent);
+      background: #f0fdf4;
+    }
+
+    .callout.warning {
+      border-left-color: #f59e0b;
+      background: #fffbeb;
+    }
+
+    .diagram-box {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 20px;
+      border-radius: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.88rem;
+    }
+
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--text-dark);
+      font-weight: 700;
+    }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Banner -->
+  <header class="header-banner">
+    <div class="header-container">
+      <div class="header-branding">
+        <div class="header-icon">🏢</div>
+        <div class="header-title">
+          <h1>Localhost & Local Server Deployment Guide</h1>
+          <p>Complete Manual for Deploying on Local Windows PCs, Security Room Workstations & On-Premises Servers</p>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a href="/ANPR_Configuration_Procedure_Guide.html" class="nav-badge">📷 Camera Setup Guide</a>
+        <a href="/Cloud_ANPR_Integration_Architecture_Guide.html" class="nav-badge">☁️ Cloud Architecture</a>
+        <a href="/" class="nav-badge">🖥️ Back to Dashboard</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- Section 1: Architecture Overview -->
+    <section class="card">
+      <h2>1. Local Network System Architecture</h2>
+      <p>
+        The SaNDS Lab Smart Parking Management System runs completely on-premises inside your local hospital/building network subnet (e.g. <code>192.168.8.x</code> or <code>192.168.1.x</code>). It does not require continuous internet access for local barrier control, plate recognition, or cashier operations.
+      </p>
+
+      <div class="diagram-box">
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        LOCAL HOSPITAL / FACILITY LAN SUBNET                            │
+│                                                                                        │
+│   ┌──────────────────────────┐                   ┌──────────────────────────────────┐  │
+│   │   UNV / Dahua / Hik      │                   │   Central Local Parking Server   │  │
+│   │   ANPR Cameras           │  Push VIID / HTTP │   Host IP: 192.168.8.11          │  │
+│   │   IP: 192.168.8.200      ├──────────────────►│   ├── PHP API Backend (8081)     │  │
+│   │   IP: 192.168.8.201      │                   │   ├── Web Dashboard UI (5173)    │  │
+│   └─────────────┬────────────┘                   │   ├── MediaMTX Stream (8889)     │  │
+│                 │                                │   └── MySQL Database (3306)      │  │
+│                 │ RTSP Live Stream               └──────────────┬───────────────────┘  │
+│                 └───────────────────────────────────────────────┤                      │
+│                                                                 ▼                      │
+│   ┌──────────────────────────┐                   ┌──────────────────────────────────┐  │
+│   │   Barrier Relay Gates    │◄──────────────────┤   Operator / Cashier Terminals   │  │
+│   │   Relay IP: 192.168.1.201│   Pulse TCP 8080  │   http://192.168.8.11:5173       │  │
+│   └──────────────────────────┘                   └──────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+      </div>
+
+      <div class="grid-3">
+        <div class="port-box primary">
+          <div class="badge badge-pink" style="margin-bottom: 6px;">PHP Backend Server</div>
+          <div class="port-number">Port 8081</div>
+          <p style="font-size: 0.76rem; margin: 6px 0 0; color: #64748b;">
+            REST API, ANPR Camera Push Receiver (<code>/VIID/MotorVehicles</code>, <code>/api/v1/webhook/anpr</code>), Display Board backend.
+          </p>
+        </div>
+
+        <div class="port-box secondary">
+          <div class="badge badge-blue" style="margin-bottom: 6px;">Frontend Web Portal</div>
+          <div class="port-number">Port 5173</div>
+          <p style="font-size: 0.76rem; margin: 6px 0 0; color: #64748b;">
+            React Operator Portal, Live Gate Monitor, Visitor QR Validation, Reports, and System Settings.
+          </p>
+        </div>
+
+        <div class="port-box accent">
+          <div class="badge badge-green" style="margin-bottom: 6px;">Live RTSP Stream Bridge</div>
+          <div class="port-number">Port 8889</div>
+          <p style="font-size: 0.76rem; margin: 6px 0 0; color: #64748b;">
+            MediaMTX ultra-low latency WebRTC/HLS live video stream gateway for IP camera streams.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Prerequisites -->
+    <section class="card">
+      <h2>2. Server Prerequisites & Requirements</h2>
+      
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Requirement</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Operating System</strong></td>
+            <td>Windows 10 / 11 / Windows Server 2019+ <em>(or Ubuntu 20.04+)</em></td>
+            <td>Host machine for running services</td>
+          </tr>
+          <tr>
+            <td><strong>PHP</strong></td>
+            <td>PHP 8.1 or higher with <code>pdo_mysql, curl, mbstring, openssl, fileinfo</code></td>
+            <td>Powers backend API & camera webhook handler</td>
+          </tr>
+          <tr>
+            <td><strong>MySQL Server</strong></td>
+            <td>MySQL 8.0 or MariaDB 10.6+</td>
+            <td>Stores parking sessions, tariffs, settings, and logs</td>
+          </tr>
+          <tr>
+            <td><strong>Node.js & npm</strong></td>
+            <td>Node.js 18.x or 20.x</td>
+            <td>Runs or compiles the React Web Portal</td>
+          </tr>
+          <tr>
+            <td><strong>Network</strong></td>
+            <td>Static IPv4 on Local LAN (e.g. <code>192.168.8.11</code>)</td>
+            <td>Allows ANPR cameras and cashier PCs to reach the server</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section 3: Quick 1-Click Startup (Windows Localhost) -->
+    <section class="card">
+      <h2>3. Quick 1-Click Startup (Windows)</h2>
+      <p>
+        On Windows, you can start the entire parking system in a <strong>single unified console window</strong> using the pre-configured launcher:
+      </p>
+
+      <div style="margin: 20px 0;">
+        <div style="display: flex; align-items: center; margin-bottom: 14px;">
+          <span class="step-number">1</span>
+          <div>
+            <strong>Open the Root Project Directory</strong>
+            <div style="font-size: 0.8rem; color: #64748b;">Navigate to <code>E:\parkingsolution\</code> (or your project folder).</div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; margin-bottom: 14px;">
+          <span class="step-number">2</span>
+          <div>
+            <strong>Double-Click <code>START_PARKING_SYSTEM.bat</code></strong>
+            <div style="font-size: 0.8rem; color: #64748b;">
+              The script will detect your LAN IP, check MySQL, start the Stream Bridge (8889), PHP Backend (8081), Frontend Web Portal (5173), and open your browser automatically.
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; margin-bottom: 14px;">
+          <span class="step-number">3</span>
+          <div>
+            <strong>Log In to the Web Management Portal</strong>
+            <div style="font-size: 0.8rem; color: #64748b;">
+              URL: <code>http://localhost:5173</code> | Admin: <code>admin</code> / <code>admin123</code> | Superadmin: <code>superadmin</code> / <code>admin123</code>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout success">
+        <strong>Single Console Controller:</strong> The launcher window stays open with an interactive menu. You can press <code>1</code> for Dashboard, <code>2</code> for Display Board, <code>3</code> for Camera Logs, <code>4</code> to Restart, or <code>Q</code> to cleanly terminate all background services.
+      </div>
+    </section>
+
+    <!-- Section 4: Manual Step-by-Step Server Setup -->
+    <section class="card">
+      <h2>4. Manual Step-by-Step Installation (Local Server)</h2>
+
+      <h3>Step 1: Database Setup</h3>
+      <p>Create the database and import the initial schema and seeds:</p>
+      <pre><code># Open MySQL Terminal or phpMyAdmin:
+CREATE DATABASE parking_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+# Import Schema and Initial Seeds:
+mysql -u root -p parking_db &lt; backend/database/schema.sql
+mysql -u root -p parking_db &lt; backend/database/seed.sql</code></pre>
+
+      <h3>Step 2: Backend Configuration</h3>
+      <p>Configure database credentials in <code>backend/config/database.php</code>:</p>
+      <pre><code>&lt;?php
+return [
+    'host'     =&gt; '127.0.0.1',
+    'port'     =&gt; 3306,
+    'database' =&gt; 'parking_db',
+    'username' =&gt; 'root',
+    'password' =&gt; 'YOUR_MYSQL_PASSWORD',
+    'charset'  =&gt; 'utf8mb4'
+];</code></pre>
+
+      <h3>Step 3: Start PHP Backend Server</h3>
+      <pre><code># From the project root folder:
+php -S 0.0.0.0:8081 backend/public/index.php</code></pre>
+
+      <h3>Step 4: Start Frontend Web Portal</h3>
+      <pre><code># From the frontend folder:
+cd frontend
+npm install
+npm run dev -- --host 0.0.0.0 --port 5173</code></pre>
+
+      <h3>Step 5: Start Live RTSP Stream Bridge (Optional for Camera Video)</h3>
+      <pre><code># From the tools/mediamtx folder:
+cd tools/mediamtx
+mediamtx.exe mediamtx.yml</code></pre>
+    </section>
+
+    <!-- Section 5: ANPR Camera Configuration -->
+    <section class="card">
+      <h2>5. Configuring ANPR Cameras to Push to Local Server</h2>
+      <p>
+        Set all your ANPR Cameras (Uniview, Dahua, Hikvision) on the same LAN subnet to push plate events into your server IP:
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Camera Brand</th>
+            <th>Protocol</th>
+            <th>Server IP Setting</th>
+            <th>Server Port</th>
+            <th>Push Path / URL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Uniview (UNV)</strong></td>
+            <td>Photo Server 1 / VIID</td>
+            <td><code>192.168.8.11</code> <em>(Your Server IP)</em></td>
+            <td><code>8081</code></td>
+            <td><code>/VIID/MotorVehicles</code></td>
+          </tr>
+          <tr>
+            <td><strong>Dahua ANPR</strong></td>
+            <td>HTTP Post / Webhook</td>
+            <td><code>192.168.8.11</code> <em>(Your Server IP)</em></td>
+            <td><code>8081</code></td>
+            <td><code>/api/v1/webhook/anpr</code></td>
+          </tr>
+          <tr>
+            <td><strong>Hikvision LPR</strong></td>
+            <td>HTTP Listening / Alarm Host</td>
+            <td><code>192.168.8.11</code> <em>(Your Server IP)</em></td>
+            <td><code>8081</code></td>
+            <td><code>/api/v1/webhook/anpr</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Tip:</strong> You can check incoming camera events live in <code>backend/storage/logs/anpr_incoming.log</code> or on the <strong>Live Gate Monitor</strong> page (<code>/lanes</code>).
+      </div>
+    </section>
+
+    <!-- Section 6: Accessing from Other PCs on LAN -->
+    <section class="card">
+      <h2>6. Accessing the System from Other PCs on the LAN</h2>
+      <p>
+        Any cashier, security guard, or admin workstation connected to the same hospital or facility WiFi / Ethernet network can access the portal directly using the server's IP address:
+      </p>
+
+      <div class="grid-2">
+        <div class="port-box primary">
+          <strong>🖥️ Cashier & Gate Operator Terminal:</strong>
+          <div style="font-family: monospace; font-size: 0.95rem; margin: 6px 0; color: #2563eb;">
+            http://192.168.8.11:5173
+          </div>
+          <span style="font-size: 0.74rem; color: #64748b;">Dashboard, Live Gate Monitor, Cashier Checkout, Reports.</span>
+        </div>
+
+        <div class="port-box secondary">
+          <strong>📺 LED Parking Display Board App:</strong>
+          <div style="font-family: monospace; font-size: 0.95rem; margin: 6px 0; color: #ec4899;">
+            http://192.168.8.11:5173/display
+          </div>
+          <span style="font-size: 0.74rem; color: #64748b;">Floor-wise available slots counter and welcome banner for drivers.</span>
+        </div>
+      </div>
+
+      <div class="callout warning">
+        <strong>Windows Firewall Setup:</strong> If other PCs cannot connect, open <strong>Windows Defender Firewall &gt; Advanced Settings &gt; Inbound Rules</strong> and create an Inbound Rule allowing TCP Ports <code>8081</code>, <code>5173</code>, and <code>8889</code>.
+      </div>
+    </section>
+
+    <!-- Section 7: Auto-Start on Server Boot -->
+    <section class="card">
+      <h2>7. Configuring Auto-Start on Windows Boot</h2>
+      <p>
+        To ensure the parking system starts automatically whenever the server computer boots or restarts:
+      </p>
+      <ol style="font-size: 0.88rem; line-height: 1.8;">
+        <li>Press <kbd>Win + R</kbd>, type <code>shell:startup</code>, and press Enter to open the Windows Startup folder.</li>
+        <li>Right-click inside the folder &gt; <strong>New &gt; Shortcut</strong>.</li>
+        <li>Browse and select <code>E:\parkingsolution\START_PARKING_SYSTEM.bat</code>.</li>
+        <li>Name the shortcut <code>SaNDS Parking System Auto-Start</code> and click <strong>Finish</strong>.</li>
+      </ol>
+    </section>
+
+  </main>
+
+  <footer>
+    &copy; 2026 SaNDS Lab Smart Parking Management System. All rights reserved.
+  </footer>
+
+</body>
+</html>

@@ -506,6 +506,32 @@ export default function SettingsPage() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <a
+                      href="/Local_Server_Deployment_Guide.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        background: 'rgba(37, 99, 235, 0.15)',
+                        color: 'var(--status-blue)',
+                        border: '1px solid rgba(37, 99, 235, 0.4)',
+                        textDecoration: 'none',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      title="Open Local Server & Localhost Deployment Step-by-Step Manual"
+                    >
+                      <Server size={12} />
+                      Local Server Guide
+                      <ExternalLink size={11} style={{ opacity: 0.8 }} />
+                    </a>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -536,6 +562,7 @@ export default function SettingsPage() {
                       Reset to Defaults
                     </button>
                   </div>
+
                 </div>
 
                 <div className="panel-body" style={{ paddingTop: '16px' }}>
