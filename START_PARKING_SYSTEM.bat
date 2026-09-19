@@ -5,6 +5,8 @@ cls
 
 :: Change directory to this script's folder
 cd /d "%~dp0"
+set "ROOT_DIR=%~dp0"
+set "ROOT_DIR=%ROOT_DIR:~0,-1%"
 
 echo ===============================================================================
 echo                SaNDS Lab Smart Parking Management System
@@ -14,7 +16,7 @@ echo.
 
 :: 1. Detect Local Network IP Address
 echo [*] Detecting Local Network IPv4 Address...
-for /f "tokens=4 delims= " %%a in ('route print 0.0.0.0 ^| findstr 0.0.0.0 ^| findstr /v "0.0.0.0.*0.0.0.0.*0.0.0.0"') do (
+for /f "tokens=4 delims= " %%a in ('route print 0.0.0.0 ^| findstr 0.0.0.0 ^| findstr /v "0.0.0.0.*0.0.0.0.*0.0.0.0" ^| findstr /v "Default"') do (
     set LOCAL_IP=%%a
 )
 if "%LOCAL_IP%"=="" (
@@ -51,8 +53,8 @@ echo.
 
 :: 4. Start Live RTSP Video Stream Bridge in Background (Hidden)
 echo [*] Starting Live RTSP Stream Gateway (Port 8889)...
-if exist "%~dp0tools\mediamtx\mediamtx.exe" (
-    powershell -NoProfile -Command "Start-Process -FilePath '%~dp0tools\mediamtx\mediamtx.exe' -ArgumentList 'mediamtx.yml' -WorkingDirectory '%~dp0tools\mediamtx' -WindowStyle Hidden" >nul 2>&1
+if exist "%ROOT_DIR%\tools\mediamtx\mediamtx.exe" (
+    powershell -NoProfile -Command "Start-Process '%ROOT_DIR%\tools\mediamtx\mediamtx.exe' -ArgumentList 'mediamtx.yml' -WorkingDirectory '%ROOT_DIR%\tools\mediamtx' -WindowStyle Hidden" >nul 2>&1
     echo [+] Stream Bridge running (Hidden Background).
 ) else (
     echo [i] Stream Gateway tool not installed (optional).
@@ -60,12 +62,12 @@ if exist "%~dp0tools\mediamtx\mediamtx.exe" (
 
 :: 5. Start PHP Backend Server in Background (Hidden)
 echo [*] Starting PHP Backend API Server (Port 8081)...
-powershell -NoProfile -Command "Start-Process -FilePath 'php' -ArgumentList '-S 0.0.0.0:8081 backend/public/index.php' -WorkingDirectory '%~dp0' -WindowStyle Hidden" >nul 2>&1
+powershell -NoProfile -Command "Start-Process php -ArgumentList '-S 0.0.0.0:8081 backend/public/index.php' -WorkingDirectory '%ROOT_DIR%' -WindowStyle Hidden" >nul 2>&1
 echo [+] PHP Backend running on port 8081 (Hidden Background).
 
 :: 6. Start Frontend Web Server in Background (Hidden)
 echo [*] Starting Frontend Web Portal (Port 5173)...
-powershell -NoProfile -Command "Start-Process -FilePath 'cmd.exe' -ArgumentList '/c npm run dev -- --host 0.0.0.0 --port 5173' -WorkingDirectory '%~dp0frontend' -WindowStyle Hidden" >nul 2>&1
+powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/c npm run dev -- --host 0.0.0.0 --port 5173' -WorkingDirectory '%ROOT_DIR%\frontend' -WindowStyle Hidden" >nul 2>&1
 echo [+] Frontend Portal running on port 5173 (Hidden Background).
 
 :: Wait 3 seconds for services to initialize
@@ -110,8 +112,8 @@ if /i "%OPT%"=="2" (
     goto MENU
 )
 if /i "%OPT%"=="3" (
-    if exist "%~dp0backend\storage\logs\anpr_incoming.log" (
-        start notepad "%~dp0backend\storage\logs\anpr_incoming.log"
+    if exist "%ROOT_DIR%\backend\storage\logs\anpr_incoming.log" (
+        start notepad "%ROOT_DIR%\backend\storage\logs\anpr_incoming.log"
     ) else (
         echo Log file not created yet.
         pause
@@ -120,7 +122,7 @@ if /i "%OPT%"=="3" (
 )
 if /i "%OPT%"=="4" (
     echo [*] Restarting all services...
-    call "%~dp0STOP_PARKING_SYSTEM.bat"
+    call "%ROOT_DIR%\STOP_PARKING_SYSTEM.bat"
     goto :EOF
 )
 if /i "%OPT%"=="Q" (
