@@ -9,18 +9,10 @@ echo                       Stop All Running Services
 echo ===============================================================================
 echo.
 
-echo [*] Terminating Backend PHP Server (Port 8081)...
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8081 ^| findstr LISTENING') do (
-    taskkill /F /PID %%a >nul 2>&1
-    echo [+] Terminated PID: %%a (Port 8081)
-)
+echo [*] Terminating all parking services (PHP 8081, Frontend 5173, Stream Bridge 8889)...
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8081,5173,8889 -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue }" >nul 2>&1
 
-echo [*] Terminating Frontend Web Portal (Port 5173)...
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5173 ^| findstr LISTENING') do (
-    taskkill /F /PID %%a >nul 2>&1
-    echo [+] Terminated PID: %%a (Port 5173)
-)
-
+echo [+] All background services have been stopped.
 echo.
 echo ===============================================================================
 echo                           ALL SERVICES STOPPED
