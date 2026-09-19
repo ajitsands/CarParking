@@ -465,9 +465,103 @@
 }</pre>
     </div>
 
-    <!-- 5. Manufacturer Column Mapping -->
+    <!-- 5. Uniview (UNV) Setup -->
     <div class="card">
-      <h2>5. Camera Column & Parameter Mapping Table</h2>
+      <h2>5. Uniview (UNV) ANPR Camera Configuration (Step-by-Step)</h2>
+      <p><strong>Supported Models:</strong> Uniview PKC2640, PKC2640@Z80-IR-P, HC121 series, and UNV ITS/LPR Traffic IPCs.</p>
+
+      <h3>Step 5.1: Access Camera Web Management</h3>
+      <ol>
+        <li>Open your browser and navigate to the UNV camera IP (e.g., <code>http://192.168.8.200</code>).</li>
+        <li>Log in with your camera administrator credentials.</li>
+        <li>Ensure Live View shows active vehicle recognition in the detection zone.</li>
+      </ol>
+
+      <h3>Step 5.2: Configure Photo Server (Video&amp;Image Database / VIID Protocol)</h3>
+      <ol>
+        <li>Navigate to: <strong>Setup</strong> &rarr; <strong>System</strong> &rarr; <strong>Photo Server</strong> &rarr; <strong>Platform 1</strong>.</li>
+        <li>Configure the parameters exactly as shown below:
+          <ul>
+            <li><strong>Enable:</strong> Checked &check;</li>
+            <li><strong>Protocol:</strong> <code>Video&amp;Image Database</code> (GA/T 1400 / VIID Standard)</li>
+            <li><strong>Transfer Protocol Type:</strong> <code>HTTP</code></li>
+            <li><strong>Server IP:</strong> <code>192.168.8.210</code> <em>(IP of this Parking Solution server)</em></li>
+            <li><strong>Server Port:</strong> <code>8081</code> <em>(or <code>8000</code> depending on backend port)</em></li>
+            <li><strong>LPR ID:</strong> <code>EZIPC0</code> <em>(Lane / Gate code identifier)</em></li>
+            <li><strong>Device ID:</strong> <code>12345678901236547896</code> <em>(Camera Device ID)</em></li>
+            <li><strong>Username:</strong> <code>admin</code></li>
+            <li><strong>Password &amp; Confirm:</strong> <code>admin</code> <em>(or camera password)</em></li>
+            <li><strong>Coordinate Mode:</strong> <code>Percentage Mode</code></li>
+            <li><strong>Connection Mode:</strong> <code>Short Connection</code></li>
+            <li><strong>Report Data Type:</strong> &check; <strong>Motor Vehicle</strong> &check; <strong>Non-Motor Vehicle</strong> &check; <strong>Person</strong> &check; <strong>Face</strong></li>
+          </ul>
+        </li>
+        <li>Click <strong>Save</strong>.</li>
+      </ol>
+
+      <!-- UNV Photo Server Screenshot Mockup Card -->
+      <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 18px; margin: 16px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-bottom: 14px;">
+          <div style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">📷 Uniview Photo Server &mdash; Platform 1 Configuration Panel</div>
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 20px; font-weight: 700;">
+            <span style="display:inline-block; width:8px; height:8px; background:#22c55e; border-radius:50%;"></span> Photo Server 1: Connected (Green)
+          </div>
+        </div>
+
+        <table style="margin: 0; background: #fff; font-size: 0.84rem;">
+          <tbody>
+            <tr><td style="width: 35%; font-weight: 600;">Enable</td><td><span class="badge badge-green">&check; Enabled</span></td></tr>
+            <tr><td style="font-weight: 600;">Protocol</td><td><code>Video&amp;Image Database</code> (GA/T 1400 VIID)</td></tr>
+            <tr><td style="font-weight: 600;">Transfer Protocol Type</td><td><code>HTTP</code></td></tr>
+            <tr><td style="font-weight: 600;">Server IP</td><td><code>192.168.8.210</code> (Local Server IP)</td></tr>
+            <tr><td style="font-weight: 600;">Server Port</td><td><code>8081</code></td></tr>
+            <tr><td style="font-weight: 600;">LPR ID / Device ID</td><td><code>EZIPC0</code> / <code>12345678901236547896</code></td></tr>
+            <tr><td style="font-weight: 600;">Username / Password</td><td><code>admin</code> / <code>admin</code></td></tr>
+            <tr><td style="font-weight: 600;">Coordinate &amp; Connection</td><td><code>Percentage Mode</code> / <code>Short Connection</code></td></tr>
+            <tr><td style="font-weight: 600;">Report Data Type</td><td>Motor Vehicle &bull; Non-Motor Vehicle &bull; Person &bull; Face</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Step 5.3: Verify Connection Status</h3>
+      <p>
+        Look at the <strong>Real time Status</strong> section in the bottom-left of the camera web interface:
+      </p>
+      <ul>
+        <li><strong>Photo Server 1:</strong> Must show a 🟢 <strong>Green Dot</strong> (Connected and Handshake Registered).</li>
+        <li>If 🔴 Red, verify the server IP is reachable and port <code>8081</code> is open in Windows Firewall.</li>
+      </ul>
+
+      <h3>UNV GA/T 1400 JSON Payload Sent to Server:</h3>
+      <pre>{
+  "MotorVehicleListObject": {
+    "MotorVehicleObject": [
+      {
+        "MotorVehicleID": "123456789012365478960220260919220953000010200001",
+        "DeviceID": "12345678901236547896",
+        "PlateNo": "347370",
+        "PlateColor": "99",
+        "VehicleColor": "99",
+        "TollgateID": "EZIPC0",
+        "MarkTime": "20260919220953",
+        "SubImageList": {
+          "SubImageInfoObject": [
+            {
+              "Type": "01",
+              "StoragePath": "http://192.168.8.200/snapshot/plate.jpg",
+              "Data": "base64_encoded_jpeg_data..."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}</pre>
+    </div>
+
+    <!-- 6. Manufacturer Column Mapping -->
+    <div class="card">
+      <h2>6. Camera Column & Parameter Mapping Table</h2>
       <p>Configure or verify these mappings under <strong>System Settings &rarr; Camera Manufacturer Profile</strong>:</p>
 
       <table>
@@ -548,9 +642,9 @@
       </table>
     </div>
 
-    <!-- 6. Snapshot Image Storage Path -->
+    <!-- 7. Snapshot Image Storage Path -->
     <div class="card">
-      <h2>6. Camera Snapshot Storage Folder Path</h2>
+      <h2>7. Camera Snapshot Storage Folder Path</h2>
       <p>Incoming camera vehicle photos (Base64 data, multipart binary uploads, or snapshot links) are automatically stored onto disk:</p>
 
       <div class="alert-box">
@@ -562,9 +656,9 @@
       <p>Images stored here are directly indexed and visible in Parking Sessions, Live Monitor, and Audit Trails.</p>
     </div>
 
-    <!-- 7. Boom Barrier Relay Hardware Setup -->
+    <!-- 8. Boom Barrier Relay Hardware Setup -->
     <div class="card">
-      <h2>7. Boom Barrier Relay Hardware Configuration</h2>
+      <h2>8. Boom Barrier Relay Hardware Configuration</h2>
       <p>The system triggers barrier opening via Ethernet IP Relay modules (Dry Contact NO/COM pulse):</p>
       <ul>
         <li><strong>Relay Wiring:</strong> Connect Relay Channel 1 (COM and NO terminals) to the Boom Barrier motherboard's <strong>Open Signal</strong> dry contact input.</li>
@@ -575,9 +669,9 @@
       </ul>
     </div>
 
-    <!-- 8. Prepaid Parking & Whitelisting -->
+    <!-- 9. Prepaid Parking & Whitelisting -->
     <div class="card">
-      <h2>8. Prepaid Passes & Automatic Whitelisting</h2>
+      <h2>9. Prepaid Passes & Automatic Whitelisting</h2>
       <p>For vehicles paying for Day, Week, or Month parking passes:</p>
       <ol>
         <li>Go to <strong>Prepaid Passes</strong> in the top menu &rarr; click <strong>+ Issue New Prepaid Pass</strong>.</li>
@@ -591,9 +685,9 @@
       </div>
     </div>
 
-    <!-- 9. Troubleshooting -->
+    <!-- 10. Troubleshooting -->
     <div class="card">
-      <h2>9. Field Verification & Troubleshooting</h2>
+      <h2>10. Field Verification & Troubleshooting</h2>
       <table>
         <thead>
           <tr>
