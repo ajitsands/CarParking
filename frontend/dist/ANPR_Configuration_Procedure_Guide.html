@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANPR Camera Integration & System Configuration Manual - KIMSHEALTH Parking</title>
+  <style>
+    :root {
+      --primary: #ec4899;
+      --secondary: #2563eb;
+      --dark: #0f172a;
+      --surface: #1e293b;
+      --text: #334155;
+      --text-dark: #0f172a;
+      --border: #e2e8f0;
+      --accent: #10b981;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: #f8fafc;
+      margin: 0;
+      padding: 0;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      color: #fff;
+      padding: 40px 20px;
+      border-bottom: 4px solid var(--primary);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .header-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      justifyContent: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .doc-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 30px auto 60px;
+      padding: 0 20px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px;
+      margin-bottom: 26px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.85rem;
+      color: #fff;
+      font-weight: 800;
+    }
+    h2 {
+      font-size: 1.35rem;
+      color: var(--text-dark);
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 10px;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h3 {
+      font-size: 1.05rem;
+      color: var(--secondary);
+      margin-top: 20px;
+    }
+    p, li {
+      font-size: 0.92rem;
+      color: #475569;
+    }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    pre {
+      background: #0f172a;
+      color: #a7f3d0;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      border: 1px solid #334155;
+    }
+    .url-box {
+      background: #0f172a;
+      border-left: 4px solid var(--primary);
+      padding: 14px 18px;
+      border-radius: 6px;
+      color: #38bdf8;
+      font-family: monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 10px 0 16px;
+      word-break: break-all;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.88rem;
+    }
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 10px 14px;
+      text-align: left;
+    }
+    th {
+      background: #f8fafc;
+      color: var(--text-dark);
+      font-weight: 700;
+    }
+    tr:nth-child(even) {
+      background: #fdfdfd;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-primary { background: #fce7f3; color: #be185d; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .badge-green { background: #d1fae5; color: #065f46; }
+    .alert-box {
+      background: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 14px 18px;
+      border-radius: 6px;
+      margin: 16px 0;
+      font-size: 0.88rem;
+    }
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-logo {
+      height: 48px;
+      width: auto;
+      background: #ffffff;
+      padding: 6px 14px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    /* ── App Footer (Matching Application) ─────────────────── */
+    .app-footer {
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 0.88rem;
+      color: #64748b;
+      margin-top: 40px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+    }
+    .footer-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      justifyContent: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .app-footer__rights {
+      color: #475569;
+    }
+    .app-footer__sep {
+      color: #cbd5e1;
+      margin: 0 4px;
+    }
+    .app-footer__powered {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .app-footer__sands-btn {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.88rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      text-decoration: underline;
+    }
+    .app-footer__sands-btn:hover {
+      color: #ec4899;
+      background: #fdf2f8;
+    }
+
+    /* ── SaNDS Lab Light Background Modal Popup ───────────── */
+    .sands-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: sandsOverlayIn 0.2s ease;
+    }
+    @keyframes sandsOverlayIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .sands-popup {
+      position: relative;
+      background: #ffffff; /* Clean Light Background by default */
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 36px 32px 28px;
+      width: 360px;
+      max-width: 92vw;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.05);
+      text-align: center;
+      animation: sandsPopupIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes sandsPopupIn {
+      from { transform: scale(0.85) translateY(20px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .sands-popup__close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .sands-popup__close:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+    .sands-popup__logo-wrap {
+      background: transparent; /* No colored background on logo */
+      padding: 0;
+      margin: 0 auto 12px;
+      width: fit-content;
+    }
+    .sands-popup__logo {
+      display: block;
+      height: 54px;
+      width: auto;
+      object-fit: contain;
+      margin: 0 auto;
+    }
+    .sands-popup__tagline {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin: 0 0 24px;
+      font-weight: 500;
+    }
+    .sands-popup__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sands-popup__action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .sands-popup__action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    .sands-popup__action-btn:active {
+      transform: translateY(0);
+    }
+    .sands-popup__btn-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .sands-popup__action-btn--whatsapp {
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      color: #fff;
+    }
+    .sands-popup__action-btn--website {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #fff;
+    }
+    .sands-popup__action-btn--products {
+      background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+      color: #fff;
+    }
+    @media print {
+      .header-banner { padding: 20px 0; }
+      .print-btn, .app-footer, .sands-overlay { display: none; }
+      body { background: #fff; }
+      .card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-banner">
+    <div class="header-container">
+      <div class="header-branding">
+        <img
+          src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
+          alt="SaNDS Lab Logo"
+          class="header-logo"
+        />
+        <div>
+          <div class="doc-badge">TECHNICAL REFERENCE MANUAL</div>
+          <h1>ANPR Camera Webhook Integration &amp; Configuration Guide</h1>
+          <div style="font-size: 0.85rem; color: #94a3b8;">
+            System: Smart Hospital Car Parking &amp; Visitor Validation Solution | KIMSHEALTH Bahrain
+          </div>
+        </div>
+      </div>
+      <div>
+        <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- 1. Overview & Architecture -->
+    <div class="card">
+      <h2>1. Architecture & Real-Time Flow</h2>
+      <p>
+        The parking solution interfaces directly with ANPR cameras at entry and exit gate lanes. When a vehicle passes through a lane, the camera captures the plate number and pushes an HTTP POST webhook request containing JSON metadata and snapshot images. The system processes the event in under 80 milliseconds, evaluates access permissions, controls the boom barrier, and tracks parking tariffs.
+      </p>
+      <div class="alert-box">
+        <strong>⚡ Decision Engine Response Time:</strong> &lt; 80ms.<br>
+        <strong>🔒 Whitelist / Emergency / Prepaid Passes:</strong> Instant automated boom barrier opening with fee waiver (BD 0.000).<br>
+        <strong>⏱️ Unvalidated Visitors:</strong> Entry barrier opens, grace period countdown starts, and automated tariff charging commences if unvalidated after grace minutes.
+      </div>
+    </div>
+
+    <!-- 2. Webhook URLs -->
+    <div class="card">
+      <h2>2. Webhook URLs to Configure in Camera Software</h2>
+      <p>Choose the target URL based on whether the camera is communicating on a Local Area Network (LAN) or Cloud WAN:</p>
+
+      <h3>Option A: Local Network (On-Premise LAN IP)</h3>
+      <p>Recommended for hospital sites where cameras and this computer are plugged into the same local router or switch:</p>
+      <div class="url-box">http://192.168.100.4:8000/api/v1/webhook/anpr</div>
+      <p style="font-size: 0.8rem; color: #64748b;">
+        * Note: Replace <code>192.168.100.4</code> with the static LAN IP assigned to your server machine by the hospital IT team.
+      </p>
+
+      <h3>Option B: Production Cloud Server (Domain Name)</h3>
+      <p>For cloud-hosted deployments where cameras push over the public internet with SSL encryption:</p>
+      <div class="url-box">https://parking.sandslab.com/api/v1/webhook/anpr</div>
+
+      <h3>Option C: Localhost (Testing on Same PC)</h3>
+      <div class="url-box">http://127.0.0.1:8000/api/v1/webhook/anpr</div>
+    </div>
+
+    <!-- 3. Dahua Setup -->
+    <div class="card">
+      <h2>3. Dahua ANPR Camera Configuration (Step-by-Step)</h2>
+      <p><strong>Supported Models:</strong> Dahua DHI-ITC413-PW4D, ITC237, ITC215, and all Dahua Traffic ITS cameras.</p>
+
+      <h3>Step 3.1: Enable Road Traffic Detection</h3>
+      <ol>
+        <li>Open browser and navigate to camera IP (default: <code>http://192.168.1.108</code>).</li>
+        <li>Login with camera admin credentials.</li>
+        <li>Go to: <strong>Setting</strong> &rarr; <strong>Event</strong> &rarr; <strong>Traffic Recognition</strong> (or <strong>Road Traffic</strong>).</li>
+        <li>Check <strong>Enable Road Traffic</strong>. Set Region to <strong>Bahrain (BHR)</strong> or <strong>GCC</strong>.</li>
+        <li>Click <strong>Save</strong>.</li>
+      </ol>
+
+      <h3>Step 3.2: Configure HTTP Push Webhook</h3>
+      <ol>
+        <li>Go to: <strong>Setting</strong> &rarr; <strong>Network</strong> &rarr; <strong>Access Platform</strong> &rarr; <strong>HTTP Push</strong> (or <strong>Alarm Server</strong>).</li>
+        <li>Configure the settings:
+          <ul>
+            <li><strong>Enable:</strong> Checked</li>
+            <li><strong>Protocol:</strong> HTTP</li>
+            <li><strong>Method:</strong> POST</li>
+            <li><strong>Destination IP:</strong> <code>192.168.100.4</code> (Your Host Server IP)</li>
+            <li><strong>Port:</strong> <code>8000</code></li>
+            <li><strong>Request Path / URL:</strong> <code>/api/v1/webhook/anpr</code></li>
+            <li><strong>Data Format:</strong> JSON (UTF-8)</li>
+            <li><strong>Upload Pictures:</strong> Check <strong>Plate Picture</strong> & <strong>Panoramic Overview Picture</strong>.</li>
+          </ul>
+        </li>
+        <li>Click <strong>Save</strong> and <strong>Apply</strong>.</li>
+      </ol>
+
+      <h3>Dahua JSON Payload Format Sent to Server:</h3>
+      <pre>{
+  "PlateNumber": "BHR 55443",
+  "PlateColor": "Blue",
+  "VehicleColor": "Silver",
+  "VehicleType": "Sedan",
+  "TimeStamp": "2026-09-10 12:45:00",
+  "Channel": 1,
+  "Lane": 1,
+  "SnapPicURL": "http://192.168.100.20/snapshot/img1.jpg"
+}</pre>
+    </div>
+
+    <!-- 4. Hikvision Setup -->
+    <div class="card">
+      <h2>4. Hikvision ANPR Camera Configuration</h2>
+      <p><strong>Supported Models:</strong> DS-2CD7A series, iDS-TCM403, iDS DeepinView Traffic IPC.</p>
+      <ol>
+        <li>Navigate to: <strong>Configuration</strong> &rarr; <strong>Network</strong> &rarr; <strong>Advanced Settings</strong> &rarr; <strong>HTTP Listening</strong> (or <strong>Alarm Server</strong>).</li>
+        <li>Set:
+          <ul>
+            <li><strong>Destination Address:</strong> <code>192.168.100.4</code></li>
+            <li><strong>Port:</strong> <code>8000</code></li>
+            <li><strong>URL:</strong> <code>/api/v1/webhook/anpr</code></li>
+            <li><strong>Protocol:</strong> HTTP POST</li>
+            <li><strong>Picture Upload:</strong> Enabled (Plate Cutout & Overview Snapshot).</li>
+          </ul>
+        </li>
+        <li>Under <strong>Road Traffic &rarr; Vehicle Detection</strong>, ensure region is GCC / Bahrain.</li>
+        <li>Click <strong>Save</strong>.</li>
+      </ol>
+      <pre>{
+  "licensePlate": "BHR 11223",
+  "laneNo": 1,
+  "dateTime": "2026-09-10 12:45:00",
+  "vehicleType": "Car",
+  "vehicleColor": "Silver",
+  "picture": ""
+}</pre>
+    </div>
+
+    <!-- 5. Manufacturer Column Mapping -->
+    <div class="card">
+      <h2>5. Camera Column & Parameter Mapping Table</h2>
+      <p>Configure or verify these mappings under <strong>System Settings &rarr; Camera Manufacturer Profile</strong>:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter Purpose</th>
+            <th>Dahua (ITC Series)</th>
+            <th>Hikvision (Smart LPR)</th>
+            <th>Uniview (UNV)</th>
+            <th>Generic / Custom</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>License Plate Key</strong></td>
+            <td><code>PlateNumber</code></td>
+            <td><code>licensePlate</code></td>
+            <td><code>PlateText</code></td>
+            <td><code>plate_number</code></td>
+          </tr>
+          <tr>
+            <td><strong>Gate / Channel Key</strong></td>
+            <td><code>Channel</code></td>
+            <td><code>laneNo</code></td>
+            <td><code>ChannelID</code></td>
+            <td><code>gate_code</code></td>
+          </tr>
+          <tr>
+            <td><strong>Lane Number</strong></td>
+            <td><code>Lane</code></td>
+            <td><code>laneNo</code></td>
+            <td><code>TollGateID</code></td>
+            <td><code>lane_number</code></td>
+          </tr>
+          <tr>
+            <td><strong>Timestamp Key</strong></td>
+            <td><code>TimeStamp</code> / <code>UTC</code></td>
+            <td><code>dateTime</code></td>
+            <td><code>PassTime</code></td>
+            <td><code>timestamp</code></td>
+          </tr>
+          <tr>
+            <td><strong>Vehicle Type Key</strong></td>
+            <td><code>VehicleType</code></td>
+            <td><code>vehicleType</code></td>
+            <td><code>CarType</code></td>
+            <td><code>vehicle_type</code></td>
+          </tr>
+          <tr>
+            <td><strong>Vehicle Color Key</strong></td>
+            <td><code>VehicleColor</code></td>
+            <td><code>vehicleColor</code></td>
+            <td><code>PlateColor</code></td>
+            <td><code>vehicle_color</code></td>
+          </tr>
+          <tr>
+            <td><strong>Snapshot Image Key</strong></td>
+            <td><code>Image</code> / <code>SnapPicURL</code></td>
+            <td><code>picture</code></td>
+            <td><code>ImageURL</code></td>
+            <td><code>image_base64</code></td>
+          </tr>
+          <tr>
+            <td><strong>Channel for Entry Gate</strong></td>
+            <td><code>1</code> &rarr; GATE-IN-01</td>
+            <td><code>1</code></td>
+            <td><code>1</code></td>
+            <td><code>GATE-IN-01</code></td>
+          </tr>
+          <tr>
+            <td><strong>Channel for Exit Gate</strong></td>
+            <td><code>2</code> &rarr; GATE-OUT-01</td>
+            <td><code>2</code></td>
+            <td><code>2</code></td>
+            <td><code>GATE-OUT-01</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 6. Snapshot Image Storage Path -->
+    <div class="card">
+      <h2>6. Camera Snapshot Storage Folder Path</h2>
+      <p>Incoming camera vehicle photos (Base64 data, multipart binary uploads, or snapshot links) are automatically stored onto disk:</p>
+
+      <div class="alert-box">
+        <strong>Configured Directory:</strong> <code>storage/uploads/anpr_snapshots</code><br>
+        <strong>Host Disk Absolute Path:</strong> <code>E:\parkingsolution\backend\storage\uploads\anpr_snapshots</code><br>
+        <strong>File Naming Format:</strong> <code>[PLATE]_[DIRECTION]_[YYYYMMDD_HHMMSS]_[RAND].jpg</code><br>
+        <em>Example:</em> <code>BHR_55443_entry_20260910_124500_91a2.jpg</code>
+      </div>
+      <p>Images stored here are directly indexed and visible in Parking Sessions, Live Monitor, and Audit Trails.</p>
+    </div>
+
+    <!-- 7. Boom Barrier Relay Hardware Setup -->
+    <div class="card">
+      <h2>7. Boom Barrier Relay Hardware Configuration</h2>
+      <p>The system triggers barrier opening via Ethernet IP Relay modules (Dry Contact NO/COM pulse):</p>
+      <ul>
+        <li><strong>Relay Wiring:</strong> Connect Relay Channel 1 (COM and NO terminals) to the Boom Barrier motherboard's <strong>Open Signal</strong> dry contact input.</li>
+        <li><strong>Relay Pulse Duration:</strong> <code>800 ms</code> (Configurable in Settings).</li>
+        <li><strong>Entry Barrier Relay Target:</strong> <code>192.168.1.201:8080</code> (Gate: GATE-IN-01)</li>
+        <li><strong>Exit Barrier Relay Target:</strong> <code>192.168.1.202:8080</code> (Gate: GATE-OUT-01)</li>
+        <li><strong>Relay Command:</strong> <code>RELAY_CH1_PULSE</code></li>
+      </ul>
+    </div>
+
+    <!-- 8. Prepaid Parking & Whitelisting -->
+    <div class="card">
+      <h2>8. Prepaid Passes & Automatic Whitelisting</h2>
+      <p>For vehicles paying for Day, Week, or Month parking passes:</p>
+      <ol>
+        <li>Go to <strong>Prepaid Passes</strong> in the top menu &rarr; click <strong>+ Issue New Prepaid Pass</strong>.</li>
+        <li>Enter Start Date, Duration Plan (Day/Week/Month), Plate Number, Vehicle Type, Owner Name, Contact Phone, and Payment Method (Cash, BenefitPay QR, Card).</li>
+        <li>Click <strong>Confirm & Issue Prepaid Pass</strong>.</li>
+      </ol>
+      <div class="alert-box">
+        <strong>Automatic Whitelisting Effect:</strong><br>
+        The vehicle is immediately inserted into the <code>vehicles</code> table with <code>access_status = 'whitelisted'</code>.<br>
+        When the ANPR camera detects the vehicle, the Decision Engine automatically recognizes the active pass, opens the boom barrier, waives the parking fee (<code>BD 0.000</code>), and records the transaction in the Financial and Vehicle-Specific Ledgers.
+      </div>
+    </div>
+
+    <!-- 9. Troubleshooting -->
+    <div class="card">
+      <h2>9. Field Verification & Troubleshooting</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Symptom</th>
+            <th>Possible Cause</th>
+            <th>Resolution</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Camera posts event but fails with timeout</td>
+            <td>Windows Firewall blocking Port 8000</td>
+            <td>Run: <code>New-NetFirewallRule -DisplayName "ANPR Webhook" -Direction Inbound -LocalPort 8000 -Protocol TCP -Action Allow</code></td>
+          </tr>
+          <tr>
+            <td>Server returns HTTP 400 "Plate not detected"</td>
+            <td>JSON column key mismatch</td>
+            <td>In System Settings, select the camera manufacturer preset (e.g., Dahua) or check exact plate field name.</td>
+          </tr>
+          <tr>
+            <td>Plate detected but barrier doesn't open</td>
+            <td>Relay IP offline or cable disconnected</td>
+            <td>Check Ethernet cable to IP relay (e.g. <code>192.168.1.201</code>). Test barrier manually with physical push button.</td>
+          </tr>
+          <tr>
+            <td>Prepaid vehicle charged a fee</td>
+            <td>Pass expired or plate typed with different spaces</td>
+            <td>Verify pass in Prepaid Passes registry; spaces are automatically normalized.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Default System Credentials:</h3>
+      <ul>
+        <li><strong>Hospital Admin:</strong> <code>admin</code> / <code>Admin@12345</code></li>
+        <li><strong>Gate Operator:</strong> <code>operator</code> / <code>User@12345</code></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Application Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <span class="app-footer__rights">
+        &copy; 2026 All Rights Reserved &mdash; <strong>KIMSHEALTH Hospital Parking Solution</strong>
+      </span>
+      <span class="app-footer__sep">|</span>
+      <span class="app-footer__powered">
+        Powered by <button class="app-footer__sands-btn" onclick="openSandsPopup()" aria-label="About SaNDS Lab">SaNDS Lab</button>
+      </span>
+    </div>
+  </footer>
+
+  <!-- SaNDS Lab Light Background Modal Popup -->
+  <div id="sandsOverlay" class="sands-overlay" style="display:none;" onclick="closeSandsPopup()">
+    <div class="sands-popup" onclick="event.stopPropagation()" role="dialog" aria-modal="true">
+      <button class="sands-popup__close" onclick="closeSandsPopup()" aria-label="Close dialog">&#x2715;</button>
+
+      <div class="sands-popup__logo-wrap">
+        <img
+          src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
+          alt="SaNDS Lab Logo"
+          class="sands-popup__logo"
+        />
+      </div>
+
+      <p class="sands-popup__tagline">Innovative Solutions &amp; Digital Services</p>
+
+      <div class="sands-popup__actions">
+        <a
+          href="https://wa.me/97335078079"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--whatsapp"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" class="sands-popup__btn-icon">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+          </svg>
+          Connect on WhatsApp
+        </a>
+
+        <a
+          href="https://www.sandslab.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--website"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sands-popup__btn-icon">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          Visit Our Website
+        </a>
+
+        <a
+          href="https://sandslab.com/products/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--products"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sands-popup__btn-icon">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+          Our Latest Products
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openSandsPopup() {
+      const overlay = document.getElementById('sandsOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    }
+
+    function closeSandsPopup() {
+      const overlay = document.getElementById('sandsOverlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeSandsPopup();
+    });
+  </script>
+
+</body>
+</html>

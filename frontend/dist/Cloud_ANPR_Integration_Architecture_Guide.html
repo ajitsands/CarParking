@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud ANPR Architecture & Local Camera Integration Guide - SaNDS Lab</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #0ea5e9;
+      --accent: #10b981;
+      --dark: #0f172a;
+      --surface: #1e293b;
+      --card-bg: #ffffff;
+      --text: #334155;
+      --text-dark: #0f172a;
+      --border: #e2e8f0;
+      --highlight: #f8fafc;
+      --code-bg: #0b1120;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.65;
+      color: var(--text);
+      background: #f1f5f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .header-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+      color: #fff;
+      padding: 36px 24px;
+      border-bottom: 4px solid var(--primary);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+
+    .header-container {
+      max-width: 1060px;
+      margin: 0 auto;
+      display: flex;
+      justifyContent: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-logo {
+      height: 48px;
+      width: auto;
+      background: #ffffff;
+      padding: 6px 14px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .doc-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 9999px;
+      background: linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .container {
+      max-width: 1060px;
+      margin: 36px auto 60px;
+      padding: 0 20px;
+      flex: 1;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 28px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 2rem;
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    h2 {
+      font-size: 1.35rem;
+      color: var(--text-dark);
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 12px;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      color: var(--primary-dark);
+      margin-top: 24px;
+      margin-bottom: 8px;
+    }
+
+    p, li {
+      font-size: 0.95rem;
+      color: #475569;
+    }
+
+    .architecture-diagram {
+      background: #0f172a;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      color: #fff;
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .flow-step {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      position: relative;
+    }
+
+    .flow-step-num {
+      position: absolute;
+      top: -10px;
+      left: 14px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    .flow-step h4 {
+      color: #38bdf8;
+      margin: 8px 0 6px;
+      font-size: 0.95rem;
+    }
+
+    .flow-step p {
+      color: #cbd5e1;
+      font-size: 0.85rem;
+      margin: 0;
+    }
+
+    .url-hero-box {
+      background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+      border: 2px solid var(--primary);
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .url-hero-title {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .url-hero-text {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 1.3rem;
+      color: #a5b4fc;
+      font-weight: 700;
+      word-break: break-all;
+      user-select: all;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      margin: 18px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      color: var(--text-dark);
+      font-weight: 700;
+    }
+
+    tr:nth-child(even) {
+      background: #fcfdfe;
+    }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    code {
+      background: #f1f5f9;
+      color: #d946ef;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+
+    pre {
+      background: var(--code-bg);
+      color: #a7f3d0;
+      padding: 18px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      border: 1px solid #1e293b;
+      line-height: 1.5;
+    }
+
+    .alert-box {
+      background: #eff6ff;
+      border-left: 4px solid var(--secondary);
+      padding: 16px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 18px 0;
+    }
+
+    .alert-box.success {
+      background: #ecfdf5;
+      border-left-color: var(--accent);
+    }
+
+    .alert-box.warning {
+      background: #fffbeb;
+      border-left-color: #f59e0b;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .print-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .print-btn:hover {
+      background: #fff;
+      color: var(--dark);
+    }
+
+    /* ── App Footer (Matching Application) ─────────────────── */
+    .app-footer {
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 0.88rem;
+      color: #64748b;
+      margin-top: auto;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+    }
+
+    .footer-container {
+      max-width: 1060px;
+      margin: 0 auto;
+      display: flex;
+      justifyContent: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .app-footer__rights {
+      color: #475569;
+    }
+
+    .app-footer__sep {
+      color: #cbd5e1;
+      margin: 0 4px;
+    }
+
+    .app-footer__powered {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .app-footer__sands-btn {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.88rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      text-decoration: underline;
+    }
+
+    .app-footer__sands-btn:hover {
+      color: #ec4899;
+      background: #fdf2f8;
+    }
+
+    /* ── SaNDS Lab Light Background Modal Popup ───────────── */
+    .sands-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: sandsOverlayIn 0.2s ease;
+    }
+
+    @keyframes sandsOverlayIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .sands-popup {
+      position: relative;
+      background: #ffffff; /* Clean Light Background by default */
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 36px 32px 28px;
+      width: 360px;
+      max-width: 92vw;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.05);
+      text-align: center;
+      animation: sandsPopupIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes sandsPopupIn {
+      from { transform: scale(0.85) translateY(20px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .sands-popup__close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .sands-popup__close:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+
+    .sands-popup__logo-wrap {
+      background: transparent; /* No colored background on logo for light theme */
+      padding: 0;
+      margin: 0 auto 12px;
+      width: fit-content;
+    }
+
+    .sands-popup__logo {
+      display: block;
+      height: 54px;
+      width: auto;
+      object-fit: contain;
+      margin: 0 auto;
+    }
+
+    .sands-popup__tagline {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin: 0 0 24px;
+      font-weight: 500;
+    }
+
+    .sands-popup__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sands-popup__action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .sands-popup__action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+
+    .sands-popup__action-btn:active {
+      transform: translateY(0);
+    }
+
+    .sands-popup__btn-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .sands-popup__action-btn--whatsapp {
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      color: #fff;
+    }
+
+    .sands-popup__action-btn--website {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #fff;
+    }
+
+    .sands-popup__action-btn--products {
+      background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+      color: #fff;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .header-banner { background: #000; color: #fff; padding: 20px; }
+      .header-actions, .app-footer, .sands-overlay { display: none; }
+      .card { border: 1px solid #ccc; box-shadow: none; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Banner -->
+  <header class="header-banner">
+    <div class="header-container">
+      <div class="header-branding">
+        <img
+          src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
+          alt="SaNDS Lab Logo"
+          class="header-logo"
+        />
+        <div>
+          <span class="doc-badge">Technical Architecture &amp; Integration Manual</span>
+          <h1>Cloud ANPR Integration Guide</h1>
+          <p style="margin: 0; color: #cbd5e1; font-size: 0.95rem;">
+            How Local Network ANPR Cameras Post Webhook Events to the Cloud Server (<code>parking.sandslab.com</code>)
+          </p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="print-btn" onclick="window.print()">🖨️ Print / Save PDF</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- 1. Executive Summary & Webhook URL -->
+    <div class="card">
+      <h2>1. The Cloud Webhook URL</h2>
+      <p>
+        When your application is hosted on the cloud (e.g. <strong>parking.sandslab.com</strong> or your VPS IP), the ANPR cameras on your on-premises local network (e.g. <code>192.168.1.X</code> or <code>192.168.100.X</code>) communicate with the cloud by pushing <strong>outbound HTTP POST</strong> requests to this designated endpoint:
+      </p>
+
+      <div class="url-hero-box">
+        <div class="url-hero-title">Cloud ANPR Camera Webhook Endpoint</div>
+        <div class="url-hero-text">https://parking.sandslab.com/api/v1/webhook/anpr</div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Production Cloud Setting</th>
+              <th>Local LAN / Testing Fallback</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Protocol</strong></td>
+              <td><code>HTTPS</code> (or <code>HTTP</code>)</td>
+              <td><code>HTTP</code></td>
+            </tr>
+            <tr>
+              <td><strong>Target Host / Domain</strong></td>
+              <td><code>parking.sandslab.com</code></td>
+              <td><code>192.168.100.4</code> (Local PC IP)</td>
+            </tr>
+            <tr>
+              <td><strong>Port</strong></td>
+              <td><code>443</code> (HTTPS) or <code>80</code> (HTTP)</td>
+              <td><code>8000</code> or <code>8081</code></td>
+            </tr>
+            <tr>
+              <td><strong>HTTP Method</strong></td>
+              <td><code>POST</code></td>
+              <td><code>POST</code></td>
+            </tr>
+            <tr>
+              <td><strong>URI / Request Path</strong></td>
+              <td><code>/api/v1/webhook/anpr</code></td>
+              <td><code>/api/v1/webhook/anpr</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. Network Topology & Why It Works -->
+    <div class="card">
+      <h2>2. Architecture &amp; Real-Time Data Flow</h2>
+      <p>
+        <strong>Why does this work without port forwarding on your local router?</strong><br>
+        In modern networks, all routers allow <strong>Outbound Internet Traffic (NAT)</strong>. When a car approaches a gate, the local camera makes an outbound request across the Internet to the cloud server, exactly like an office computer browsing the web. No public IP or open incoming firewall ports are needed on the local camera switch.
+      </p>
+
+      <div class="architecture-diagram">
+        <div style="font-weight: 700; color: #a5b4fc; margin-bottom: 12px; font-size: 1.1rem;">
+          🌐 End-to-End Parking Flow (Local Hardware ⟷ Cloud System)
+        </div>
+
+        <div class="flow-grid">
+          <div class="flow-step">
+            <span class="flow-step-num">Step 1</span>
+            <h4>Vehicle Approach &amp; LPR</h4>
+            <p>Vehicle enters entry/exit lane. ANPR Camera (Dahua / Hikvision on <code>192.168.1.100</code>) recognizes plate in &lt; 50ms.</p>
+          </div>
+
+          <div class="flow-step">
+            <span class="flow-step-num">Step 2</span>
+            <h4>Outbound Cloud Webhook</h4>
+            <p>Camera sends HTTP POST with plate JSON metadata to <code>https://parking.sandslab.com/api/v1/webhook/anpr</code>.</p>
+          </div>
+
+          <div class="flow-step">
+            <span class="flow-step-num">Step 3</span>
+            <h4>Cloud Decision Engine</h4>
+            <p>Backend validates whitelist/staff, active parking sessions, grace period, or calculates tariff fee in &lt; 80ms.</p>
+          </div>
+
+          <div class="flow-step">
+            <span class="flow-step-num">Step 4</span>
+            <h4>Gate Action &amp; Display</h4>
+            <p>Android Display Tablet (polling cloud every 2s) displays vehicle fee &amp; QR. Local barrier relay triggers open.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-box success">
+        <strong>✓ Zero Local Router Configuration Required:</strong> Because cameras push data outward, you do not need a static public IP at the hospital, DDNS, or router port-forwarding. As long as the camera switch has outbound Internet access (DNS 8.8.8.8), webhooks will work 24/7.
+      </div>
+    </div>
+
+    <!-- 3. Step-by-Step Camera Setup (Cloud Mode) -->
+    <div class="card">
+      <h2>3. Camera Configuration Procedures (Cloud Webhook Mode)</h2>
+
+      <h3>A. Dahua ANPR ITS Cameras (DHI-ITC413 / ITC237 / ITC215)</h3>
+      <ol>
+        <li>Open browser and login to the Dahua camera web console (e.g., <code>http://192.168.1.108</code>).</li>
+        <li>Ensure DNS is configured under <strong>Setting &rarr; Network &rarr; TCP/IP</strong>:
+          <ul>
+            <li><strong>Preferred DNS:</strong> <code>8.8.8.8</code></li>
+            <li><strong>Alternate DNS:</strong> <code>1.1.1.1</code></li>
+          </ul>
+        </li>
+        <li>Go to <strong>Setting &rarr; Network &rarr; Access Platform &rarr; HTTP Push</strong> (or <strong>Alarm Server</strong>):
+          <ul>
+            <li><strong>Enable:</strong> Checked / ON</li>
+            <li><strong>Protocol:</strong> HTTP or HTTPS</li>
+            <li><strong>Destination Server / IP:</strong> <code>parking.sandslab.com</code></li>
+            <li><strong>Port:</strong> <code>443</code> (for HTTPS) or <code>80</code> (for HTTP)</li>
+            <li><strong>Request Path / URL:</strong> <code>/api/v1/webhook/anpr</code></li>
+            <li><strong>Method:</strong> POST</li>
+            <li><strong>Data Format:</strong> JSON</li>
+            <li><strong>Upload Pictures:</strong> Check <em>Plate Cutout</em> and <em>Overview Picture</em>.</li>
+          </ul>
+        </li>
+        <li>Click <strong>Save &amp; Apply</strong>.</li>
+      </ol>
+
+      <h3>B. Hikvision DeepinView / Traffic IPC (DS-2CD7A / iDS-TCM403)</h3>
+      <ol>
+        <li>Log into the Hikvision camera web manager.</li>
+        <li>Ensure Gateway and DNS (<code>8.8.8.8</code>) are configured under <strong>Configuration &rarr; Network &rarr; Basic Settings</strong>.</li>
+        <li>Navigate to: <strong>Configuration &rarr; Network &rarr; Advanced Settings &rarr; HTTP Listening</strong> (or <strong>Alarm Server</strong>):
+          <ul>
+            <li><strong>Destination Address:</strong> <code>parking.sandslab.com</code></li>
+            <li><strong>Port:</strong> <code>443</code> (or <code>80</code>)</li>
+            <li><strong>URL Path:</strong> <code>/api/v1/webhook/anpr</code></li>
+            <li><strong>Protocol:</strong> HTTP/HTTPS POST</li>
+            <li><strong>Picture Upload:</strong> Enabled</li>
+          </ul>
+        </li>
+        <li>Under <strong>Road Traffic &rarr; Vehicle Detection</strong>, set region to <strong>Bahrain / GCC</strong>.</li>
+        <li>Click <strong>Save</strong>.</li>
+      </ol>
+
+      <h3>C. Uniview / Hanwha / External LPR Software (Plate Recognizer / OpenALPR)</h3>
+      <ol>
+        <li>Open the Webhook / Integration settings of your LPR software.</li>
+        <li>Set Webhook URL: <code>https://parking.sandslab.com/api/v1/webhook/anpr</code></li>
+        <li>Set Method: <code>POST</code> (JSON format).</li>
+      </ol>
+    </div>
+
+    <!-- 4. Webhook Payload Examples -->
+    <div class="card">
+      <h2>4. Webhook JSON Payloads &amp; Server Response</h2>
+      <p>The cloud backend automatically parses all standard camera manufacturer payload formats:</p>
+
+      <h3>Standard JSON Payload (Sent by Camera or Local Agent):</h3>
+      <pre>{
+  "gate_id": "GATE-IN-01",
+  "plate_number": "123456",
+  "confidence": 98.5,
+  "direction": "ENTRY",
+  "vehicle_type": "Car",
+  "vehicle_color": "White",
+  "timestamp": "2026-09-11 19:30:00"
+}</pre>
+
+      <h3>Cloud Server Response (&lt; 80ms):</h3>
+      <pre>{
+  "success": true,
+  "action": "ALLOW_ENTRY",
+  "barrier_command": "OPEN_BARRIER_PULSE",
+  "session": {
+    "session_id": 408,
+    "plate_number": "123456",
+    "gate_in": "GATE-IN-01",
+    "entry_time": "2026-09-11 19:30:00",
+    "status": "ACTIVE"
+  },
+  "message": "Vehicle recorded and entry granted."
+}</pre>
+    </div>
+
+    <!-- 5. How Boom Barrier & Display Board Work in Cloud Setup -->
+    <div class="card">
+      <h2>5. Barrier Control &amp; Exit Display Board in Cloud Setup</h2>
+      
+      <h3>Option 1: Direct Camera Alarm Out to Barrier (Standard Hardware Link)</h3>
+      <p>
+        The ANPR camera has a built-in relay dry-contact output (Alarm Out). Wire this contact directly to the Boom Barrier controller's Open input. When the camera recognizes the plate, it fires the physical pulse locally while simultaneously notifying the cloud server.
+      </p>
+
+      <h3>Option 2: Android Exit Gate Display Board / Kiosk App</h3>
+      <p>
+        The Android tablet mounted on the exit lane is configured with Server URL: <code>https://parking.sandslab.com</code>.
+      </p>
+      <ul>
+        <li>It continuously polls <code>/api/v1/kiosk/status?gate_id=GATE-OUT-01</code> every 2 seconds.</li>
+        <li>When a car is detected by the camera and processed on the cloud, the tablet instantly displays the plate number, duration, fee, and dynamic BenefitPay / QR payment code.</li>
+        <li>Once payment is confirmed, the Android app sends the pulse to open the barrier.</li>
+      </ul>
+    </div>
+
+    <!-- 6. Network Diagnostics & Health Check -->
+    <div class="card">
+      <h2>6. Troubleshooting &amp; Diagnostics</h2>
+
+      <div class="alert-box warning">
+        <strong>⚠️ If the camera is not sending events to the cloud:</strong><br>
+        1. <strong>DNS Check on Camera:</strong> Ensure the camera has a valid DNS server configured (e.g. <code>8.8.8.8</code>). If the camera has no DNS, it cannot resolve domain names like <code>parking.sandslab.com</code>.<br>
+        2. <strong>Test with Browser:</strong> Open <code>https://parking.sandslab.com/api/v1/webhook/anpr</code> in any web browser. You should receive an active JSON status message.<br>
+        3. <strong>Test with cURL on Local PC:</strong> Run the command below from a computer on the same local network as the cameras.
+      </div>
+
+      <h3>Quick Diagnostic cURL Command:</h3>
+      <pre>curl -X POST https://parking.sandslab.com/api/v1/webhook/anpr \
+  -H "Content-Type: application/json" \
+  -d '{"gate_id":"GATE-IN-01","plate_number":"BAH-99887","direction":"ENTRY"}'</pre>
+    </div>
+
+  </main>
+
+  <!-- Application Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <span class="app-footer__rights">
+        &copy; 2026 All Rights Reserved &mdash; <strong>KIMSHEALTH Hospital Parking Solution</strong>
+      </span>
+      <span class="app-footer__sep">|</span>
+      <span class="app-footer__powered">
+        Powered by <button class="app-footer__sands-btn" onclick="openSandsPopup()" aria-label="About SaNDS Lab">SaNDS Lab</button>
+      </span>
+    </div>
+  </footer>
+
+  <!-- SaNDS Lab Light Background Modal Popup -->
+  <div id="sandsOverlay" class="sands-overlay" style="display:none;" onclick="closeSandsPopup()">
+    <div class="sands-popup" onclick="event.stopPropagation()" role="dialog" aria-modal="true">
+      <button class="sands-popup__close" onclick="closeSandsPopup()" aria-label="Close dialog">&#x2715;</button>
+
+      <div class="sands-popup__logo-wrap">
+        <img
+          src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
+          alt="SaNDS Lab Logo"
+          class="sands-popup__logo"
+        />
+      </div>
+
+      <p class="sands-popup__tagline">Innovative Solutions &amp; Digital Services</p>
+
+      <div class="sands-popup__actions">
+        <a
+          href="https://wa.me/97335078079"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--whatsapp"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" class="sands-popup__btn-icon">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+          </svg>
+          Connect on WhatsApp
+        </a>
+
+        <a
+          href="https://www.sandslab.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--website"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sands-popup__btn-icon">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+          </svg>
+          Visit Our Website
+        </a>
+
+        <a
+          href="https://sandslab.com/products/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--products"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sands-popup__btn-icon">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+            <line x1="8" y1="21" x2="16" y2="21" />
+            <line x1="12" y1="17" x2="12" y2="21" />
+          </svg>
+          Our Latest Products
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openSandsPopup() {
+      const overlay = document.getElementById('sandsOverlay');
+      if (overlay) overlay.style.display = 'flex';
+    }
+
+    function closeSandsPopup() {
+      const overlay = document.getElementById('sandsOverlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeSandsPopup();
+    });
+  </script>
+
+</body>
+</html>

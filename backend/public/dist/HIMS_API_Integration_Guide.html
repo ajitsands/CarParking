@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Universal & HIMS API Integration Manual & QR Printing Specification - Hospital Parking Solution</title>
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --secondary: #6366f1;
+      --dark: #0f172a;
+      --surface: #1e293b;
+      --text: #334155;
+      --text-dark: #0f172a;
+      --border: #e2e8f0;
+      --accent: #10b981;
+      --amber: #f59e0b;
+      --pink: #ec4899;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: #f8fafc;
+      margin: 0;
+      padding: 0;
+    }
+    .header-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #0c4a6e 50%, #1e1b4b 100%);
+      color: #fff;
+      padding: 40px 20px;
+      border-bottom: 4px solid var(--primary);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+    .header-container {
+      max-width: 1050px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-logo {
+      height: 48px;
+      width: auto;
+      background: #ffffff;
+      padding: 6px 14px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .doc-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+    .container {
+      max-width: 1050px;
+      margin: 30px auto 60px;
+      padding: 0 20px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px;
+      margin-bottom: 26px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.85rem;
+      color: #fff;
+      font-weight: 800;
+    }
+    h2 {
+      font-size: 1.35rem;
+      color: var(--text-dark);
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 10px;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h3 {
+      font-size: 1.05rem;
+      color: var(--primary-dark);
+      margin-top: 20px;
+    }
+    p, li {
+      font-size: 0.92rem;
+      color: #475569;
+    }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    pre {
+      background: #0f172a;
+      color: #38bdf8;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      border: 1px solid #1e293b;
+      position: relative;
+    }
+    .endpoint-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-weight: 800;
+      font-size: 0.75rem;
+      margin-right: 8px;
+      font-family: ui-monospace, monospace;
+    }
+    .get-badge { background: #0284c7; color: #fff; }
+    .post-badge { background: #10b981; color: #fff; }
+    .table-custom {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 0.86rem;
+    }
+    .table-custom th, .table-custom td {
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      text-align: left;
+    }
+    .table-custom th {
+      background: #f1f5f9;
+      color: var(--text-dark);
+      font-weight: 700;
+    }
+    .table-custom tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .callout {
+      padding: 16px 18px;
+      border-radius: 8px;
+      margin: 18px 0;
+      font-size: 0.88rem;
+    }
+    .callout-info {
+      background: #e0f2fe;
+      border-left: 4px solid var(--primary);
+      color: #0369a1;
+    }
+    .callout-success {
+      background: #dcfce7;
+      border-left: 4px solid var(--accent);
+      color: #15803d;
+    }
+    .callout-warning {
+      background: #fef3c7;
+      border-left: 4px solid var(--amber);
+      color: #b45309;
+    }
+    .print-btn {
+      background: #fff;
+      color: var(--dark);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: all 0.2s ease;
+    }
+    .print-btn:hover {
+      background: #f1f5f9;
+      transform: translateY(-1px);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 768px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    /* ── Responsive Visual Workflow Diagram ─────────────────── */
+    .workflow-container {
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      border-radius: 12px;
+      padding: 24px;
+      margin: 20px 0;
+      border: 1px solid #334155;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    }
+    .workflow-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .workflow-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .workflow-tag {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #7dd3fc;
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .workflow-step {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .workflow-step:hover {
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    }
+    .step-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .step-pill {
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .step-icon {
+      font-size: 1.4rem;
+    }
+    .step-heading {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin: 0 0 6px;
+    }
+    .step-desc {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      line-height: 1.45;
+      margin: 0 0 10px;
+    }
+    .step-action {
+      background: #020617;
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.73rem;
+      color: #38bdf8;
+      word-break: break-all;
+    }
+
+    /* Software Compatibility Badges */
+    .compat-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0;
+    }
+    .compat-badge {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #1e293b;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    /* ── App Footer (Matching Application) ─────────────────── */
+    .app-footer {
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      padding: 20px 24px;
+      text-align: center;
+      font-size: 0.88rem;
+      color: #64748b;
+      margin-top: 40px;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.02);
+    }
+    .footer-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .app-footer__rights {
+      color: #475569;
+    }
+    .app-footer__sep {
+      color: #cbd5e1;
+      margin: 0 4px;
+    }
+    .app-footer__powered {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .app-footer__sands-btn {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.88rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      text-decoration: underline;
+    }
+    .app-footer__sands-btn:hover {
+      color: #ec4899;
+      background: #fdf2f8;
+    }
+
+    /* ── SaNDS Lab Light Background Modal Popup ───────────── */
+    .sands-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: sandsOverlayIn 0.2s ease;
+    }
+    @keyframes sandsOverlayIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .sands-popup {
+      position: relative;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 36px 32px 28px;
+      width: 360px;
+      max-width: 92vw;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0,0,0,0.05);
+      text-align: center;
+      animation: sandsPopupIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes sandsPopupIn {
+      from { transform: scale(0.85) translateY(20px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .sands-popup__close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    .sands-popup__close:hover {
+      background: #fee2e2;
+      color: #ef4444;
+    }
+    .sands-popup__logo-wrap {
+      background: transparent;
+      padding: 0;
+      margin: 0 auto 12px;
+      width: fit-content;
+    }
+    .sands-popup__logo {
+      display: block;
+      height: 54px;
+      width: auto;
+      object-fit: contain;
+      margin: 0 auto;
+    }
+    .sands-popup__tagline {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin: 0 0 24px;
+      font-weight: 500;
+    }
+    .sands-popup__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .sands-popup__action-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .sands-popup__action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    .sands-popup__action-btn:active {
+      transform: translateY(0);
+    }
+    .sands-popup__btn-icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .sands-popup__action-btn--whatsapp {
+      background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+      color: #fff;
+    }
+    .sands-popup__action-btn--website {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #fff;
+    }
+    .sands-popup__action-btn--products {
+      background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+      color: #fff;
+    }
+
+    @media print {
+      body { background: #fff; color: #000; }
+      .header-banner { background: #0f172a !important; -webkit-print-color-adjust: exact; padding: 20px 0; }
+      .print-btn, .app-footer, .sands-overlay { display: none; }
+      .card { border: 1px solid #cbd5e1; box-shadow: none; page-break-inside: avoid; }
+      pre { background: #f1f5f9 !important; color: #0f172a !important; border: 1px solid #cbd5e1; }
+      .workflow-container { background: #f8fafc !important; color: #000 !important; border: 1px solid #cbd5e1; }
+      .workflow-step { background: #fff !important; border: 1px solid #cbd5e1 !important; }
+      .step-heading { color: #000 !important; }
+      .step-desc { color: #475569 !important; }
+      .step-action { background: #f1f5f9 !important; color: #0284c7 !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Banner with SaNDS Lab Logo -->
+  <div class="header-banner">
+    <div class="header-container">
+      <div class="header-branding">
+        <img
+          src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
+          alt="SaNDS Lab Logo"
+          class="header-logo"
+        />
+        <div>
+          <div class="doc-badge">UNIVERSAL &amp; HIMS INTEGRATION SPECIFICATION</div>
+          <h1>Universal 3rd-Party &amp; HIMS / HIS API Integration &amp; QR Printing Manual</h1>
+          <div style="font-size: 0.85rem; color: #94a3b8;">
+            Bilateral REST Integration for Real-Time Parking Capacity, Booking Ingestion, Dynamic QR Slip Printing &amp; Visitor Validation for ANY Software
+          </div>
+        </div>
+      </div>
+      <div>
+        <button class="print-btn" onclick="window.print()">
+          🖨️ Print / Save as PDF
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Executive Summary & Architecture -->
+    <div class="card">
+      <h2>1. Architectural Overview &amp; Workflow</h2>
+      <p>
+        The Hospital &amp; Facility Parking Management System provides dedicated, high-performance REST APIs for bilateral integration with <strong>ANY external software system</strong>. While commonly used for Hospital Information Systems (HIMS / HIS / EHR), these standard APIs integrate seamlessly with Clinic Management Systems (CMS), ERPs, CRMs, Hotel PMS, Valet &amp; Visitor Gate Desks, Mobile Apps, or custom web appointment schedulers.
+      </p>
+
+      <div class="compat-badges">
+        <span class="compat-badge">🏥 Hospital Info Systems (HIMS / HIS / EHR)</span>
+        <span class="compat-badge">🩺 Clinic Management Systems (CMS)</span>
+        <span class="compat-badge">🏢 Enterprise ERP &amp; CRM</span>
+        <span class="compat-badge">🏨 Hotel &amp; Valet PMS</span>
+        <span class="compat-badge">📱 Mobile &amp; Web Booking Portals</span>
+        <span class="compat-badge">🎟️ Self-Service Kiosks</span>
+      </div>
+
+      <!-- Responsive Visual Workflow Grid -->
+      <div class="workflow-container">
+        <div class="workflow-header">
+          <div class="workflow-title">
+            <span>🔄</span> End-to-End Bilateral Integration Workflow
+          </div>
+          <div class="workflow-tag">Live REST API Protocol</div>
+        </div>
+
+        <div class="workflow-grid">
+          <!-- Step 1 -->
+          <div class="workflow-step">
+            <div class="step-top">
+              <span class="step-pill">STEP 01</span>
+              <span class="step-icon">🏥</span>
+            </div>
+            <div class="step-heading">Booking in External Software</div>
+            <div class="step-desc">
+              Patient or visitor books an appointment/visit in HIMS, CMS, ERP, Mobile App, or online portal.
+            </div>
+            <div class="step-action">Client Software Confirmation</div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="workflow-step">
+            <div class="step-top">
+              <span class="step-pill">STEP 02</span>
+              <span class="step-icon">⚡</span>
+            </div>
+            <div class="step-heading">API Sync &amp; QR Request</div>
+            <div class="step-desc">
+              External system calls parking API with patient MRN/ID, Name, optional Plate number, and Free Hours.
+            </div>
+            <div class="step-action">POST /api/v1/his/appointments/sync</div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="workflow-step">
+            <div class="step-top">
+              <span class="step-pill">STEP 03</span>
+              <span class="step-icon">🎟️</span>
+            </div>
+            <div class="step-heading">Dynamic QR Token Generated</div>
+            <div class="step-desc">
+              Parking system creates unique QR token (using custom prefix from Settings or Default), returning Base64 PNG, SVG &amp; HTML slip.
+            </div>
+            <div class="step-action">Thermal Receipt / WhatsApp Slip</div>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="workflow-step">
+            <div class="step-top">
+              <span class="step-pill">STEP 04</span>
+              <span class="step-icon">🚗</span>
+            </div>
+            <div class="step-heading">Vehicle Entry &amp; ANPR Scan</div>
+            <div class="step-desc">
+              Patient arrives at hospital gate. The ANPR camera captures the license plate and opens the boom barrier.
+            </div>
+            <div class="step-action">Inbound Parking Session Active</div>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="workflow-step">
+            <div class="step-top">
+              <span class="step-pill">STEP 05</span>
+              <span class="step-icon">📲</span>
+            </div>
+            <div class="step-heading">QR Validation at Clinic Desk</div>
+            <div class="step-desc">
+              Visitor presents the QR slip at the clinic validation desk, or doctor clicks "Complete Consultation" in HIMS.
+            </div>
+            <div class="step-action">POST /api/v1/validation/qr</div>
+          </div>
+
+          <!-- Step 6 -->
+          <div class="workflow-step">
+            <div class="step-top">
+              <span class="step-pill">STEP 06</span>
+              <span class="step-icon">🟢</span>
+            </div>
+            <div class="step-heading">Free Exit Barrier Open</div>
+            <div class="step-desc">
+              Exit ANPR camera detects the validated plate. With the free parking waiver applied, the exit barrier opens automatically.
+            </div>
+            <div class="step-action">Session VALIDATED &rarr; Auto Exit</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <strong>⚙️ Dynamic QR Token Prefix from Settings or Request:</strong>
+        The system generates secure QR tokens formatted as <code>{PREFIX}-{IDENTIFIER}-{TIMESTAMP}-{RANDOM}</code>. The prefix is dynamically retrieved from <strong>System Settings &rarr; QR Token Prefix</strong> (e.g. <code>QR-KIMS</code>, <code>QR-PARK</code>, <code>QR-HOSPITAL</code>, <code>QR-VIP</code>, or custom). External software can also pass a custom <code>token_prefix</code> in the JSON request body to override it per department or platform. If unconfigured, it safely defaults to <code>QR-KIMS</code>.
+      </div>
+
+      <div class="callout callout-info">
+        <strong>⚡ Base Server Endpoint:</strong> All APIs are available under <code>http://&lt;PARKING_SERVER_IP&gt;:8000/api/v1/his/</code> (or your configured production domain <code>https://parking.sandslab.com/api/v1/his/</code>).
+      </div>
+    </div>
+
+    <!-- API 1: Real-time Parking Status -->
+    <div class="card">
+      <h2>
+        <span class="endpoint-badge get-badge">GET</span>
+        2. Real-Time Parking Availability &amp; Floor Status API
+      </h2>
+      <p>
+        HIMS, CMS, digital outdoor signage boards, or visitor mobile apps can call this API periodically to fetch the live parking availability, total capacity, occupied spots, and floor-wise slot breakdowns.
+      </p>
+      
+      <p><strong>Endpoint:</strong> <code>GET /api/v1/his/parking-status</code></p>
+      
+      <h3>Query Parameters:</h3>
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>(none)</code></td>
+            <td>-</td>
+            <td>No</td>
+            <td>Returns overall facility parking capacity, occupied count, available slots, occupancy rate, and floor-wise breakdown.</td>
+          </tr>
+          <tr>
+            <td><code>plate_number</code></td>
+            <td>string</td>
+            <td>No</td>
+            <td>Lookup a specific vehicle plate (e.g. <code>BHR 43210</code>) for current entry time, duration, and validation status.</td>
+          </tr>
+          <tr>
+            <td><code>patient_mrn</code></td>
+            <td>string</td>
+            <td>No</td>
+            <td>Lookup vehicle status linked to patient / visitor ID or MRN (e.g. <code>MRN-88192</code>).</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Sample Response (Overall Facility Parking Capacity &amp; Floor Breakdown):</h3>
+      <pre><code>{
+  "success": true,
+  "data": {
+    "parking_status": "AVAILABLE",
+    "total_capacity": 500,
+    "currently_occupied": 182,
+    "available_slots": 318,
+    "occupancy_rate_percent": 36.4,
+    "breakdown": {
+      "validation_pending": 45,
+      "validated_free": 110,
+      "charging_active": 27
+    },
+    "floor_breakdown": [
+      {
+        "floor_id": "GF",
+        "floor_name": "Ground Floor",
+        "total_capacity": 125,
+        "occupied_slots": 45,
+        "available_slots": 80,
+        "occupancy_rate": 36.0,
+        "status": "AVAILABLE"
+      },
+      {
+        "floor_id": "B1",
+        "floor_name": "Basement 1 (Patient &amp; Visitor)",
+        "total_capacity": 200,
+        "occupied_slots": 73,
+        "available_slots": 127,
+        "occupancy_rate": 36.5,
+        "status": "AVAILABLE"
+      },
+      {
+        "floor_id": "B2",
+        "floor_name": "Basement 2 (Doctors &amp; Staff)",
+        "total_capacity": 175,
+        "occupied_slots": 64,
+        "available_slots": 111,
+        "occupancy_rate": 36.6,
+        "status": "AVAILABLE"
+      }
+    ],
+    "last_updated": "2026-09-12 13:10:00"
+  },
+  "message": "Hospital Parking Status retrieved successfully"
+}</code></pre>
+    </div>
+
+    <!-- API 2: Online Booking & QR Generation -->
+    <div class="card">
+      <h2>
+        <span class="endpoint-badge post-badge">POST</span>
+        3. Universal Booking Ingestion &amp; Printable QR Code API
+      </h2>
+      <p>
+        When an appointment or visit is confirmed in <strong>HIMS, Clinic Software, ERP, Mobile App, or Web Booking engine</strong>, the external software calls this endpoint. The parking system creates the appointment record, generates a unique secure QR token (using custom prefix from Settings or payload override), produces a high-resolution Base64 PNG and SVG vector image, and returns the printable payload immediately so the software can print it on thermal slips, patient passes, or send via WhatsApp / SMS.
+      </p>
+
+      <p><strong>Endpoint:</strong> <code>POST /api/v1/his/appointments/sync</code></p>
+      <p><strong>Content-Type:</strong> <code>application/json</code></p>
+
+      <h3>Request Body Fields:</h3>
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>patient_mrn</code></td>
+            <td>string</td>
+            <td><strong>Yes</strong></td>
+            <td>Medical Record Number, Visitor ID, or User Reference (e.g. <code>MRN-88192</code> or <code>VIS-1044</code>).</td>
+          </tr>
+          <tr>
+            <td><code>patient_name</code></td>
+            <td>string</td>
+            <td><strong>Yes</strong></td>
+            <td>Full Name of the patient / visitor (e.g. <code>Ahmed Al-Sayed</code>).</td>
+          </tr>
+          <tr>
+            <td><code>patient_phone</code></td>
+            <td>string</td>
+            <td>Optional</td>
+            <td>Contact phone number (e.g. <code>+973 3611 0022</code>).</td>
+          </tr>
+          <tr>
+            <td><code>doctor_name</code></td>
+            <td>string</td>
+            <td>Optional</td>
+            <td>Attending consultant / host / doctor name (e.g. <code>Dr. Tariq Al-Hashimi</code>).</td>
+          </tr>
+          <tr>
+            <td><code>department</code></td>
+            <td>string</td>
+            <td>Optional</td>
+            <td>Department or clinic name (e.g. <code>Cardiology</code>, <code>Pediatrics</code>, <code>VIP Lounge</code>).</td>
+          </tr>
+          <tr>
+            <td><code>appointment_datetime</code></td>
+            <td>string</td>
+            <td>Optional</td>
+            <td>Appointment date &amp; time in <code>YYYY-MM-DD HH:MM:SS</code> format. Defaults to current timestamp.</td>
+          </tr>
+          <tr>
+            <td><code>registered_plate_number</code></td>
+            <td>string</td>
+            <td>Optional</td>
+            <td>Vehicle plate number if known (e.g. <code>BHR 43210</code>). Enables automatic ANPR match upon arrival.</td>
+          </tr>
+          <tr>
+            <td><code>free_hours</code></td>
+            <td>integer</td>
+            <td>Optional</td>
+            <td>Free parking duration granted upon QR validation (default: <code>3</code> hours = 180 mins).</td>
+          </tr>
+          <tr>
+            <td><code>token_prefix</code></td>
+            <td>string</td>
+            <td>Optional</td>
+            <td>Custom token prefix for this request (e.g. <code>QR-CMS</code>, <code>QR-PARK</code>, <code>QR-VIP</code>). If omitted, uses System Settings or default <code>QR-KIMS</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Sample JSON Request:</h3>
+      <pre><code>{
+  "patient_mrn": "MRN-88192",
+  "patient_name": "Ahmed Al-Sayed",
+  "patient_phone": "+973 3611 0022",
+  "doctor_name": "Dr. Tariq Al-Hashimi",
+  "department": "Cardiology",
+  "appointment_datetime": "2026-09-12 14:30:00",
+  "registered_plate_number": "BHR 43210",
+  "free_hours": 3,
+  "token_prefix": "QR-KIMS"
+}</code></pre>
+
+      <h3>Sample JSON Response from Parking System:</h3>
+      <pre><code>{
+  "success": true,
+  "data": {
+    "appointment_id": 42,
+    "appointment_code": "APT-20260912-7A9B1",
+    "patient_name": "Ahmed Al-Sayed",
+    "patient_mrn": "MRN-88192",
+    "registered_plate": "BHR 43210",
+    "qr_token": "QR-KIMS-88192-1788983570-491",
+    "qr_data_string": "KIMSHEALTH://VAL?TOKEN=QR-KIMS-88192-1788983570-491&amp;MRN=MRN-88192&amp;CODE=APT-20260912-7A9B1",
+    "qr_png_base64": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAAEsCAYAAAB5g51...",
+    "qr_svg_data_uri": "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz...",
+    "printable_slip_html": "&lt;div style=\"font-family: monospace; width: 280px; ...\"&gt;...&lt;/div&gt;",
+    "free_hours_granted": 3,
+    "free_minutes_granted": 180,
+    "sync_status": "SYNCHRONIZED",
+    "created_at": "2026-09-12 13:10:00"
+  },
+  "message": "HIMS appointment received and Parking QR code generated successfully"
+}</code></pre>
+
+      <div class="callout callout-success">
+        <strong>💡 Thermal Slip &amp; Receipt Printing:</strong> External software developers can directly take <code>qr_png_base64</code> or <code>printable_slip_html</code> from the response and send it to their thermal receipt printers (Epson, Zebra, Bixolon, Citizen, Star Micronics) or embed it inside patient digital passes &amp; WhatsApp confirmations.
+      </div>
+    </div>
+
+    <!-- API 3: Consultation Checkout Validation -->
+    <div class="card">
+      <h2>
+        <span class="endpoint-badge post-badge">POST</span>
+        4. Consultation Checkout &amp; Direct Validation API
+      </h2>
+      <p>
+        If the doctor, nurse, receptionist, or cashier clicks "Complete Consultation" or "Invoice Paid" inside HIMS / external software, the system can automatically validate the patient's parking session without requiring manual QR slip scanning.
+      </p>
+
+      <p><strong>Endpoint:</strong> <code>POST /api/v1/his/validate-visitor</code></p>
+      
+      <h3>Sample JSON Request:</h3>
+      <pre><code>{
+  "patient_mrn": "MRN-88192",
+  "plate_number": "BHR 43210",
+  "appointment_code": "APT-20260912-7A9B1"
+}</code></pre>
+
+      <h3>Sample JSON Response:</h3>
+      <pre><code>{
+  "success": true,
+  "data": {
+    "session_code": "SESS-20260912-0014",
+    "plate_number": "BHR 43210",
+    "status": "VALIDATED",
+    "message": "Parking session SESS-20260912-0014 for vehicle BHR 43210 validated successfully via HIMS consultation checkout."
+  }
+}</code></pre>
+    </div>
+
+    <!-- API 4: Emergency Priority Clearance -->
+    <div class="card">
+      <h2>
+        <span class="endpoint-badge post-badge">POST</span>
+        5. Emergency Ambulance &amp; VIP Priority Access API
+      </h2>
+      <p>
+        Used for emergency inbound ambulances, doctor rapid response, or VIP emergency room codes to instantly open the inbound boom barrier and record high-priority audit logs.
+      </p>
+
+      <p><strong>Endpoint:</strong> <code>POST /api/v1/his/emergency-access</code></p>
+      
+      <h3>Sample JSON Request:</h3>
+      <pre><code>{
+  "plate_number": "AMBULANCE-04",
+  "gate_id": "GATE-IN-01",
+  "reason": "Trauma Emergency Inbound"
+}</code></pre>
+    </div>
+
+    <!-- Section 6: Visitor Validation Scan Portal -->
+    <div class="card">
+      <h2>6. Visitor Validation Scanning Methods</h2>
+      <p>
+        The parking management portal supports three simultaneous validation methods to accommodate all patient and visitor workflows:
+      </p>
+
+      <div class="grid-2">
+        <div style="background: #f8fafc; border: 1px solid var(--border); padding: 16px; border-radius: 8px;">
+          <h3 style="margin-top: 0; color: var(--primary);">Method A: Scan Appointment QR</h3>
+          <p style="font-size: 0.86rem;">
+            Patient presents the printed thermal slip or digital phone pass generated from HIMS / CMS / App. The clinic desk or kiosk scans the QR using a 2D barcode scanner or camera.
+          </p>
+          <p style="font-size: 0.8rem; font-family: monospace; color: #0284c7;">
+            Endpoint: POST /api/v1/validation/qr
+          </p>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid var(--border); padding: 16px; border-radius: 8px;">
+          <h3 style="margin-top: 0; color: var(--secondary);">Method B: Reception Desk Manual</h3>
+          <p style="font-size: 0.86rem;">
+            For patients without an appointment QR code. The receptionist enters the vehicle plate number and MRN directly in the web portal to authorize free parking.
+          </p>
+          <p style="font-size: 0.8rem; font-family: monospace; color: #6366f1;">
+            Endpoint: POST /api/v1/validation/reception
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Examples -->
+    <div class="card">
+      <h2>7. Multi-Platform Integration Code Examples</h2>
+
+      <h3>1. JavaScript / Node.js (Axios / Fetch):</h3>
+      <pre><code>const axios = require('axios');
+
+async function syncParkingAppointment(patientData) {
+  try {
+    const response = await axios.post('http://192.168.1.100:8000/api/v1/his/appointments/sync', {
+      patient_mrn: patientData.mrn,
+      patient_name: patientData.name,
+      doctor_name: patientData.doctor,
+      department: patientData.department,
+      registered_plate_number: patientData.plate,
+      free_hours: 3,
+      token_prefix: 'QR-KIMS' // Optional: Custom prefix (or leave empty to use Settings default)
+    });
+
+    const qrImageBase64 = response.data.data.qr_png_base64;
+    const qrToken = response.data.data.qr_token;
+    console.log('Generated Parking QR Token:', qrToken);
+    return response.data.data;
+  } catch (error) {
+    console.error('Parking Sync Error:', error.response?.data || error.message);
+  }
+}</code></pre>
+
+      <h3>2. C# / .NET (HttpClient):</h3>
+      <pre><code>using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+
+public async Task&lt;string&gt; GenerateParkingQrAsync(string mrn, string name, string plate)
+{
+    using var client = new HttpClient();
+    var payload = new {
+        patient_mrn = mrn,
+        patient_name = name,
+        registered_plate_number = plate,
+        free_hours = 3
+    };
+    var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+    var response = await client.PostAsync("http://192.168.1.100:8000/api/v1/his/appointments/sync", content);
+    var jsonString = await response.Content.ReadAsStringAsync();
+    return jsonString;
+}</code></pre>
+
+      <h3>3. Python (Requests):</h3>
+      <pre><code>import requests
+
+def create_parking_qr(mrn, name, plate=None, free_hours=3):
+    url = "http://192.168.1.100:8000/api/v1/his/appointments/sync"
+    payload = {
+        "patient_mrn": mrn,
+        "patient_name": name,
+        "registered_plate_number": plate,
+        "free_hours": free_hours
+    }
+    response = requests.post(url, json=payload)
+    return response.json()</code></pre>
+
+      <h3>4. cURL Command Line:</h3>
+      <pre><code>curl -X POST http://192.168.1.100:8000/api/v1/his/appointments/sync \
+  -H "Content-Type: application/json" \
+  -d '{
+    "patient_mrn": "MRN-88192",
+    "patient_name": "Ahmed Al-Sayed",
+    "doctor_name": "Dr. Tariq Al-Hashimi",
+    "registered_plate_number": "BHR 43210",
+    "free_hours": 3
+  }'</code></pre>
+    </div>
+
+    <!-- Thermal Printer Integration -->
+    <div class="card">
+      <h2>8. Thermal Slip Printer Integration Guidelines</h2>
+      <p>
+        When printing patient consultation slips or appointment receipts on 80mm or 58mm POS thermal printers (Epson ESC/POS, Zebra ZPL, Citizen, Bixolon, Star Micronics):
+      </p>
+      <ul>
+        <li><strong>Base64 PNG Direct Print:</strong> Convert <code>qr_png_base64</code> to a bitonal bitmap image and send via standard ESC/POS raster graphics command (<code>ESC *</code> or <code>GS v 0</code>).</li>
+        <li><strong>Native Thermal QR Command:</strong> If using native printer QR commands, pass the <code>qr_token</code> string to printer function <code>GS ( k</code>.</li>
+        <li><strong>Recommended QR Dimension:</strong> 150px &times; 150px to 240px &times; 240px (minimum 25mm on physical thermal paper) for instantaneous 100% scanning rate.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Application Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <span class="app-footer__rights">
+        &copy; 2026 All Rights Reserved &mdash; <strong>Hospital Parking Management System</strong>
+      </span>
+      <span class="app-footer__sep">|</span>
+      <span class="app-footer__powered">
+        Powered by <button class="app-footer__sands-btn" onclick="openSandsPopup()" aria-label="About SaNDS Lab">SaNDS Lab</button>
+      </span>
+    </div>
+  </footer>
+
+  <!-- SaNDS Lab Light Background Modal Popup -->
+  <div id="sandsOverlay" class="sands-overlay" style="display:none;" onclick="closeSandsPopup()">
+    <div class="sands-popup" onclick="event.stopPropagation()" role="dialog" aria-modal="true">
+      <button class="sands-popup__close" onclick="closeSandsPopup()" aria-label="Close dialog">&#x2715;</button>
+
+      <div class="sands-popup__logo-wrap">
+        <img
+          src="https://qrgenerator.sandslab.com/assets/SaNDSLab-LogoForWhite-C43CoLgA.png"
+          alt="SaNDS Lab Logo"
+          class="sands-popup__logo"
+        />
+      </div>
+
+      <p class="sands-popup__tagline">Innovative Solutions &amp; Digital Services</p>
+
+      <div class="sands-popup__actions">
+        <a
+          href="https://wa.me/97335078079"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--whatsapp"
+        >
+          <svg viewBox="0 0 24 24" fill="currentColor" class="sands-popup__btn-icon">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+          </svg>
+          Connect on WhatsApp
+        </a>
+
+        <a
+          href="https://www.sandslab.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--website"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sands-popup__btn-icon">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          Visit Website
+        </a>
+
+        <a
+          href="https://products.sandslab.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="sands-popup__action-btn sands-popup__action-btn--products"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sands-popup__btn-icon">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+          </svg>
+          Explore All Products
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openSandsPopup() {
+      var overlay = document.getElementById('sandsOverlay');
+      if (overlay) {
+        overlay.style.display = 'flex';
+      }
+    }
+    function closeSandsPopup() {
+      var overlay = document.getElementById('sandsOverlay');
+      if (overlay) {
+        overlay.style.display = 'none';
+      }
+    }
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeSandsPopup();
+      }
+    });
+  </script>
+</body>
+</html>
