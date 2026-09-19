@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Settings, Globe, DollarSign, Clock, Building2, Upload, CheckCircle2, 
   AlertCircle, Palette, Sparkles, Receipt, Calculator, Video, Copy, Check, 
-  Server, Wifi, Send, ExternalLink, Terminal, Radio, Folder, Cpu, Layers, HardDrive, HelpCircle, BookOpen 
+  Server, Wifi, Send, ExternalLink, Terminal, Radio, Folder, Cpu, Layers, HardDrive, HelpCircle, BookOpen,
+  Download, Play, Square, RotateCcw, Zap
 } from 'lucide-react';
 import { api } from '../services/api';
 import { useSettings } from '../context/SettingsContext';
@@ -30,7 +31,10 @@ export default function SettingsPage() {
     menu_theme: 'pink_blue',
     menu_color_primary: '#ec4899',
     menu_color_secondary: '#2563eb',
-    menu_bg_style: 'gradient_accents'
+    menu_bg_style: 'gradient_accents',
+    port_backend_api: '8081',
+    port_frontend_ui: '5173',
+    port_stream_gateway: '8889'
   });
 
   const [timezones, setTimezones] = useState({});
@@ -461,6 +465,385 @@ export default function SettingsPage() {
             <GateManagementSection />
 
             <form onSubmit={handleSave}>
+              {/* SYSTEM SERVICE PORTS & CENTRAL LAUNCHER SCRIPTS CARD */}
+              <div className="panel" style={{
+                marginBottom: '16px',
+                border: '1.5px solid rgba(37, 99, 235, 0.4)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                background: 'var(--bg-panel)'
+              }}>
+                <div className="panel-header" style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '10px',
+                  borderBottom: '1px solid var(--border-color)',
+                  paddingBottom: '12px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      boxShadow: '0 2px 10px rgba(37,99,235,0.35)'
+                    }}>
+                      <Zap size={20} />
+                    </div>
+                    <div>
+                      <span className="panel-title" style={{ fontSize: '0.98rem', fontWeight: 800 }}>
+                        System Service Ports & Launcher Scripts
+                      </span>
+                      <p style={{ margin: '2px 0 0', fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
+                        Specify and customize system ports (Backend: 8081, Frontend: 5173, Stream Gateway: 8889) and download single-window startup control scripts.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({
+                          ...prev,
+                          port_backend_api: '8081',
+                          port_frontend_ui: '5173',
+                          port_stream_gateway: '8889'
+                        }));
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        padding: '4px 10px',
+                        borderRadius: '4px',
+                        background: 'rgba(255, 255, 255, 0.06)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      title="Reset all ports to default values (8081, 5173, 8889)"
+                    >
+                      <RotateCcw size={12} />
+                      Reset to Defaults
+                    </button>
+                  </div>
+                </div>
+
+                <div className="panel-body" style={{ paddingTop: '16px' }}>
+                  {/* Port Configuration Grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                    gap: '14px',
+                    marginBottom: '18px'
+                  }}>
+                    {/* 1. PHP Backend Port */}
+                    <div style={{
+                      padding: '14px',
+                      borderRadius: '8px',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-color)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between'
+                    }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Server size={15} color="#ec4899" />
+                            PHP Backend API Port
+                          </span>
+                          <span style={{
+                            fontSize: '0.66rem',
+                            fontWeight: 700,
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            background: 'rgba(236, 72, 153, 0.15)',
+                            color: '#ec4899',
+                            border: '1px solid rgba(236, 72, 153, 0.3)'
+                          }}>
+                            Default: 8081
+                          </span>
+                        </div>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.3 }}>
+                          Runs PHP REST server, ANPR VIID/Webhook push endpoints, and Parking Display Board.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: '0.72rem', fontWeight: 600, marginBottom: '4px' }}>
+                          Custom Backend Port:
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.port_backend_api || '8081'}
+                          onChange={(e) => setFormData(prev => ({ ...prev, port_backend_api: e.target.value }))}
+                          placeholder="8081"
+                          min="1024"
+                          max="65535"
+                          style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                        />
+                        <div style={{ marginTop: '6px', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                          API Endpoint: <code style={{ color: '#ec4899' }}>http://localhost:{formData.port_backend_api || '8081'}</code>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. Frontend Web Portal Port */}
+                    <div style={{
+                      padding: '14px',
+                      borderRadius: '8px',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-color)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between'
+                    }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Globe size={15} color="#2563eb" />
+                            Frontend Web UI Port
+                          </span>
+                          <span style={{
+                            fontSize: '0.66rem',
+                            fontWeight: 700,
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            background: 'rgba(37, 99, 235, 0.15)',
+                            color: 'var(--status-blue)',
+                            border: '1px solid rgba(37, 99, 235, 0.3)'
+                          }}>
+                            Default: 5173
+                          </span>
+                        </div>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.3 }}>
+                          Runs Vite React Web UI (Dashboard, Gate Monitor, Validation, Settings).
+                        </p>
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: '0.72rem', fontWeight: 600, marginBottom: '4px' }}>
+                          Custom Frontend Port:
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.port_frontend_ui || '5173'}
+                          onChange={(e) => setFormData(prev => ({ ...prev, port_frontend_ui: e.target.value }))}
+                          placeholder="5173"
+                          min="1024"
+                          max="65535"
+                          style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                        />
+                        <div style={{ marginTop: '6px', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                          UI URL: <code style={{ color: '#2563eb' }}>http://localhost:{formData.port_frontend_ui || '5173'}</code>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3. RTSP Stream Gateway Port */}
+                    <div style={{
+                      padding: '14px',
+                      borderRadius: '8px',
+                      background: 'var(--bg-input)',
+                      border: '1px solid var(--border-color)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between'
+                    }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Video size={15} color="#10b981" />
+                            Stream Gateway Port
+                          </span>
+                          <span style={{
+                            fontSize: '0.66rem',
+                            fontWeight: 700,
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            background: 'rgba(16, 185, 129, 0.15)',
+                            color: 'var(--status-green)',
+                            border: '1px solid rgba(16, 185, 129, 0.3)'
+                          }}>
+                            Default: 8889
+                          </span>
+                        </div>
+                        <p style={{ margin: '0 0 10px 0', fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.3 }}>
+                          MediaMTX bridge converting IP camera RTSP streams into live browser WebRTC/HLS feeds.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: '0.72rem', fontWeight: 600, marginBottom: '4px' }}>
+                          Custom Stream Port:
+                        </label>
+                        <input
+                          type="number"
+                          className="form-input"
+                          value={formData.port_stream_gateway || '8889'}
+                          onChange={(e) => setFormData(prev => ({ ...prev, port_stream_gateway: e.target.value }))}
+                          placeholder="8889"
+                          min="1024"
+                          max="65535"
+                          style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                        />
+                        <div style={{ marginTop: '6px', fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                          Stream URL: <code style={{ color: '#10b981' }}>http://localhost:{formData.port_stream_gateway || '8889'}</code>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Launcher Download Action Cards */}
+                  <div style={{
+                    borderTop: '1px solid var(--border-color)',
+                    paddingTop: '16px'
+                  }}>
+                    <div style={{ marginBottom: '12px' }}>
+                      <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                        Download Launcher Batch Scripts (.bat)
+                      </h4>
+                      <p style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+                        Click below to download the unified single-window startup and shutdown batch files configured with your port settings.
+                      </p>
+                    </div>
+
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                      gap: '12px'
+                    }}>
+                      {/* 1. Start Launcher Button Card */}
+                      <div style={{
+                        padding: '14px 16px',
+                        borderRadius: '8px',
+                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(37, 99, 235, 0.08) 100%)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: '12px'
+                      }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{
+                              width: '26px',
+                              height: '26px',
+                              borderRadius: '6px',
+                              background: '#10b981',
+                              color: '#fff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <Play size={14} />
+                            </div>
+                            <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+                              START_PARKING_SYSTEM.bat
+                            </span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
+                            Single-window background launcher. Starts MySQL, Stream Gateway (Port {formData.port_stream_gateway || '8889'}), PHP API (Port {formData.port_backend_api || '8081'}), and Web Portal (Port {formData.port_frontend_ui || '5173'}), and opens your browser.
+                          </p>
+                        </div>
+
+                        <a
+                          href={api.getLauncherDownloadUrl('start')}
+                          download="START_PARKING_SYSTEM.bat"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            padding: '8px 14px',
+                            borderRadius: '6px',
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            fontSize: '0.78rem',
+                            textDecoration: 'none',
+                            boxShadow: '0 2px 8px rgba(16, 185, 129, 0.35)',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Download size={14} />
+                          Download START_PARKING_SYSTEM.bat
+                        </a>
+                      </div>
+
+                      {/* 2. Stop Launcher Button Card */}
+                      <div style={{
+                        padding: '14px 16px',
+                        borderRadius: '8px',
+                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: '12px'
+                      }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{
+                              width: '26px',
+                              height: '26px',
+                              borderRadius: '6px',
+                              background: '#ef4444',
+                              color: '#fff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <Square size={14} />
+                            </div>
+                            <span style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+                              STOP_PARKING_SYSTEM.bat
+                            </span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--text-secondary)', lineHeight: 1.35 }}>
+                            Clean shutdown script. Automatically frees and cleanly stops all background processes running on ports {formData.port_backend_api || '8081'}, {formData.port_frontend_ui || '5173'}, and {formData.port_stream_gateway || '8889'}.
+                          </p>
+                        </div>
+
+                        <a
+                          href={api.getLauncherDownloadUrl('stop')}
+                          download="STOP_PARKING_SYSTEM.bat"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            padding: '8px 14px',
+                            borderRadius: '6px',
+                            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                            color: '#ffffff',
+                            fontWeight: 700,
+                            fontSize: '0.78rem',
+                            textDecoration: 'none',
+                            boxShadow: '0 2px 8px rgba(239, 68, 68, 0.35)',
+                            transition: 'all 0.2s ease',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <Download size={14} />
+                          Download STOP_PARKING_SYSTEM.bat
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* 0. ANPR Camera Webhook Integration & Push URL Card */}
               <div className="panel" style={{
               marginBottom: '16px',
@@ -468,6 +851,7 @@ export default function SettingsPage() {
               boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
               background: 'var(--bg-panel)'
             }}>
+
               <div className="panel-header" style={{
                 display: 'flex',
                 justifyContent: 'space-between',

@@ -56,6 +56,7 @@ export const api = {
   updateSettings: (data) => request('/settings', { method: 'POST', body: data }),
   uploadLogo: (image) => request('/settings/logo', { method: 'POST', body: { image } }),
   testAnprMapping: (data) => request('/settings/test-anpr-mapping', { method: 'POST', body: data }),
+  getLauncherDownloadUrl: (type = 'start') => `/api/v1/settings/download-launcher?type=${type}`,
 
   // Superadmin Server Config
   getServerConfig: () => request('/superadmin/server-config'),

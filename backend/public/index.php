@@ -154,6 +154,7 @@ $router->get('/api/v1/settings', [SettingsController::class, 'getSettings']);
 $router->post('/api/v1/settings', [SettingsController::class, 'updateSettings'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);
 $router->post('/api/v1/settings/logo', [SettingsController::class, 'uploadLogo'], [AuthMiddleware::class, RoleMiddleware::adminOrSuperadmin()]);
 $router->post('/api/v1/settings/test-anpr-mapping', [SettingsController::class, 'testAnprMapping'], [AuthMiddleware::class]);
+$router->get('/api/v1/settings/download-launcher', [SettingsController::class, 'downloadLauncher']);
 
 // ── Gates & ANPR Cameras (Multi-Gate Management) ───────────────
 $router->get('/api/v1/gates', [GateController::class, 'index'], [AuthMiddleware::class]);

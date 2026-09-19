@@ -19,6 +19,15 @@ class SettingsController extends Controller {
         if (!isset($settings['show_powered_by'])) {
             $settings['show_powered_by'] = '1';
         }
+        if (!isset($settings['port_backend_api']) || empty($settings['port_backend_api'])) {
+            $settings['port_backend_api'] = '8081';
+        }
+        if (!isset($settings['port_frontend_ui']) || empty($settings['port_frontend_ui'])) {
+            $settings['port_frontend_ui'] = '5173';
+        }
+        if (!isset($settings['port_stream_gateway']) || empty($settings['port_stream_gateway'])) {
+            $settings['port_stream_gateway'] = '8889';
+        }
 
         $appConfig = require __DIR__ . '/../../config/app.php';
 
@@ -28,8 +37,8 @@ class SettingsController extends Controller {
         if ($detectedLanIp === '127.0.0.1' || empty($detectedLanIp)) {
             $detectedLanIp = $_SERVER['SERVER_ADDR'] ?? '192.168.1.100';
         }
-        $serverPort = (int)($_SERVER['SERVER_PORT'] ?? 8000);
-        if ($serverPort === 0) $serverPort = 8000;
+        $serverPort = (int)($_SERVER['SERVER_PORT'] ?? ($settings['port_backend_api'] ?? 8081));
+        if ($serverPort === 0) $serverPort = (int)($settings['port_backend_api'] ?? 8081);
 
         $localBase = !empty($settings['anpr_lan_ip']) 
             ? "http://" . $settings['anpr_lan_ip'] . ":" . ($settings['anpr_lan_port'] ?? $serverPort)
@@ -42,6 +51,9 @@ class SettingsController extends Controller {
         $networkInfo = [
             'detected_lan_ip'       => $detectedLanIp,
             'server_port'           => $serverPort,
+            'port_backend_api'      => (int)$settings['port_backend_api'],
+            'port_frontend_ui'      => (int)$settings['port_frontend_ui'],
+            'port_stream_gateway'   => (int)$settings['port_stream_gateway'],
             'local_webhook_url'     => $localBase . '/api/v1/webhook/anpr',
             'localhost_webhook_url' => "http://127.0.0.1:{$serverPort}/api/v1/webhook/anpr",
             'server_webhook_url'    => $prodBase . '/api/v1/webhook/anpr',
@@ -193,4 +205,176 @@ class SettingsController extends Controller {
         $result = \App\Services\AnprPayloadParser::testMapping((array)$samplePayload, (array)$customMapping);
         $this->success($result);
     }
+
+    /**
+     * Download customized batch launcher files (START_PARKING_SYSTEM.bat or STOP_PARKING_SYSTEM.bat)
+     */
+    public function downloadLauncher(): void {
+        $type = strtolower($_GET['type'] ?? 'start');
+        $db = Database::getInstance();
+        $stmt = $db->query("SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('port_backend_api', 'port_frontend_ui', 'port_stream_gateway')");
+        $settings = [];
+        while ($row = $stmt->fetch()) {
+            $settings[$row['setting_key']] = $row['setting_value'];
+        }
+
+        $backendPort = !empty($settings['port_backend_api']) ? (int)$settings['port_backend_api'] : 8081;
+        $frontendPort = !empty($settings['port_frontend_ui']) ? (int)$settings['port_frontend_ui'] : 5173;
+        $streamPort = !empty($settings['port_stream_gateway']) ? (int)$settings['port_stream_gateway'] : 8889;
+
+        if ($type === 'stop') {
+            $filename = 'STOP_PARKING_SYSTEM.bat';
+            $content = "@echo off\r\n"
+                . "title SaNDS Lab Parking Solution - Stop Services\r\n"
+                . "color 0C\r\n"
+                . "cls\r\n\r\n"
+                . "echo ===============================================================================\r\n"
+                . "echo                SaNDS Lab Smart Parking Management System\r\n"
+                . "echo                       Stop All Running Services\r\n"
+                . "echo ===============================================================================\r\n"
+                . "echo.\r\n"
+                . "echo [*] Terminating all parking services (PHP {$backendPort}, Frontend {$frontendPort}, Stream Bridge {$streamPort})...\r\n"
+                . "powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort {$backendPort},{$frontendPort},{$streamPort} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id \$_ -Force -ErrorAction SilentlyContinue }\" >nul 2>&1\r\n\r\n"
+                . "echo [+] All background services have been stopped.\r\n"
+                . "echo.\r\n"
+                . "echo ===============================================================================\r\n"
+                . "echo                           ALL SERVICES STOPPED\r\n"
+                . "echo ===============================================================================\r\n"
+                . "echo.\r\n"
+                . "pause\r\n";
+        } else {
+            $filename = 'START_PARKING_SYSTEM.bat';
+            $content = "@echo off\r\n"
+                . "title SaNDS Lab Smart Parking Management System - Central Controller\r\n"
+                . "color 0B\r\n"
+                . "cls\r\n\r\n"
+                . ":: Change directory to this script's folder\r\n"
+                . "cd /d \"%~dp0\"\r\n\r\n"
+                . "echo ===============================================================================\r\n"
+                . "echo                SaNDS Lab Smart Parking Management System\r\n"
+                . "echo                       Unified System Controller\r\n"
+                . "echo ===============================================================================\r\n"
+                . "echo.\r\n\r\n"
+                . ":: 1. Detect Local Network IP Address\r\n"
+                . "echo [*] Detecting Local Network IPv4 Address...\r\n"
+                . "for /f \"tokens=4 delims= \" %%a in ('route print 0.0.0.0 ^| findstr 0.0.0.0 ^| findstr /v \"0.0.0.0.*0.0.0.0.*0.0.0.0\"') do (\r\n"
+                . "    set LOCAL_IP=%%a\r\n"
+                . ")\r\n"
+                . "if \"%LOCAL_IP%\"==\"\" (\r\n"
+                . "    for /f \"tokens=2 delims=:\" %%a in ('ipconfig ^| findstr /i \"IPv4\" ^| findstr /v \"127.0.0.1\"') do (\r\n"
+                . "        set LOCAL_IP=%%a\r\n"
+                . "    )\r\n"
+                . ")\r\n"
+                . "for /f \"tokens=* delims= \" %%a in (\"%LOCAL_IP%\") do set LOCAL_IP=%%a\r\n"
+                . "if \"%LOCAL_IP%\"==\"\" set LOCAL_IP=127.0.0.1\r\n\r\n"
+                . "echo [+] Detected Server IP: %LOCAL_IP%\r\n"
+                . "echo.\r\n\r\n"
+                . ":: 2. Terminate any previous instances on ports {$backendPort}, {$frontendPort}, and {$streamPort}\r\n"
+                . "echo [*] Checking and freeing ports {$backendPort}, {$frontendPort}, and {$streamPort}...\r\n"
+                . "powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort {$backendPort},{$frontendPort},{$streamPort} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id \$_ -Force -ErrorAction SilentlyContinue }\" >nul 2>&1\r\n\r\n"
+                . ":: 3. Check MySQL Database Service\r\n"
+                . "echo [*] Checking MySQL Database Service...\r\n"
+                . "sc query MySQL80 >nul 2>&1\r\n"
+                . "if %ERRORLEVEL% EQU 0 (\r\n"
+                . "    net start MySQL80 >nul 2>&1\r\n"
+                . "    echo [+] MySQL80 Windows service is active.\r\n"
+                . ") else (\r\n"
+                . "    sc query MySQL >nul 2>&1\r\n"
+                . "    if %ERRORLEVEL% EQU 0 (\r\n"
+                . "        net start MySQL >nul 2>&1\r\n"
+                . "        echo [+] MySQL Windows service is active.\r\n"
+                . "    ) else (\r\n"
+                . "        echo [+] MySQL check complete.\r\n"
+                . "    )\r\n"
+                . ")\r\n"
+                . "echo.\r\n\r\n"
+                . ":: 4. Start Live RTSP Video Stream Bridge in Background (Hidden)\r\n"
+                . "echo [*] Starting Live RTSP Stream Gateway (Port {$streamPort})...\r\n"
+                . "if exist \"%~dp0tools\\mediamtx\\mediamtx.exe\" (\r\n"
+                . "    powershell -NoProfile -Command \"Start-Process -FilePath '%~dp0tools\\mediamtx\\mediamtx.exe' -ArgumentList 'mediamtx.yml' -WorkingDirectory '%~dp0tools\\mediamtx' -WindowStyle Hidden\" >nul 2>&1\r\n"
+                . "    echo [+] Stream Bridge running (Hidden Background).\r\n"
+                . ") else (\r\n"
+                . "    echo [i] Stream Gateway tool not installed (optional).\r\n"
+                . ")\r\n\r\n"
+                . ":: 5. Start PHP Backend Server in Background (Hidden)\r\n"
+                . "echo [*] Starting PHP Backend API Server (Port {$backendPort})...\r\n"
+                . "powershell -NoProfile -Command \"Start-Process -FilePath 'php' -ArgumentList '-S 0.0.0.0:{$backendPort} backend/public/index.php' -WorkingDirectory '%~dp0' -WindowStyle Hidden\" >nul 2>&1\r\n"
+                . "echo [+] PHP Backend running on port {$backendPort} (Hidden Background).\r\n\r\n"
+                . ":: 6. Start Frontend Web Server in Background (Hidden)\r\n"
+                . "echo [*] Starting Frontend Web Portal (Port {$frontendPort})...\r\n"
+                . "powershell -NoProfile -Command \"Start-Process -FilePath 'cmd.exe' -ArgumentList '/c npm run dev -- --host 0.0.0.0 --port {$frontendPort}' -WorkingDirectory '%~dp0frontend' -WindowStyle Hidden\" >nul 2>&1\r\n"
+                . "echo [+] Frontend Portal running on port {$frontendPort} (Hidden Background).\r\n\r\n"
+                . ":: Wait 3 seconds for services to initialize\r\n"
+                . "ping -n 4 127.0.0.1 >nul\r\n\r\n"
+                . ":: 7. Launch Default Browser to Dashboard\r\n"
+                . "start http://localhost:{$frontendPort}\r\n\r\n"
+                . ":MENU\r\n"
+                . "cls\r\n"
+                . "echo ===============================================================================\r\n"
+                . "echo                SaNDS Lab Smart Parking Management System\r\n"
+                . "echo                    ONLINE & RUNNING (SINGLE CONSOLE)\r\n"
+                . "echo ===============================================================================\r\n"
+                . "echo.\r\n"
+                . "echo  [+] PHP Backend API:       http://localhost:{$backendPort}  ^|  http://%LOCAL_IP%:{$backendPort}\r\n"
+                . "echo  [+] Web Dashboard UI:      http://localhost:{$frontendPort}  ^|  http://%LOCAL_IP%:{$frontendPort}\r\n"
+                . "echo  [+] Display Board App:     http://%LOCAL_IP%:{$backendPort}\r\n"
+                . "echo.\r\n"
+                . "echo -------------------------------------------------------------------------------\r\n"
+                . "echo  ANPR CAMERA CONFIGURATION (Supports 1, 2, 4, or any number of cameras):\r\n"
+                . "echo  - Set all LPR Cameras (UNV / Dahua / Hikvision) Server IP to: %LOCAL_IP%\r\n"
+                . "echo  - Set Server Port to: {$backendPort}\r\n"
+                . "echo  - Webhook URL / Push Path: /VIID/MotorVehicles or /api/v1/webhook/anpr\r\n"
+                . "echo -------------------------------------------------------------------------------\r\n"
+                . "echo.\r\n"
+                . "echo  [1] Open Dashboard in Browser (http://localhost:{$frontendPort})\r\n"
+                . "echo  [2] Open Display Board in Browser (http://localhost:{$frontendPort}/display)\r\n"
+                . "echo  [3] Open Camera Diagnostic Logs (anpr_incoming.log)\r\n"
+                . "echo  [4] Restart All Services\r\n"
+                . "echo  [Q] Stop All Services and Exit\r\n"
+                . "echo.\r\n"
+                . "echo ===============================================================================\r\n"
+                . "set /p OPT=\"Enter your choice (1-4 or Q to stop): \"\r\n\r\n"
+                . "if /i \"%OPT%\"==\"1\" (\r\n"
+                . "    start http://localhost:{$frontendPort}\r\n"
+                . "    goto MENU\r\n"
+                . ")\r\n"
+                . "if /i \"%OPT%\"==\"2\" (\r\n"
+                . "    start http://localhost:{$frontendPort}/display\r\n"
+                . "    goto MENU\r\n"
+                . ")\r\n"
+                . "if /i \"%OPT%\"==\"3\" (\r\n"
+                . "    if exist \"%~dp0backend\\storage\\logs\\anpr_incoming.log\" (\r\n"
+                . "        start notepad \"%~dp0backend\\storage\\logs\\anpr_incoming.log\"\r\n"
+                . "    ) else (\r\n"
+                . "        echo Log file not created yet.\r\n"
+                . "        pause\r\n"
+                . "    )\r\n"
+                . "    goto MENU\r\n"
+                . ")\r\n"
+                . "if /i \"%OPT%\"==\"4\" (\r\n"
+                . "    echo [*] Restarting all services...\r\n"
+                . "    call \"%~dp0STOP_PARKING_SYSTEM.bat\"\r\n"
+                . "    goto :EOF\r\n"
+                . ")\r\n"
+                . "if /i \"%OPT%\"==\"Q\" (\r\n"
+                . "    echo [*] Stopping all services...\r\n"
+                . "    powershell -NoProfile -Command \"Get-NetTCPConnection -LocalPort {$backendPort},{$frontendPort},{$streamPort} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id \$_ -Force -ErrorAction SilentlyContinue }\" >nul 2>&1\r\n"
+                . "    echo [+] All background services stopped successfully.\r\n"
+                . "    timeout /t 2 >nul\r\n"
+                . "    exit\r\n"
+                . ")\r\n\r\n"
+                . "goto MENU\r\n";
+        }
+
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+        header('Content-Length: ' . strlen($content));
+        echo $content;
+        exit;
+    }
 }
+
