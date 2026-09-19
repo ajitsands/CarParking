@@ -92,6 +92,13 @@ export default function LiveLanes({ onOpenSimulator }) {
               setExitBarrierOpen(prev => ({ ...prev, [gateId]: true }));
               setTimeout(() => setExitBarrierOpen(prev => ({ ...prev, [gateId]: false })), 5000);
               showToast(`🔵 Vehicle ${topLog.plate_number} detected at Exit (${gateId})!`);
+              // Auto-select this vehicle at exit gate when detected by Exit ANPR
+              const matchedExit = (sessRes.data?.sessions || []).find(s => 
+                s.plate_number && s.plate_number.replace(/\s+/g, '') === topLog.plate_number.replace(/\s+/g, '') && !s.exit_time
+              );
+              if (matchedExit) {
+                setSelectedExitSessionId(matchedExit.id);
+              }
             }
           }
           lastProcessedLogIdRef.current = topLog.id;
@@ -129,15 +136,15 @@ export default function LiveLanes({ onOpenSimulator }) {
         const inside = allSessions.filter(s => !s.exit_time && s.status !== 'EXIT_COMPLETED');
         setActiveSessions(inside);
 
-        // Track most recent entry session for display
+        // Track most recent entry session for Entry Lane display
         if (inside.length > 0) {
           setLatestEntryVehicle(inside[0]);
         }
 
-        // Keep existing selection if vehicle still inside; otherwise auto-select most recent inside vehicle
+        // Keep existing manual selection only if vehicle is still inside; do NOT auto-mirror entry vehicles
         setSelectedExitSessionId(prev => {
           if (prev && inside.some(s => s.id === prev)) return prev;
-          return inside[0]?.id || null;
+          return null; // Stays empty until Exit camera ANPR captures a vehicle or operator searches
         });
       }
     } catch (e) {}
@@ -592,10 +599,11 @@ export default function LiveLanes({ onOpenSimulator }) {
               </div>
             ) : (
               <div style={{ textAlign: 'center', padding: '8px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                No active vehicles currently inside the parking facility.
+                Waiting for vehicle at Exit Gate camera (Standby)... Select plate from search above or wait for Exit ANPR detection.
               </div>
             )}
           </div>
+
 
           <div style={{ padding: '12px' }}>
             <BoomBarrierVisualizer
